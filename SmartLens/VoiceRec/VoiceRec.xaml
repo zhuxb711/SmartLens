@@ -10,26 +10,23 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="39*"/>
-            <RowDefinition Height="274*"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="110*"/>
-            <RowDefinition Height="157*"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="14*"/>
+            <RowDefinition Height="5*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="86*"/>
-            <ColumnDefinition Width="400*"/>
-            <ColumnDefinition Width="100"/>
-            <ColumnDefinition Width="600*"/>
-            <ColumnDefinition Width="600*"/>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
-        <ProgressRing HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="2" Grid.RowSpan="3" Name="ProRing" Grid.Column="2" x:FieldModifier="Public"/>
-        <Button Style="{StaticResource ButtonRevealStyle}" Grid.Column="3" Width="150" Height="150" HorizontalAlignment="Center" Grid.Row="6" VerticalAlignment="Center" Background="Transparent" Foreground="Transparent" Name="RecordButton">
-            <Image Source="ms-appx:///Assets/VoiceBack.png" IsHitTestVisible="False" />
-        </Button>
-        <RichTextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="5">
+        <Grid Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Stretch">
+            <Ellipse PointerPressed="Ellipse_PointerPressed" Fill="OrangeRed" VerticalAlignment="Center" HorizontalAlignment="Center" Width="80" Height="80"/>
+            <Viewbox IsHitTestVisible="False" Width="35" Height="35" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <SymbolIcon IsHitTestVisible="False" Symbol="Microphone"/>
+            </Viewbox>
+        </Grid>
+        <RichTextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,349" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Paragraph TextIndent="30">
                 <Run Text="您可以说：" Foreground="Aqua" FontSize="25"/>
             </Paragraph>
@@ -43,6 +40,11 @@
                 <Run Text="暂停音乐" Foreground="Aqua" FontSize="25"/>
             </Paragraph>
         </RichTextBlock>
-        <TextBlock Grid.Row="3" Grid.Column="3" Text="按下说话" Foreground="Aqua" FontSize="25" TextAlignment="Center" TextWrapping="Wrap" Name="StatusText" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:FieldModifier="Public"/>
+        <Grid Grid.RowSpan="3" Grid.Column="2">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressRing Height="50" Width="50" HorizontalAlignment="Stretch" Visibility="Collapsed" Margin="0,0,10,0" VerticalAlignment="Center" Name="ProRing" x:FieldModifier="Public"/>
+                <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Center" Foreground="Aqua" FontSize="25" TextAlignment="Center" TextWrapping="Wrap" Name="StatusText" x:FieldModifier="Public"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>

@@ -17,7 +17,7 @@ namespace SmartLens
     {
         SpeechRecognizer SpeechRec;
         bool IsRecognizing = false;
-        AutoResetEvent ARE;
+        Task LoadTask;
         public static event EventHandler PlayCommanded;
         public static event EventHandler PauseCommanded;
         public static event EventHandler<string> MusicChoiceCommanded;
@@ -29,78 +29,48 @@ namespace SmartLens
         public VoiceRec()
         {
             InitializeComponent();
-            RecordButton.AddHandler(PointerPressedEvent, new PointerEventHandler(Button_OnPointerPressed), true);
             ThisPage = this;
             Loaded += VoiceRec_Loaded;
         }
 
-        private async void VoiceRec_Loaded(object sender, RoutedEventArgs e)
+        private void VoiceRec_Loaded(object sender, RoutedEventArgs e)
         {
-            ARE = new AutoResetEvent(false);
-            SpeechRec = new SpeechRecognizer();
-            await OnFirtLoad();
-        }
-
-        private async Task OnFirtLoad()
-        {
-            var GrammarFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///VoiceRec/SRGS.grxml"));
-            var SRGSConstraint = new SpeechRecognitionGrammarFileConstraint(GrammarFile, "MusicControl");
-            SpeechRec.Constraints.Add(SRGSConstraint);
-            var SongNames = await SQLite.GetInstance().GetAllMusicName();
-            if (SongNames == null)
+            LoadTask = Task.Run(async () =>
             {
+                SpeechRec = new SpeechRecognizer();
+
+                var GrammarFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///VoiceRec/SRGS.grxml"));
+                var SRGSConstraint = new SpeechRecognitionGrammarFileConstraint(GrammarFile, "MusicControl");
+                SpeechRec.Constraints.Add(SRGSConstraint);
+                var SongNames = await SQLite.GetInstance().GetAllMusicName();
+                if (SongNames == null)
+                {
+                    await SpeechRec.CompileConstraintsAsync();
+                    return;
+                }
+
+                var SongsCommand = SongNames.Select((item) =>
+                {
+                    return string.Format("{0}{1}", "播放", item);
+                });
+                var PlayConstraint = new SpeechRecognitionListConstraint(SongsCommand, "ChooseMusic");
+                SpeechRec.Constraints.Add(PlayConstraint);
                 await SpeechRec.CompileConstraintsAsync();
-                return;
-            }
-
-            var SongsCommand = SongNames.Select((item) =>
-            {
-                return string.Format("{0}{1}", "播放", item);
             });
-            var PlayConstraint = new SpeechRecognitionListConstraint(SongsCommand, "ChooseMusic");
-            SpeechRec.Constraints.Add(PlayConstraint);
-            await SpeechRec.CompileConstraintsAsync();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            ARE.Dispose();
             SpeechRec.Dispose();
-        }
-
-        private async void Button_OnPointerPressed(object sender, PointerRoutedEventArgs e)
-        {
-            if (IsRecognizing)
-            {
-                return;
-            }
-            IsRecognizing = true;
-
-            ProRing.IsActive = true;
-            StatusText.Text = "正在聆听……";
-            string temp = await WindowsLocalRecognizeAsync();
-            if (temp == "Failure")
-            {
-                StatusText.Text = "按下说话";
-                ContentDialog Dialog = new ContentDialog
-                {
-                    Content = "录音中无有效输入请重试",
-                    Title = "提示",
-                    CloseButtonText = "确定"
-                };
-                await Dialog.ShowAsync();
-            }
-            else
-            {
-                StatusText.Text = temp;
-            }
-            ProRing.IsActive = false;
-
-            IsRecognizing = false;
+            LoadTask = null;
         }
 
         private async Task<string> WindowsLocalRecognizeAsync()
         {
+            if(!LoadTask.IsCompleted)
+            {
+                return "正在初始化，请稍后再试";
+            }
             var Result = await SpeechRec.RecognizeAsync();
             if (Result.Status == SpeechRecognitionResultStatus.Success && Result.RulePath != null)
             {
@@ -147,6 +117,33 @@ namespace SmartLens
             }
         }
 
+        private async void Ellipse_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if (IsRecognizing)
+            {
+                return;
+            }
+            IsRecognizing = true;
+
+            ProRing.Visibility = Visibility.Visible;
+            ProRing.IsActive = true;
+            StatusText.Text = "正在聆听……";
+            string temp = await WindowsLocalRecognizeAsync();
+            if (temp == "Failure")
+            {
+                StatusText.Text = "麦克风未检测到声音输入";
+            }
+            else
+            {
+                StatusText.Text = temp;
+            }
+            ProRing.IsActive = false;
+            ProRing.Visibility = Visibility.Collapsed;
+
+            IsRecognizing = false;
+        }
+
+
         #region 百度云识别(弃用)
         //private AudioRecorder Recorder = new AudioRecorder();
 
@@ -175,6 +172,7 @@ namespace SmartLens
             ProRing.IsActive = false;
         }*/
         #endregion
+
     }
     #region 百度云识别功能实现与录制实现(弃用)
     //public class AudioRecorder
