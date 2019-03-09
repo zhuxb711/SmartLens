@@ -1,0 +1,101 @@
+﻿<Page
+    x:Class="SmartLens.MusicAlbum"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartLens"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="13*"/>
+            <ColumnDefinition Width="467*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="45*"/>
+            <RowDefinition Height="220"/>
+            <RowDefinition Height="30*"/>
+            <RowDefinition Height="636*"/>
+        </Grid.RowDefinitions>
+
+        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Image Name="AlbumImage" Stretch="UniformToFill"/>
+            <Grid Name="Animation" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <TextBlock Opacity="{x:Bind AlbumImage.Opacity,Mode=OneWay}" FontSize="28" Height="40" TextTrimming="CharacterEllipsis" Name="AlbumName" Margin="20,0,0,0"/>
+                    <TextBlock Opacity="{x:Bind AlbumImage.Opacity,Mode=OneWay}" FontSize="18" Foreground="Gray" Height="30" Margin="20,0,0,0" TextTrimming="CharacterEllipsis" Name="SingerName"/>
+                    <TextBlock Opacity="{x:Bind AlbumImage.Opacity,Mode=OneWay}" FontSize="18" Foreground="Gray" Height="30" Margin="20,0,0,0" TextTrimming="CharacterEllipsis" Name="PublishTime"/>
+                </StackPanel>
+                <ScrollViewer Opacity="{x:Bind AlbumImage.Opacity,Mode=OneWay}" Name="Scroll" Margin="20,0,0,0" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible" IsVerticalScrollChainingEnabled="True" HorizontalAlignment="Stretch" Grid.Row="1" VerticalAlignment="Stretch">
+                    <TextBlock Name="AlbumIntroText" FontSize="18" TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+        <ListView Name="AlbumList" Margin="0,10,0,0" Grid.Column="1" Grid.Row="3">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Button HorizontalAlignment="Left" BorderThickness="0" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" Name="PlayAll" MinWidth="85" Click="PlayAll_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEDB5;"/>
+                            <TextBlock Text="播放全部" FontSize="18" Margin="8,5,0,5"/>
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:SearchSingleMusic">
+                    <Grid Height="48">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="50*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" FontSize="16" TextTrimming="CharacterEllipsis" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind Music}"/>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind Glyph}" Foreground="{x:Bind Col}" Grid.Column="1" PointerPressed="FontIcon_PointerPressed"/>
+                        <SymbolIcon Symbol="Play" Grid.Column="2" PointerPressed="SymbolIcon_PointerPressed"/>
+                        <Border Margin="5,0,0,0" Grid.Column="3" BorderBrush="OrangeRed" BorderThickness="1" Height="{Binding ElementName=MV,Path=ActualHeight}" Visibility="{x:Bind MVExists}">
+                            <TextBlock Name="MV" Text="MV" Foreground="OrangeRed" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="15" Visibility="{x:Bind MVExists}" PointerPressed="MV_PointerPressed"/>
+                        </Border>
+                        <TextBlock Grid.Column="5" FontSize="16" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{x:Bind Artist}"/>
+                        <TextBlock Grid.Column="6" FontSize="16" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{x:Bind Album}" />
+                        <TextBlock Grid.Column="7" FontSize="16" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{x:Bind Duration}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <controls:Loading Name="LoadingControl" IsLoading="False" Grid.Column="1" Grid.Row="3">
+            <controls:Loading.Background>
+                <SolidColorBrush Color="Black" Opacity="0.7"/>
+            </controls:Loading.Background>
+            <StackPanel Orientation="Horizontal" Padding="12">
+                <Grid Margin="0,0,8,0">
+                    <ProgressRing IsActive="True" Foreground="White" Height="30" Width="30"/>
+                </Grid>
+                <TextBlock Text="正在等待网络响应..." FontSize="20" Foreground="White" VerticalAlignment="Center" />
+            </StackPanel>
+        </controls:Loading>
+    </Grid>
+</Page>

@@ -1,0 +1,52 @@
+﻿<Page
+    x:Class="SmartLens.EmailStartupOne"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartLens"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Disabled"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="添加账户" FontSize="25"/>
+            <TextBlock Text="电子邮件地址" Grid.Row="1" FontSize="20"/>
+            <TextBox IsSpellCheckEnabled="False" Name="Address" Text="{x:Bind EmailAddress,Mode=TwoWay}" PlaceholderText="someone@example.com" Grid.Row="2"/>
+            <TextBlock Grid.Row="4" Text="使用此名称发送邮件" FontSize="20"/>
+            <TextBox IsSpellCheckEnabled="False" Name="Call" Text="{x:Bind CallName,Mode=TwoWay}" Grid.Row="5"/>
+            <TextBlock Grid.Row="7" Text="Email密码" FontSize="20"/>
+            <PasswordBox Name="Pass" Password="{x:Bind Password,Mode=TwoWay}" Grid.Row="8" PlaceholderText="输入密码"/>
+            <TextBlock Grid.Row="10" Text="将保存所有信息，无需每次都输入" FontSize="20"/>
+            <StackPanel Height="30" HorizontalAlignment="Right" Grid.Row="11" Orientation="Horizontal">
+                <Button Margin="0,0,5,0" Content="确定" Width="100" Name="Confirm" Click="Confirm_Click"/>
+                <Button Content="取消" Width="100" Name="Cancel" Click="Cancel_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

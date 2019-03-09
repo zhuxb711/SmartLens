@@ -1,0 +1,65 @@
+﻿<grammar xml:lang="zh-Hans" root="Control" version="1.0"  tag-format="semantics/1.0" xmlns="http://www.w3.org/2001/06/grammar">
+  <rule id="Control">
+    <one-of>
+      <item>
+        <ruleref uri="#Play"/>
+      </item>
+      <item>
+        <ruleref uri="#Pause"/>
+      </item>
+      <item>
+        <ruleref uri="#NextSong"/>
+      </item>
+      <item>
+        <ruleref uri="#PreviousSong"/>
+      </item>
+    </one-of>
+  </rule>
+  <rule id="Play">
+    <item repeat="0-1">请</item>
+    <item>
+      <one-of>
+        <item>播放</item>
+        <item>开始播放</item>
+        <item>播放音乐</item>
+        <item>继续播放</item>
+      </one-of>
+    </item>
+  </rule>
+  <rule id="Pause">
+    <item repeat="0-1">请</item>
+    <item>
+      <one-of>
+        <item>停止播放</item>
+        <item>暂停播放</item>
+        <item>暂停音乐</item>
+        <item>暂停</item>
+        <item>停止</item>
+      </one-of>
+    </item>
+  </rule>
+  <rule id="NextSong">
+    <item repeat="0-1">请</item>
+    <item repeat="0-1">帮我</item>
+    <item repeat="0-1">切换</item>
+    <item>
+      <one-of>
+        <item>下一首</item>
+        <item>下一首歌</item>
+        <item>下一曲</item>
+      </one-of>
+    </item>
+  </rule>
+  <rule id="PreviousSong">
+    <item repeat="0-1">请</item>
+    <item repeat="0-1">帮我</item>
+    <item repeat="0-1">切换</item>
+    <item>
+      <one-of>
+        <item>上一首</item>
+        <item>上一首歌</item>
+        <item>上一曲</item>
+      </one-of>
+    </item>
+  </rule>
+</grammar>

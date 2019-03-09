@@ -1,0 +1,577 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{93629595-1924-4944-91F5-2B91E5652118}</ProjectGuid>
+    <OutputType>AppContainerExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SmartLens</RootNamespace>
+    <AssemblyName>SmartLens</AssemblyName>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.17763.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
+    <PackageCertificateKeyFile>SmartLens_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
+    <AppInstallerUpdateFrequency>1</AppInstallerUpdateFrequency>
+    <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <AppInstallerUri>https://smartlen.azurewebsites.net/</AppInstallerUri>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <EnableGatekeeperAnalysis>true</EnableGatekeeperAnalysis>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AboutPage\About.xaml.cs">
+      <DependentUpon>About.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Class\ClassCollection.cs" />
+    <Compile Include="USB\AESDialog.xaml.cs">
+      <DependentUpon>AESDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\AttributeDialog.xaml.cs">
+      <DependentUpon>AttributeDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="BlueScreen.xaml.cs">
+      <DependentUpon>BlueScreen.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmailPage\EmailPage.xaml.cs">
+      <DependentUpon>EmailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmailPage\EmailPresenter.xaml.cs">
+      <DependentUpon>EmailPresenter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmailPage\EmailDetail.xaml.cs">
+      <DependentUpon>EmailDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmailPage\EmailSender.xaml.cs">
+      <DependentUpon>EmailSender.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmailPage\EmailStartupOne.xaml.cs">
+      <DependentUpon>EmailStartupOne.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmailPage\EmailStartupTwo.xaml.cs">
+      <DependentUpon>EmailStartupTwo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicAlbum.xaml.cs">
+      <DependentUpon>MusicAlbum.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicMV.xaml.cs">
+      <DependentUpon>MusicMV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicSinger.xaml.cs">
+      <DependentUpon>MusicSinger.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Class\NetEaseCloudMusicAPITypes.cs" />
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Bluetooth\BluetoothUI.xaml.cs">
+      <DependentUpon>BluetoothUI.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Bluetooth\BluetoothFileTransfer.xaml.cs">
+      <DependentUpon>BluetoothFileTransfer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AboutPage\ChangeLog.xaml.cs">
+      <DependentUpon>ChangeLog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CosmeticsPage\Cosmetics.xaml.cs">
+      <DependentUpon>Cosmetics.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\Lrc.xaml.cs">
+      <DependentUpon>Lrc.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="HomePage.xaml.cs">
+      <DependentUpon>HomePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicDetail.xaml.cs">
+      <DependentUpon>MusicDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicList.xaml.cs">
+      <DependentUpon>MusicList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicPage.xaml.cs">
+      <DependentUpon>MusicPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicSearch.xaml.cs">
+      <DependentUpon>MusicSearch.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Music\PlayModeNotification.xaml.cs">
+      <DependentUpon>PlayModeNotification.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="USB\RenameDialog.xaml.cs">
+      <DependentUpon>RenameDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SettingPage\SettingsPage.xaml.cs">
+      <DependentUpon>SettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\USBControl.xaml.cs">
+      <DependentUpon>USBControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\USBFilePresenter.xaml.cs">
+      <DependentUpon>USBFilePresenter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\USBMediaPlayer.xaml.cs">
+      <DependentUpon>USBMediaPlayer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\USBPhotoViewer.xaml.cs">
+      <DependentUpon>USBPhotoViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Weather\WeatherControl.xaml.cs">
+      <DependentUpon>WeatherControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="VoiceRec\VoiceRec.xaml.cs">
+      <DependentUpon>VoiceRec.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\WebPage.xaml.cs">
+      <DependentUpon>WebPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\WebTab.xaml.cs">
+      <DependentUpon>WebTab.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\ZipDialog.xaml.cs">
+      <DependentUpon>ZipDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="USB\ZipExplorer.xaml.cs">
+      <DependentUpon>ZipExplorer.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+    <None Include="Properties\DataSources\System.Data.DataSet.datasource" />
+    <None Include="Properties\ServiceReferences.Designer.ClientConfig" />
+    <Content Include="Assets\DocIcon.png" />
+    <Content Include="Assets\Logo.png" />
+    <Content Include="Assets\SplashScreen.scale-100.png" />
+    <Content Include="Assets\SplashScreen.scale-125.png" />
+    <Content Include="Assets\SplashScreen.scale-150.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\SplashScreen.scale-400.png" />
+    <Content Include="AboutPage\ChangeLog.txt" />
+    <Content Include="CosmeticsPage\LipLogo\CHANEL.png" />
+    <Content Include="CosmeticsPage\LipLogo\Dior.jpg" />
+    <Content Include="CosmeticsPage\LipLogo\GIVENCHY.jpeg" />
+    <Content Include="CosmeticsPage\LipLogo\LANCOME.jpg" />
+    <Content Include="CosmeticsPage\LipLogo\M.A.C.png" />
+    <Content Include="CosmeticsPage\shape_predictor_68_face_landmarks.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="SmartLens_TemporaryKey.pfx" />
+    <Content Include="Weather\CityCode.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="VoiceRec\SRGS.grxml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\LargeTile.scale-100.png" />
+    <Content Include="Assets\LargeTile.scale-125.png" />
+    <Content Include="Assets\LargeTile.scale-150.png" />
+    <Content Include="Assets\LargeTile.scale-200.png" />
+    <Content Include="Assets\LargeTile.scale-400.png" />
+    <Content Include="Assets\SmallTile.scale-100.png" />
+    <Content Include="Assets\SmallTile.scale-125.png" />
+    <Content Include="Assets\SmallTile.scale-150.png" />
+    <Content Include="Assets\SmallTile.scale-200.png" />
+    <Content Include="Assets\SmallTile.scale-400.png" />
+    <Content Include="Assets\Square150x150Logo.scale-100.png" />
+    <Content Include="Assets\Square150x150Logo.scale-125.png" />
+    <Content Include="Assets\Square150x150Logo.scale-150.png" />
+    <Content Include="Assets\Square150x150Logo.scale-400.png" />
+    <Content Include="Assets\Square44x44Logo.altform-unplated_targetsize-16.png" />
+    <Content Include="Assets\Square44x44Logo.altform-unplated_targetsize-256.png" />
+    <Content Include="Assets\Square44x44Logo.altform-unplated_targetsize-32.png" />
+    <Content Include="Assets\Square44x44Logo.altform-unplated_targetsize-48.png" />
+    <Content Include="Assets\Square44x44Logo.scale-100.png" />
+    <Content Include="Assets\Square44x44Logo.scale-125.png" />
+    <Content Include="Assets\Square44x44Logo.scale-150.png" />
+    <Content Include="Assets\Square44x44Logo.scale-400.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-16.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-256.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-32.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-48.png" />
+    <Content Include="Assets\StoreLogo.scale-100.png" />
+    <Content Include="Assets\StoreLogo.scale-125.png" />
+    <Content Include="Assets\StoreLogo.scale-150.png" />
+    <Content Include="Assets\StoreLogo.scale-200.png" />
+    <Content Include="Assets\StoreLogo.scale-400.png" />
+    <Content Include="Assets\VoiceBack.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-100.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-125.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-150.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Content Include="Properties\Default.rd.xml" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Weather\WeatherIcon\big_rain.png" />
+    <Content Include="Weather\WeatherIcon\cloud.png" />
+    <Content Include="Weather\WeatherIcon\fine.png" />
+    <Content Include="Weather\WeatherIcon\fog.png" />
+    <Content Include="Weather\WeatherIcon\ice_rain.png" />
+    <Content Include="Weather\WeatherIcon\lquick_rain.png" />
+    <Content Include="Weather\WeatherIcon\mbig_rain.png" />
+    <Content Include="Weather\WeatherIcon\mid_rain.png" />
+    <Content Include="Weather\WeatherIcon\overcast.png" />
+    <Content Include="Weather\WeatherIcon\quick_rain.png" />
+    <Content Include="Weather\WeatherIcon\quick_rain_ice2.png" />
+    <Content Include="Weather\WeatherIcon\quick_snow.png" />
+    <Content Include="Weather\WeatherIcon\rain_snow.png" />
+    <Content Include="Weather\WeatherIcon\sand.png" />
+    <Content Include="Weather\WeatherIcon\small_rain.png" />
+    <Content Include="Weather\WeatherIcon\stom_rain.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="AboutPage\About.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\AESDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\AttributeDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="BlueScreen.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Bluetooth\BluetoothUI.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Bluetooth\BluetoothFileTransfer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AboutPage\ChangeLog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CosmeticsPage\Cosmetics.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmailPage\EmailPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmailPage\EmailPresenter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmailPage\EmailDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmailPage\EmailSender.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmailPage\EmailStartupOne.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmailPage\EmailStartupTwo.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\Lrc.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="HomePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicAlbum.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicMV.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicSinger.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\MusicSearch.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Music\PlayModeNotification.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\RenameDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SettingPage\SettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\USBControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\USBFilePresenter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\USBMediaPlayer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\USBPhotoViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Weather\WeatherControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="VoiceRec\VoiceRec.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WebBrowser\WebPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WebBrowser\WebTab.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\ZipDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\ZipExplorer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Bluetooth.Services.Obex">
+      <Version>1.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="DlibDotNet">
+      <Version>19.16.0.20190223</Version>
+    </PackageReference>
+    <PackageReference Include="MailKit">
+      <Version>2.1.3</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Data.Sqlite.Core">
+      <Version>2.2.2</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
+      <Version>6.2.2</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp">
+      <Version>5.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Connectivity">
+      <Version>5.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications">
+      <Version>5.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.UI">
+      <Version>5.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Animations">
+      <Version>5.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
+      <Version>5.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="SharpZipLib">
+      <Version>1.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="SQLitePCLRaw.bundle_winsqlite3">
+      <Version>1.1.13</Version>
+    </PackageReference>
+    <PackageReference Include="TagLib.Portable">
+      <Version>1.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="WinRTXamlToolkit.UWP">
+      <Version>2.3.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OpenCVBridge\OpenCVBridge.vcxproj">
+      <Project>{dcf8f794-eeef-413b-b74d-a9fc69872783}</Project>
+      <Name>OpenCVBridge</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
+    <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

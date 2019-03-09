@@ -1,0 +1,35 @@
+﻿<Page xmlns:my="using:Microsoft.Toolkit.Uwp.UI.Controls" 
+    x:Class="SmartLens.ChangeLog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartLens"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Disabled"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="92*"/>
+            <ColumnDefinition Width="1739*"/>
+            <ColumnDefinition Width="89*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="18*"/>
+            <RowDefinition Height="149*"/>
+            <RowDefinition Height="13*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="1" Text="更新日志" FontSize="50" Foreground="Cyan" VerticalAlignment="Center"/>
+        <ScrollViewer Grid.Column="1" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+            <my:MarkdownTextBlock 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Stretch" 
+                Name="MarkdownControl"
+                Header1Foreground="{ThemeResource SystemControlForegroundAccentBrush}" 
+                SchemeList="companyportal,randomscheme" 
+                Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"
+                LinkClicked="MarkdownControl_LinkClicked"/>
+        </ScrollViewer>
+    </Grid>
+</Page>

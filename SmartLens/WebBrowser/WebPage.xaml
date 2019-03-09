@@ -1,0 +1,62 @@
+﻿<Page
+    x:Class="SmartLens.WebPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Disabled"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid Name="Gr">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="20"/>
+            </Grid.ColumnDefinitions>
+            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Name="Back" Click="Back_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
+                <SymbolIcon Symbol="Back"/>
+            </Button>
+            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Name="Forward" Click="Forward_Click"  Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
+                <SymbolIcon Symbol="Forward"/>
+            </Button>
+            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Name="Home" Click="Home_Click"  Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+                <SymbolIcon Symbol="Home"/>
+            </Button>
+            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3" Name="Refresh" Click="Refresh_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+                <SymbolIcon Symbol="Refresh" Name="RefreshState"/>
+            </Button>
+            <ProgressRing Grid.Column="4" Name="Progress" Height="30" Width="30"/>
+            <AutoSuggestBox 
+                        Grid.Column="5"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Stretch"
+                        Name="AutoSuggest"
+                        QueryIcon="Find" 
+                        PlaceholderText="搜索或输入网址" 
+                        TextChanged="AutoSuggestBox_TextChanged" 
+                        QuerySubmitted="AutoSuggestBox_QuerySubmitted"
+                        BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
+            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="6" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="截图并蓝牙发送" Icon="Save" Name="ScreenShot" Click="ScreenShot_Click"/>
+                        <MenuFlyoutItem Text="清除缓存" Icon="ProtectedDocument" Name="ClearCache" Click="ClearCache_Click"/>
+                        <MenuFlyoutItem Text="关于" Icon="Message" Name="About" Click="About_Click"/>
+                    </MenuFlyout>
+                </Button.Flyout>
+                <SymbolIcon Symbol="Setting"/>
+            </Button>
+        </Grid>
+    </Grid>
+</Page>

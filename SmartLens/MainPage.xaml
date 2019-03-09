@@ -1,0 +1,84 @@
+﻿<Page
+    x:Class="SmartLens.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations"
+    mc:Ignorable="d"
+    FontFamily="Segoe UI"
+    Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
+
+    <Grid>
+        <NavigationView 
+            IsSettingsVisible="True" 
+            x:Name="NavigationView" 
+            AlwaysShowHeader="False" 
+            x:FieldModifier="Public"
+            IsPaneOpen="False" 
+            ItemInvoked="NavigationView_ItemInvoked"
+            FontSize="26" 
+            animations:Connected.Key="item" 
+            IsBackEnabled="True" 
+            Loaded="NavigationView_Loaded" 
+            BackRequested="NavigationView_BackRequested"
+            Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
+            PaneDisplayMode="LeftCompact">
+            <NavigationView.MenuItems>
+                <NavigationViewItemHeader Content="主页"/>
+                <NavigationViewItem Content="主页" IsSelected="True">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE80F;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator/>
+                <NavigationViewItemHeader Content="功能" FontSize="40"/>
+                <NavigationViewItem Content="音乐">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8D6;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="语音识别">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE720;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="网页浏览" >
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE909;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="智能美妆">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEBD2;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="USB管理">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xECF0;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="邮件">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE715;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="关于">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE946;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.Content>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="10*"/>
+                        <RowDefinition Height="550*"/>
+                    </Grid.RowDefinitions>
+                    <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" Grid.Row="1"/>
+                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Title" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"/>
+                </Grid>
+            </NavigationView.Content>
+        </NavigationView>
+    </Grid>
+</Page>

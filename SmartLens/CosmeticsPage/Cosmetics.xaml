@@ -1,0 +1,52 @@
+﻿<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartLens"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Custom="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    x:Class="SmartLens.Cosmetics"
+    mc:Ignorable="d"
+    NavigationCacheMode="Disabled"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid Name="Gr">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Name="CosmeticsControl" SelectionChanged="CosmeticsControl_SelectionChanged" MinWidth="400">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:CosmeticsItem">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="190" Height="130" Stretch="Fill" Margin="5">
+                            <Image.Source>
+                                <BitmapImage UriSource="{x:Bind ImageUri}" DecodePixelHeight="130" DecodePixelWidth="190" DecodePixelType="Logical"/>
+                            </Image.Source>
+                        </Image>
+                        <StackPanel>
+                            <TextBlock Text="{x:Bind Name}" FontSize="23" Margin="5,5" TextWrapping="Wrap"/>
+                            <TextBlock Text="{x:Bind Description}" FontSize="19" Margin="5" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Image Name="CaptureControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="UniformToFill" FlowDirection="RightToLeft"/>
+        <controls:Loading x:Name="LoadingControl" IsLoading="True"  Grid.ColumnSpan="2" >
+            <controls:Loading.Background>
+                <SolidColorBrush Color="Black" Opacity="0.7"/>
+            </controls:Loading.Background>
+            <StackPanel Orientation="Horizontal" Padding="12">
+                <Grid Margin="0,0,8,0">
+                    <ProgressRing IsActive="True" Foreground="White" Height="30" Width="30"/>
+                </Grid>
+                <TextBlock Text="智能美妆正在启动...请稍后" FontSize="25" Foreground="White" VerticalAlignment="Center" />
+            </StackPanel>
+        </controls:Loading>
+    </Grid>
+</Page>

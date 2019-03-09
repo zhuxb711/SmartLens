@@ -1,0 +1,56 @@
+﻿<Page
+    x:Class="SmartLens.EmailStartupTwo"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Disabled"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="35"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="高级设置" FontSize="25"/>
+            <TextBlock Text="IMAP服务器地址" Grid.Row="1" FontSize="20"/>
+            <TextBox IsSpellCheckEnabled="False" Name="IMAPAdd" Text="{x:Bind IMAPAddress,Mode=TwoWay}" PlaceholderText="imap.example.com" Grid.Row="2"/>
+            <TextBlock Grid.Row="4" Text="IMAP服务器端口" FontSize="20"/>
+            <TextBox IsSpellCheckEnabled="False" Name="IMAPPo" Text="{x:Bind IMAPPort,Mode=TwoWay}" Grid.Row="5"/>
+            <TextBlock Grid.Row="7" Text="SMTP服务器地址" FontSize="20"/>
+            <TextBox IsSpellCheckEnabled="False" Name="SMTPAdd" Text="{x:Bind SMTPAddress,Mode=TwoWay}" Grid.Row="8" PlaceholderText="smtp.example.com"/>
+            <TextBlock Grid.Row="10" Text="SMTP服务器端口" FontSize="20"/>
+            <TextBox IsSpellCheckEnabled="False" Name="SMTPPo" Grid.Row="11" Text="{x:Bind SMTPPort,Mode=TwoWay}"/>
+            <CheckBox Margin="0,5,0,0" Grid.Row="12" Content="使用SSL安全连接(推荐)" FontSize="16" IsChecked="{x:Bind IsEnableSSL,Mode=TwoWay}"/>
+            <StackPanel Height="30" HorizontalAlignment="Right" Grid.Row="13" Orientation="Horizontal">
+                <Button Margin="0,0,5,0" Content="确定" Width="100" Name="Confirm" Click="Confirm_Click"/>
+                <Button Content="取消" Width="100" Name="Cancel" Click="Cancel_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+
+</Page>

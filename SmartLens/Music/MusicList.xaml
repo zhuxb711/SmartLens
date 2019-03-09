@@ -1,0 +1,116 @@
+﻿<Page
+    x:Class="SmartLens.MusicList"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartLens"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="13*"/>
+            <ColumnDefinition Width="467*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="45*"/>
+            <RowDefinition Height="270"/>
+            <RowDefinition Height="33*"/>
+            <RowDefinition Height="636*"/>
+        </Grid.RowDefinitions>
+
+        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="270"/>
+                <ColumnDefinition Width="311*"/>
+            </Grid.ColumnDefinitions>
+            <Image HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" x:Name="Image1" x:FieldModifier="Public" Stretch="Uniform">
+                <Image.Source>
+                    <BitmapImage UriSource="ms-appx:///Assets/Logo.png"/>
+                </Image.Source>
+            </Image>
+            <Grid Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="60"/>
+                </Grid.RowDefinitions>
+                <Grid HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" Name="PlayAll" Click="PlayAll_Click">
+                        <StackPanel>
+                            <SymbolIcon Symbol="Play"/>
+                            <TextBlock Text="播放全部" FontSize="17"/>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" Grid.Column="1" Name="SearchOnline" Click="SearchOnline_Click" >
+                        <StackPanel>
+                            <SymbolIcon Symbol="Find" />
+                            <TextBlock Text="在线搜索" FontSize="17"/>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" Grid.Column="2" Name="Select" Click="Select_Click">
+                        <StackPanel>
+                            <SymbolIcon Symbol="Bullets" />
+                            <TextBlock Text="选择音乐" FontSize="17" Name="Del"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <ListView HorizontalAlignment="Stretch" Grid.Row="3" VerticalAlignment="Stretch" x:Name="MusicListControl" ItemsSource="{Binding}" Grid.Column="1" DoubleTapped="MusicListControl_DoubleTapped">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="7" Background="{ThemeResource SystemBaseLowColor}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="50*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="音乐" FontSize="18" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                        <TextBlock FontSize="18" Grid.Column="3" Text="艺术家" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                        <TextBlock FontSize="18" Grid.Column="4" Text="专辑" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                        <TextBlock FontSize="18" Grid.Column="5" Text="时长" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:Name="TableDataTemplate" x:DataType="local:PlayList">
+                    <Grid Height="48">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="100*"/>
+                            <ColumnDefinition Width="50*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind Music}" Foreground="{x:Bind FontColor,Mode=OneWay}"/>
+                        <Border Grid.Column="1" BorderBrush="OrangeRed" BorderThickness="1" Height="{Binding ElementName=MV,Path=ActualHeight}" Visibility="{x:Bind MVExists}">
+                            <TextBlock Name="MV" Text="MV" Foreground="OrangeRed" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="15" Visibility="{x:Bind MVExists}" PointerPressed="MV_PointerPressed"/>
+                        </Border>
+                        <TextBlock Grid.Column="3" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Text="{x:Bind Artist}" Foreground="{x:Bind FontColor,Mode=OneWay}"/>
+                        <TextBlock Grid.Column="4" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Text="{x:Bind Album}" Foreground="{x:Bind FontColor,Mode=OneWay}"/>
+                        <TextBlock Grid.Column="5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Text="{x:Bind Duration}" Foreground="{x:Bind FontColor,Mode=OneWay}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

@@ -1,0 +1,67 @@
+﻿<Page
+    x:Class="SmartLens.EmailDetail"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartLens"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+
+    <Grid>
+        <Grid Name="Gr" x:FieldModifier="Public">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+        </Grid>
+        <Grid VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40" x:Name="ExpanderGrid"/>
+            </Grid.RowDefinitions>
+            <CommandBar x:FieldModifier="Public" Visibility="Collapsed" Name="CommandBarContorl" FlowDirection="RightToLeft" Background="{ThemeResource SystemControlAcrylicElementBrush}" IsOpen="False" DefaultLabelPosition="Right">
+                <AppBarButton Icon="Delete" Label="删除" Name="CommandBarDelete" Click="CommandBarDelete_Click"/>
+                <AppBarButton Icon="MailForward" Label="转发" Name="CommandBarForward" Click="CommandBarForward_Click"/>
+                <AppBarButton Icon="MailReplyAll" Label="全部回复" Name="CommandBarReplyAll" Click="CommandBarReplyAll_Click"/>
+                <AppBarButton Icon="MailReply" Label="回复" Name="CommandBarReply" Click="CommandBarReply_Click"/>
+            </CommandBar>
+
+            <controls:Expander Grid.Row="1" x:FieldModifier="Public" Name="FileExpander" Header="查看Email附件" Background="{ThemeResource SystemControlAcrylicElementBrush}" Visibility="Collapsed" Expanded="FileExpander_Expanded" Collapsed="FileExpander_Collapsed" FontSize="22">
+                <GridView Name="FileGridView" 
+                          x:FieldModifier="Public"
+                          HorizontalAlignment="Stretch" 
+                          VerticalAlignment="Stretch"
+                          IsRightTapEnabled="True"
+                          RightTapped="FileGridView_RightTapped"
+                          SelectionChanged="FileGridView_SelectionChanged">
+                    <GridView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsWrapGrid MaximumRowsOrColumns="4" Orientation="Horizontal" HorizontalAlignment="Stretch"/>
+                        </ItemsPanelTemplate>
+                    </GridView.ItemsPanel>
+                    <GridView.ContextFlyout>
+                        <CommandBarFlyout Placement="RightEdgeAlignedTop">
+                            <CommandBarFlyout.SecondaryCommands>
+                                <AppBarButton Icon="Save" Label="保存" Name="Save" Click="Save_Click"/>
+                            </CommandBarFlyout.SecondaryCommands>
+                        </CommandBarFlyout>
+                    </GridView.ContextFlyout>
+                    <GridView.ItemTemplate>
+                        <DataTemplate x:DataType="local:EmailAttachment" >
+                            <StackPanel Width="250" Padding="12" Orientation="Horizontal">
+                                <Image IsHitTestVisible="False" VerticalAlignment="Center" Source="ms-appx:///Assets/DocIcon.png" Margin="0,5,5,0" Height="60" Width="60"/>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock IsHitTestVisible="False" Text="{x:Bind FileName}" FontSize="20" Width="180" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock IsHitTestVisible="False" Text="{x:Bind Type}" FontSize="18" Foreground="Gray"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </controls:Expander>
+        </Grid>
+    </Grid>
+</Page>
