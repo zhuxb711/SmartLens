@@ -11,13 +11,13 @@
     Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
     <Page.Resources>
         <DataTemplate x:Key="SingleMusicTemplate">
-            <TextBlock Text="{Binding Path=Name}"/>
+            <TextBlock Text="{Binding Name}"/>
         </DataTemplate>
         <DataTemplate x:Key="ArtistTemplate">
-            <TextBlock Text="{Binding Path=name}"/>
+            <TextBlock Text="{Binding name}"/>
         </DataTemplate>
         <DataTemplate x:Key="AlbumTemplate">
-            <TextBlock Text="{Binding Path=name}"/>
+            <TextBlock Text="{Binding name}"/>
         </DataTemplate>
         <local:CustomDataTemplateSelector x:Key="Selector" SingleMusicTemplate="{StaticResource SingleMusicTemplate}" ArtistsTemplate="{StaticResource ArtistTemplate}" AlbumTemplate="{StaticResource AlbumTemplate}"/>
         <Style x:Key="ButtonStyle1" TargetType="Button">
@@ -61,7 +61,7 @@
         <Pivot Grid.Column="1" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Name="PivotControl">
             <PivotItem Header="单曲">
                 <Grid>
-                    <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="SingleMusicControl" ItemsSource="{Binding}" x:FieldModifier="Public" IsDoubleTapEnabled="True" DoubleTapped="SingleMusicControl_DoubleTapped">
+                    <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="SingleMusicControl" x:FieldModifier="Public" IsDoubleTapEnabled="True" DoubleTapped="SingleMusicControl_DoubleTapped">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
@@ -112,7 +112,7 @@
                 </Grid>
             </PivotItem>
             <PivotItem Header="歌手">
-                <ListView IsItemClickEnabled="True" ItemClick="SingerControl_ItemClick" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="SingerControl" ItemsSource="{Binding}">
+                <ListView IsItemClickEnabled="True" ItemClick="SingerControl_ItemClick" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="SingerControl">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
@@ -145,7 +145,7 @@
                 </ListView>
             </PivotItem>
             <PivotItem Header="专辑">
-                <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="AlbumControl" ItemsSource="{Binding}" IsItemClickEnabled="True" ItemClick="AlbumControl_ItemClick">
+                <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="AlbumControl" IsItemClickEnabled="True" ItemClick="AlbumControl_ItemClick">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>

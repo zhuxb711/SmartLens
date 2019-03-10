@@ -102,15 +102,15 @@ namespace SmartLens
         {
             if (IsRecognizing)
             {
-                Cancellation.Cancel();
-                await SpeechRec.StopRecognitionAsync();
+                Cancellation?.Cancel();
+                await SpeechRec?.StopRecognitionAsync();
             }
             else
             {
-                Cancellation.Dispose();
+                Cancellation?.Dispose();
                 Cancellation = null;
             }
-            SpeechRec.Dispose();
+            SpeechRec?.Dispose();
             SpeechRec = null;
             LoadTask = null;
             StatusText.Visibility = Visibility.Collapsed;

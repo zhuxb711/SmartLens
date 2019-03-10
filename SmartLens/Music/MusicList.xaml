@@ -66,7 +66,7 @@
             </Grid>
         </Grid>
 
-        <ListView HorizontalAlignment="Stretch" Grid.Row="3" VerticalAlignment="Stretch" x:Name="MusicListControl" ItemsSource="{Binding}" Grid.Column="1" DoubleTapped="MusicListControl_DoubleTapped">
+        <ListView HorizontalAlignment="Stretch" Grid.Row="3" VerticalAlignment="Stretch" x:Name="MusicListControl" Grid.Column="1" DoubleTapped="MusicListControl_DoubleTapped">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
