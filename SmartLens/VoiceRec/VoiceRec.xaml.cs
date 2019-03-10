@@ -10,7 +10,6 @@ using Windows.Media.SpeechRecognition;
 using Windows.Storage;
 using System.Threading;
 
-
 namespace SmartLens
 {
     public sealed partial class VoiceRec : Page
@@ -18,6 +17,8 @@ namespace SmartLens
         SpeechRecognizer SpeechRec;
         bool IsRecognizing = false;
         Task LoadTask;
+        CancellationTokenSource Cancellation;
+        readonly object SyncRoot = new object();
         public static event EventHandler PlayCommanded;
         public static event EventHandler PauseCommanded;
         public static event EventHandler<string> MusicChoiceCommanded;
@@ -37,11 +38,12 @@ namespace SmartLens
         {
             LoadTask = Task.Run(async () =>
             {
+                Cancellation = new CancellationTokenSource();
                 SpeechRec = new SpeechRecognizer();
 
                 var GrammarFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///VoiceRec/SRGS.grxml"));
-                var SRGSConstraint = new SpeechRecognitionGrammarFileConstraint(GrammarFile, "MusicControl");
-                SpeechRec.Constraints.Add(SRGSConstraint);
+                var SRGSConstraint = new SpeechRecognitionGrammarFileConstraint(GrammarFile, "Control");
+                SpeechRec?.Constraints.Add(SRGSConstraint);
                 var SongNames = await SQLite.GetInstance().GetAllMusicName();
                 if (SongNames == null)
                 {
@@ -54,15 +56,65 @@ namespace SmartLens
                     return string.Format("{0}{1}", "播放", item);
                 });
                 var PlayConstraint = new SpeechRecognitionListConstraint(SongsCommand, "ChooseMusic");
-                SpeechRec.Constraints.Add(PlayConstraint);
-                await SpeechRec.CompileConstraintsAsync();
+                SpeechRec?.Constraints.Add(PlayConstraint);
+                await SpeechRec?.CompileConstraintsAsync();
             });
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        private async void Ellipse_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            lock (SyncRoot)
+            {
+                if (IsRecognizing)
+                {
+                    return;
+                }
+                IsRecognizing = true;
+            }
+
+            StatusText.Visibility = Visibility.Collapsed;
+            ListeningDisplay.Visibility = Visibility.Visible;
+
+            string RecResult = await WindowsLocalRecognizeAsync();
+
+            if (RecResult == null)
+            {
+                IsRecognizing = false;
+                return;
+            }
+            if (RecResult == "Failure")
+            {
+                ListeningDisplay.Visibility = Visibility.Collapsed;
+                StatusText.Visibility = Visibility.Visible;
+                StatusText.Text = "麦克风未检测到声音输入";
+            }
+            else
+            {
+                ListeningDisplay.Visibility = Visibility.Collapsed;
+                StatusText.Visibility = Visibility.Visible;
+                StatusText.Text = RecResult;
+            }
+
+            IsRecognizing = false;
+        }
+
+        protected async override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            if (IsRecognizing)
+            {
+                Cancellation.Cancel();
+                await SpeechRec.StopRecognitionAsync();
+            }
+            else
+            {
+                Cancellation.Dispose();
+                Cancellation = null;
+            }
             SpeechRec.Dispose();
+            SpeechRec = null;
             LoadTask = null;
+            StatusText.Visibility = Visibility.Collapsed;
+            ListeningDisplay.Visibility = Visibility.Collapsed;
         }
 
         private async Task<string> WindowsLocalRecognizeAsync()
@@ -71,12 +123,28 @@ namespace SmartLens
             {
                 return "正在初始化，请稍后再试";
             }
-            var Result = await SpeechRec.RecognizeAsync();
+
+            SpeechRecognitionResult Result = null;
+            try
+            {
+                Result = await SpeechRec.RecognizeAsync();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            if(Cancellation.IsCancellationRequested)
+            {
+                Cancellation.Dispose();
+                Cancellation = null;
+                return null;
+            }
+
             if (Result.Status == SpeechRecognitionResultStatus.Success && Result.RulePath != null)
             {
                 switch (Result.Constraint.Tag)
                 {
-                    case "MusicControl":
+                    case "Control":
                         {
                             List<string> Path = Result.RulePath.ToList();
                             if (Path.Count >= 2)
@@ -84,19 +152,33 @@ namespace SmartLens
                                 switch (Path[1])
                                 {
                                     case "Play":
-                                        PlayCommanded?.Invoke(null, null);
-                                        return Result.Text;
+                                        {
+                                            PlayCommanded?.Invoke(null, null);
+                                            return Result.Text;
+                                        }
                                     case "Pause":
-                                        PauseCommanded?.Invoke(null, null);
-                                        return Result.Text;
+                                        {
+                                            PauseCommanded?.Invoke(null, null);
+                                            return Result.Text;
+                                        }
                                     case "NextSong":
-                                        NextSongCommanded?.Invoke(null, null);
-                                        return Result.Text;
+                                        {
+                                            NextSongCommanded?.Invoke(null, null);
+                                            return Result.Text;
+                                        }
                                     case "PreviousSong":
-                                        PreviousSongCommanded?.Invoke(null, null);
-                                        return Result.Text;
+                                        {
+                                            PreviousSongCommanded?.Invoke(null, null);
+                                            return Result.Text;
+                                        }
+                                    case "Weather":
+                                        {
+                                            string WeatherInfo = HomePage.ThisPage.WeatherCtr.GetTodayWeatherDescribtion();
+                                            return WeatherInfo ?? "天气数据加载中...暂时无法查询";
+                                        }
+
                                     default:
-                                        return "Unrecognized";
+                                        return "Unrecognized未知命令";
                                 }
                             }
                             else return "None";
@@ -107,7 +189,7 @@ namespace SmartLens
                             return Result.Text;
                         }
                     default:
-                        return "Unrecognized";
+                        return "Unrecognized未知命令";
                 }
 
             }
@@ -116,33 +198,6 @@ namespace SmartLens
                 return "Failure";
             }
         }
-
-        private async void Ellipse_PointerPressed(object sender, PointerRoutedEventArgs e)
-        {
-            if (IsRecognizing)
-            {
-                return;
-            }
-            IsRecognizing = true;
-
-            ProRing.Visibility = Visibility.Visible;
-            ProRing.IsActive = true;
-            StatusText.Text = "正在聆听……";
-            string temp = await WindowsLocalRecognizeAsync();
-            if (temp == "Failure")
-            {
-                StatusText.Text = "麦克风未检测到声音输入";
-            }
-            else
-            {
-                StatusText.Text = temp;
-            }
-            ProRing.IsActive = false;
-            ProRing.Visibility = Visibility.Collapsed;
-
-            IsRecognizing = false;
-        }
-
 
         #region 百度云识别(弃用)
         //private AudioRecorder Recorder = new AudioRecorder();

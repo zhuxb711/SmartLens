@@ -19,6 +19,6 @@
             <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
         <CalendarView Grid.Column="1" Name="Calendar" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" BorderThickness="0"/>
-        <local:WeatherControl Grid.Row="1" Grid.Column="1" x:Name="WeatherCtr"/>
+        <local:WeatherControl x:FieldModifier="public" Grid.Row="1" Grid.Column="1" x:Name="WeatherCtr"/>
     </Grid>
 </Page>

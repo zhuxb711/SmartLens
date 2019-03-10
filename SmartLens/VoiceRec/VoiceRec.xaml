@@ -26,7 +26,7 @@
                 <SymbolIcon IsHitTestVisible="False" Symbol="Microphone"/>
             </Viewbox>
         </Grid>
-        <RichTextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,349" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <RichTextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Paragraph TextIndent="30">
                 <Run Text="您可以说：" Foreground="Aqua" FontSize="25"/>
             </Paragraph>
@@ -40,11 +40,12 @@
                 <Run Text="暂停音乐" Foreground="Aqua" FontSize="25"/>
             </Paragraph>
         </RichTextBlock>
-        <Grid Grid.RowSpan="3" Grid.Column="2">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <ProgressRing Height="50" Width="50" HorizontalAlignment="Stretch" Visibility="Collapsed" Margin="0,0,10,0" VerticalAlignment="Center" Name="ProRing" x:FieldModifier="Public"/>
-                <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Center" Foreground="Aqua" FontSize="25" TextAlignment="Center" TextWrapping="Wrap" Name="StatusText" x:FieldModifier="Public"/>
+        <Grid Grid.RowSpan="3" Grid.Column="2" Name="Gri">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Name="ListeningDisplay" Visibility="Collapsed">
+                <ProgressRing Height="50" Width="50" IsActive="True" HorizontalAlignment="Center" Margin="0,0,10,0" VerticalAlignment="Center" x:FieldModifier="Public"/>
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="正在聆听……" Foreground="Aqua" FontSize="25" TextAlignment="Center" TextWrapping="Wrap"/>
             </StackPanel>
+            <TextBlock Visibility="Collapsed" Width="{x:Bind Gri.Width,Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Aqua" FontSize="25" TextAlignment="Center" TextWrapping="Wrap" Name="StatusText" x:FieldModifier="Public"/>
         </Grid>
     </Grid>
 </Page>

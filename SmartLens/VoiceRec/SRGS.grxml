@@ -13,6 +13,9 @@
       <item>
         <ruleref uri="#PreviousSong"/>
       </item>
+      <item>
+        <ruleref uri="#Weather"/>
+      </item>
     </one-of>
   </rule>
   <rule id="Play">
@@ -59,6 +62,17 @@
         <item>上一首</item>
         <item>上一首歌</item>
         <item>上一曲</item>
+      </one-of>
+    </item>
+  </rule>
+  <rule id="Weather">
+    <item repeat="0-1">今天</item>
+    <item>
+      <one-of>
+        <item>天气如何</item>
+        <item>天气怎么样</item>
+        <item>什么天气</item>
+        <item>天气情况</item>
       </one-of>
     </item>
   </rule>

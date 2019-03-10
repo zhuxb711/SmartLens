@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -17,7 +15,7 @@ namespace SmartLens
 {
     public sealed partial class WeatherControl : UserControl
     {
-        Dictionary<string, Uri> WeatherIconCollection;
+        private Dictionary<string, Uri> WeatherIconCollection;
 
         public WeatherControl()
         {
@@ -61,6 +59,22 @@ namespace SmartLens
             WeatherIcon2.Source = new BitmapImage();
             WeatherIcon3.Source = new BitmapImage();
             WeatherIcon4.Source = new BitmapImage();
+        }
+
+        public string GetTodayWeatherDescribtion()
+        {
+            if (Describe.Text == "" || Temperature.Text == "" || Humid.Text == "" || PM.Text == "")
+            {
+                return null;
+            }
+            if (Describe.Text == "多云" || Describe.Text == "晴" || Describe.Text == "阴")
+            {
+                return "今天天气" + Describe.Text + "，气温" + Temperature.Text + "℃，" + Humid.Text + "，" + PM.Text.Insert(6, "指数");
+            }
+            else
+            {
+                return "今天有" + Describe.Text + "，气温" + Temperature.Text + "℃，" + Humid.Text + "，" + PM.Text.Insert(6, "指数");
+            }
         }
 
         public void Error(ErrorReason reason)
