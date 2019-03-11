@@ -1076,6 +1076,10 @@ namespace SmartLens
             {
                 Nav.Navigate(typeof(USBMediaPlayer), ReFile.File, new DrillInNavigationTransitionInfo());
             }
+            else if(ReFile.File.FileType==".txt")
+            {
+                Nav.Navigate(typeof(USBTextViewer), ReFile, new DrillInNavigationTransitionInfo());
+            }
         }
 
         private void GridViewControl_DragItemsStarting(object sender, DragItemsStartingEventArgs e)

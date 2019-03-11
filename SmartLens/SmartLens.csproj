@@ -114,6 +114,9 @@
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="Class\ClassCollection.cs" />
+    <Compile Include="USB\USBTextViewer.xaml.cs">
+      <DependentUpon>USBTextViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="USB\AESDialog.xaml.cs">
       <DependentUpon>AESDialog.xaml</DependentUpon>
     </Compile>
@@ -324,6 +327,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="AboutPage\About.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\USBTextViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

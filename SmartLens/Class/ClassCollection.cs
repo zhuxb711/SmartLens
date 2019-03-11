@@ -1280,6 +1280,14 @@ namespace SmartLens
             }
         }
 
+        public void FileUpdateRequested(StorageFile File,string FileSize)
+        {
+            this.File = File;
+            OnPropertyChanged("DisplayName");
+            Size = FileSize;
+            OnPropertyChanged("Size");
+        }
+
         public void NameUpdateRequested()
         {
             OnPropertyChanged("DisplayName");
