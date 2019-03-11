@@ -48,8 +48,8 @@ namespace SmartLens
             }
             else
             {
-                int temp = -1;
-                if(!int.TryParse(IMAPPort,out temp))
+                int temp;
+                if (!int.TryParse(IMAPPort,out temp))
                 {
                     IMAPPo.BorderBrush = new SolidColorBrush(Colors.Red);
                     return;
@@ -72,7 +72,7 @@ namespace SmartLens
             }
             else
             {
-                int temp = -1;
+                int temp;
                 if (!int.TryParse(SMTPPort, out temp))
                 {
                     SMTPPo.BorderBrush = new SolidColorBrush(Colors.Red);

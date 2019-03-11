@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
@@ -13,8 +12,8 @@ namespace SmartLens
     {
         private Uri MovieUri;
         public static MusicMV ThisPage { get; private set; }
-        private ObservableCollection<MVSuggestion> MVSuggestionCollection = new ObservableCollection<MVSuggestion>();
-        private NeteaseMusicAPI NetEase = NeteaseMusicAPI.GetInstance();
+        private readonly ObservableCollection<MVSuggestion> MVSuggestionCollection = new ObservableCollection<MVSuggestion>();
+        private readonly NeteaseMusicAPI NetEase = NeteaseMusicAPI.GetInstance();
         private long ArtistID;
         private bool IsSame = false;
         public MusicMV()
@@ -25,7 +24,7 @@ namespace SmartLens
 
             Loaded += async (s, e) =>
             {
-                if(IsSame)
+                if (IsSame)
                 {
                     IsSame = false;
                     return;
@@ -78,7 +77,7 @@ namespace SmartLens
 
         private async void MediaPlayer_MediaFailed(Windows.Media.Playback.MediaPlayer sender, Windows.Media.Playback.MediaPlayerFailedEventArgs args)
         {
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async() =>
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
                 ContentDialog dialog = new ContentDialog
                 {
@@ -105,7 +104,7 @@ namespace SmartLens
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if(IsSame)
+            if (IsSame)
             {
                 return;
             }

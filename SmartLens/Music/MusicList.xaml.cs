@@ -38,7 +38,7 @@ namespace SmartLens
                     MusicSongIdDictionary.Remove(item.SongID);
                 }
             }
-            else if(e.Action==NotifyCollectionChangedAction.Add)
+            else if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 foreach (PlayList item in e.NewItems)
                 {
@@ -60,7 +60,7 @@ namespace SmartLens
 
         private async void PlayAll_Click(object sender, RoutedEventArgs e)
         {
-            if(MediaPlayList.FavouriteSongList.Items.Count==0)
+            if (MediaPlayList.FavouriteSongList.Items.Count == 0)
             {
                 ContentDialog dialog = new ContentDialog
                 {

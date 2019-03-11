@@ -33,12 +33,10 @@ namespace SmartLens
                 DataReader reader = DataReader.FromBuffer(buffer);
                 byte[] fileContent = new byte[reader.UnconsumedBufferLength];
                 reader.ReadBytes(fileContent);
-                string FileText = "";
-
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 Encoding GBKEncoding = Encoding.GetEncoding("GBK");
 
-                FileText = GBKEncoding.GetString(fileContent);
+                string FileText = GBKEncoding.GetString(fileContent);
                 Text.Text = FileText;
             }
         }

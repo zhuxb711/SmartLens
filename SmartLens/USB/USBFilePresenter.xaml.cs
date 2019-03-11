@@ -629,9 +629,9 @@ namespace SmartLens
                 if (IsDeleteRequest)
                 {
                     await SelectedFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
-                    for(int i=0;i<FileCollection.Count;i++)
+                    for (int i = 0; i < FileCollection.Count; i++)
                     {
-                        if(FileCollection[i].DisplayName==SelectedFile.DisplayName)
+                        if (FileCollection[i].DisplayName == SelectedFile.DisplayName)
                         {
                             FileCollection.Remove(FileCollection[i]);
                             break;
@@ -924,7 +924,7 @@ namespace SmartLens
                     HasUnrealizedChildren = false
                 });
                 USBControl.ThisPage.FolderDictionary[RelativeId].Add(NewFolder);
-                JUMP: continue;
+            JUMP: continue;
             }
         }
 
@@ -1068,15 +1068,15 @@ namespace SmartLens
             {
                 Nav.Navigate(typeof(ZipExplorer), ReFile, new DrillInNavigationTransitionInfo());
             }
-            else if(ReFile.File.FileType == ".jpg"|| ReFile.File.FileType == ".png"|| ReFile.File.FileType == ".bmp")
+            else if (ReFile.File.FileType == ".jpg" || ReFile.File.FileType == ".png" || ReFile.File.FileType == ".bmp")
             {
                 Nav.Navigate(typeof(USBPhotoViewer), ReFile.File.FolderRelativeId, new DrillInNavigationTransitionInfo());
             }
-            else if(ReFile.File.FileType==".mkv"|| ReFile.File.FileType == ".mp4"|| ReFile.File.FileType == ".mp3" || ReFile.File.FileType == ".flac")
+            else if (ReFile.File.FileType == ".mkv" || ReFile.File.FileType == ".mp4" || ReFile.File.FileType == ".mp3" || ReFile.File.FileType == ".flac")
             {
                 Nav.Navigate(typeof(USBMediaPlayer), ReFile.File, new DrillInNavigationTransitionInfo());
             }
-            else if(ReFile.File.FileType==".txt")
+            else if (ReFile.File.FileType == ".txt")
             {
                 Nav.Navigate(typeof(USBTextViewer), ReFile, new DrillInNavigationTransitionInfo());
             }
@@ -1085,7 +1085,7 @@ namespace SmartLens
         private void GridViewControl_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
         {
             AddToZipQueue.Clear();
-            foreach(RemovableDeviceFile item in e.Items)
+            foreach (RemovableDeviceFile item in e.Items)
             {
                 AddToZipQueue.Enqueue(item.File);
             }
@@ -1099,9 +1099,9 @@ namespace SmartLens
                 ZipFile zipFile = new ZipFile(ZipFileStream);
                 try
                 {
-                    await Task.Run(async() =>
+                    await Task.Run(async () =>
                     {
-                        while(AddToZipQueue.Count>0)
+                        while (AddToZipQueue.Count > 0)
                         {
                             zipFile.BeginUpdate();
 

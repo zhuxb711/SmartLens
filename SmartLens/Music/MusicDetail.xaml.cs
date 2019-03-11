@@ -1,21 +1,21 @@
-﻿using System;
+﻿using SmartLens.NetEase;
+using System;
+using Windows.Media.Playback;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
-using Windows.Media.Playback;
-using SmartLens.NetEase;
-using Windows.UI.Core;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
 {
     public sealed partial class MusicDetail : Page
     {
-        private NeteaseMusicAPI NetEaseMusic = NeteaseMusicAPI.GetInstance();
+        private readonly NeteaseMusicAPI NetEaseMusic = NeteaseMusicAPI.GetInstance();
         public DispatcherTimer timer = new DispatcherTimer();
-        private DispatcherTimer timer1 = new DispatcherTimer();
+        private readonly DispatcherTimer timer1 = new DispatcherTimer();
         private long LastSongID;
 
         public MusicDetail()
@@ -134,7 +134,7 @@ namespace SmartLens
             {
                 PlayList PL = MusicList.ThisPage.MusicInfo[Convert.ToInt32(MediaPlayList.FavouriteSongList.CurrentItemIndex)];
 
-                if (PL.SongID==LastSongID)
+                if (PL.SongID == LastSongID)
                 {
                     return;
                 }
@@ -420,7 +420,7 @@ namespace SmartLens
         private void Timer1_Tick(object sender, object e)
         {
             BackBlurBrush.Amount += 0.5;
-            if(BackBlurBrush.Amount>=15)
+            if (BackBlurBrush.Amount >= 15)
             {
                 timer1.Stop();
             }

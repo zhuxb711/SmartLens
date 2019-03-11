@@ -83,13 +83,13 @@ namespace SmartLens
             {
                 foreach (var item in Result.result.albums)
                 {
-                    AlbumCollection.Add(new SingerAlbum(item.name,item.id ,new Uri(item.picUrl)));
+                    AlbumCollection.Add(new SingerAlbum(item.name, item.id, new Uri(item.picUrl)));
                 }
             }
 
             foreach (var item in HotSongCollection)
             {
-                if(CancelToken.IsCancellationRequested)
+                if (CancelToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -293,7 +293,7 @@ namespace SmartLens
                         break;
                     }
                 }
-                MusicList.ThisPage.MusicInfo.Add(new PlayList(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0],SSM.MVid));
+                MusicList.ThisPage.MusicInfo.Add(new PlayList(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid));
                 MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(MusicURL)));
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
                 Props.Type = Windows.Media.MediaPlaybackType.Music;
@@ -301,7 +301,7 @@ namespace SmartLens
                 Props.MusicProperties.Artist = SSM.Artist;
                 Item.ApplyDisplayProperties(Props);
                 MediaPlayList.FavouriteSongList.Items.Add(Item);
-                await SQLite.GetInstance().SetMusicData(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0],SSM.MVid);
+                await SQLite.GetInstance().SetMusicData(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid);
             }
             else
             {

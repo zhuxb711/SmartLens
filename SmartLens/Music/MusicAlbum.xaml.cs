@@ -18,8 +18,8 @@ namespace SmartLens
 {
     public sealed partial class MusicAlbum : Page
     {
-        ObservableCollection<SearchSingleMusic> AlbumCollection = new ObservableCollection<SearchSingleMusic>();
-        NeteaseMusicAPI NetEase = NeteaseMusicAPI.GetInstance();
+        readonly ObservableCollection<SearchSingleMusic> AlbumCollection = new ObservableCollection<SearchSingleMusic>();
+        readonly NeteaseMusicAPI NetEase = NeteaseMusicAPI.GetInstance();
         Song[] AlbumSong;
         bool IsSame = false;
 
@@ -88,7 +88,7 @@ namespace SmartLens
             {
                 ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("ToAlbumAnimation");
 
-                animation?.TryStart(AlbumImage, new UIElement[] { Animation});
+                animation?.TryStart(AlbumImage, new UIElement[] { Animation });
             }
             finally
             {

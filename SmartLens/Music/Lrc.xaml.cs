@@ -57,7 +57,7 @@ namespace SmartLens
         }
 
         #region 加载歌词
-        public void LoadLrc(string lrcstr,string Tlrcstr)
+        public void LoadLrc(string lrcstr, string Tlrcstr)
         {
             Lrcs.Clear();
             TLrcs.Clear();
@@ -80,7 +80,7 @@ namespace SmartLens
                 }
             }
             string[] StrCollection = lrcstr.Split('\n');
-            for (int i=0;i<StrCollection.Length;i++)
+            for (int i = 0; i < StrCollection.Length; i++)
             {
                 string str = StrCollection[i];
                 if (str.Length > 0 && str.IndexOf(":") != -1)
@@ -90,8 +90,8 @@ namespace SmartLens
                     {
                         continue;
                     }
-                    string lrc=string.Empty;
-                    if(TlrcCollection==null)
+                    string lrc = string.Empty;
+                    if (TlrcCollection == null)
                     {
                         lrc = str.Split(']')[1];
                     }
@@ -125,7 +125,7 @@ namespace SmartLens
                         Lrcs.Add(time.TotalMilliseconds, new LrcModel()
                         {
                             LrcTb = c_lrcbk,
-                            LrcText = lrc ,
+                            LrcText = lrc,
                             Time = time.TotalMilliseconds
                         });
                     }
@@ -134,7 +134,7 @@ namespace SmartLens
                         Lrcs[time.TotalMilliseconds] = new LrcModel()
                         {
                             LrcTb = c_lrcbk,
-                            LrcText = lrc ,
+                            LrcText = lrc,
                             Time = time.TotalMilliseconds
                         };
                     }
@@ -155,7 +155,7 @@ namespace SmartLens
         {
             Regex reg = new Regex(@"\[(?<time>.*)\]", RegexOptions.IgnoreCase);
             string timestr = reg.Match(str).Groups["time"].Value;
-            int m = 0;
+            int m;
             //获得分
             try
             {
@@ -166,7 +166,8 @@ namespace SmartLens
                 return TimeSpan.MaxValue;
             }
             //判断是否有小数点
-            int s = 0, f = 0;
+            int f = 0;
+            int s;
             if (timestr.Split(':')[1].IndexOf(".") != -1)
             {
                 //有
@@ -200,7 +201,7 @@ namespace SmartLens
         /// <param name="nowtime"></param>
         public void LrcRoll(double nowtime)
         {
-            if(Lrcs.Count==0)
+            if (Lrcs.Count == 0)
             {
                 return;
             }
@@ -210,8 +211,8 @@ namespace SmartLens
             }
             else
             {
-                int index = SortLrcs.FindIndex(m => m.Key>=nowtime);
-                if(index<=0||index==LastIndex)
+                int index = SortLrcs.FindIndex(m => m.Key >= nowtime);
+                if (index <= 0 || index == LastIndex)
                 {
                     return;
                 }
@@ -219,8 +220,8 @@ namespace SmartLens
                 FoucsLrc.LrcTb.FontSize = 15;
 
                 LastIndex = index;
-                LrcModel lm = SortLrcs[index-1].Value;
-                
+                LrcModel lm = SortLrcs[index - 1].Value;
+
                 FoucsLrc.LrcTb.Foreground = NoramlLrcColor;
 
 

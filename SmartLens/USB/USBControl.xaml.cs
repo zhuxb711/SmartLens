@@ -36,7 +36,7 @@ namespace SmartLens
         {
             CancelToken = new CancellationTokenSource();
             ResetEvent = new AutoResetEvent(false);
-            Nav.Navigate(typeof(USBFilePresenter),Nav,new DrillInNavigationTransitionInfo());
+            Nav.Navigate(typeof(USBFilePresenter), Nav, new DrillInNavigationTransitionInfo());
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -60,16 +60,16 @@ namespace SmartLens
                 };
                 FolderTree.RootNodes.Add(RemovableNode);
                 await FillTreeNode(RemovableNode);
-                if(RemovableNode.Children.Count==0)
+                if (RemovableNode.Children.Count == 0)
                 {
-                    RemovableNode.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay() { DisplayName="无USB设备接入"} });
+                    RemovableNode.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay() { DisplayName = "无USB设备接入" } });
                 }
             }
         }
 
         private async Task FillTreeNode(TreeViewNode node)
         {
-            StorageFolder folder = null;
+            StorageFolder folder;
             if (node.HasUnrealizedChildren == true)
             {
                 folder = node.Content as StorageFolder;
@@ -87,13 +87,13 @@ namespace SmartLens
             else
             {
                 list = await folder.GetFoldersAsync();
-                if(folder.FolderRelativeId!= RootFolderId)
+                if (folder.FolderRelativeId != RootFolderId)
                 {
                     FolderDictionary.Add(folder.FolderRelativeId, new List<StorageFolder>(list));
                 }
                 else
                 {
-                    if(list.Count==0)
+                    if (list.Count == 0)
                     {
                         node.Children.Clear();
                     }
@@ -174,7 +174,7 @@ namespace SmartLens
                 CurrentFolder = folder;
                 CurrentNode = args.InvokedItem as TreeViewNode;
 
-                if (Nav.CurrentSourcePageType.Name == "ZipExplorer" || Nav.CurrentSourcePageType.Name=="USBPhotoViewer" || Nav.CurrentSourcePageType.Name == "USBMediaPlayer")
+                if (Nav.CurrentSourcePageType.Name == "ZipExplorer" || Nav.CurrentSourcePageType.Name == "USBPhotoViewer" || Nav.CurrentSourcePageType.Name == "USBMediaPlayer" || Nav.CurrentSourcePageType.Name == "USBTextViewer")
                 {
                     Nav.GoBack();
                 }
@@ -212,7 +212,7 @@ namespace SmartLens
                     if (Thumbnail != null)
                     {
                         USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(await USBFilePresenter.ThisPage.GetSize(file), file, Thumbnail));
-                        if (file.FileType==".zip")
+                        if (file.FileType == ".zip")
                         {
                             await Task.Delay(200);
                             GridViewItem item = (USBFilePresenter.ThisPage.GridViewControl.ContainerFromIndex(USBFilePresenter.ThisPage.FileCollection.Count - 1) as GridViewItem);
@@ -331,13 +331,13 @@ namespace SmartLens
         private async void CreateFolder_Click(object sender, RoutedEventArgs e)
         {
             var CurrentFolder = (CurrentNode.Content as StorageFolder);
-            var NewFolder=await CurrentFolder.CreateFolderAsync("新建文件夹", CreationCollisionOption.GenerateUniqueName);
+            var NewFolder = await CurrentFolder.CreateFolderAsync("新建文件夹", CreationCollisionOption.GenerateUniqueName);
             CurrentNode.Children.Add(new TreeViewNode
             {
                 Content = NewFolder,
                 HasUnrealizedChildren = false
             });
-            if(FolderDictionary.ContainsKey(CurrentFolder.FolderRelativeId))
+            if (FolderDictionary.ContainsKey(CurrentFolder.FolderRelativeId))
             {
                 FolderDictionary[CurrentFolder.FolderRelativeId].Add(NewFolder);
             }

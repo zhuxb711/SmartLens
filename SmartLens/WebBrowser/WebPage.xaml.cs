@@ -145,7 +145,7 @@ namespace SmartLens
         private string GetJsonFromWeb(string Context)
         {
             string url = "http://suggestion.baidu.com/su?wd=" + Context + "&cb=window.baidu.sug";
-            string str = "";
+            string str;
             try
             {
                 Uri uri = new Uri(url);

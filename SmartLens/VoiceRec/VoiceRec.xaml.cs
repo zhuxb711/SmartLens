@@ -124,7 +124,7 @@ namespace SmartLens
                 return "正在初始化，请稍后再试";
             }
 
-            SpeechRecognitionResult Result = null;
+            SpeechRecognitionResult Result;
             try
             {
                 Result = await SpeechRec.RecognizeAsync();

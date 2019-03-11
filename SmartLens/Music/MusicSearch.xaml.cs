@@ -1,17 +1,17 @@
-﻿using System;
+﻿using SmartLens.NetEase;
+using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Windows.Media.Core;
+using Windows.Media.Playback;
 using Windows.UI;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using Windows.Media.Playback;
-using SmartLens.NetEase;
-using Windows.UI.Xaml.Media.Animation;
-using System.Threading.Tasks;
-using Windows.UI.Xaml;
 
 namespace SmartLens
 {
@@ -20,10 +20,10 @@ namespace SmartLens
         public static long ForDetail_ID { get; set; }
         public static string ForDetail_ImageURL { get; set; }
         public static string ForDetail_Name { get; set; }
-        private NeteaseMusicAPI NetEaseMusic = NeteaseMusicAPI.GetInstance();
+        private readonly NeteaseMusicAPI NetEaseMusic = NeteaseMusicAPI.GetInstance();
         public ObservableCollection<SearchSingleMusic> SingleMusicList = new ObservableCollection<SearchSingleMusic>();
-        private ObservableCollection<SearchSinger> SingerList = new ObservableCollection<SearchSinger>();
-        private ObservableCollection<SearchAlbum> AlbumList = new ObservableCollection<SearchAlbum>();
+        private readonly ObservableCollection<SearchSinger> SingerList = new ObservableCollection<SearchSinger>();
+        private readonly ObservableCollection<SearchAlbum> AlbumList = new ObservableCollection<SearchAlbum>();
         Frame MusicNav = null;
 
         public MusicSearch()
@@ -294,12 +294,12 @@ namespace SmartLens
                 LoadingControl.IsLoading = false;
                 await Task.Delay(500);
 
-                Image image=((SingerControl.ContainerFromItem(e.ClickedItem) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("SingerImage") as Image;
+                Image image = ((SingerControl.ContainerFromItem(e.ClickedItem) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("SingerImage") as Image;
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ToSingerAnimation", image).Configuration = new BasicConnectedAnimationConfiguration();
-               
+
                 ConnectedAnimationService.GetForCurrentView().DefaultDuration = TimeSpan.FromMilliseconds(400);
 
-                MusicNav.Navigate(typeof(MusicSinger), Result,new DrillInNavigationTransitionInfo());
+                MusicNav.Navigate(typeof(MusicSinger), Result, new DrillInNavigationTransitionInfo());
             }
         }
 

@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using TagLib;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -7,9 +10,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using System;
-using TagLib;
-using System.Threading.Tasks;
 
 namespace SmartLens
 {

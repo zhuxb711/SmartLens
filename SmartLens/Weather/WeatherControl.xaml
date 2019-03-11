@@ -1,66 +1,68 @@
 ﻿<UserControl
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:SmartLens"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:Custom="using:Microsoft.Toolkit.Uwp.UI.Controls"
     x:Class="SmartLens.WeatherControl"
-    mc:Ignorable="d" d:DesignHeight="480" d:DesignWidth="274.673" Name="User" 
-    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
-    <Grid Background="Transparent" Name="Stk">
+    mc:Ignorable="d"
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" d:DesignWidth="290" d:DesignHeight="400">
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="75"/>
-            <RowDefinition Height="360*"/>
+            <RowDefinition Height="100"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Name="Location" FontSize="18" TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
-        <TextBlock Name="Describe" FontSize="18" Grid.Column="1" TextAlignment="Center" TextWrapping="Wrap"/>
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1">
-            <TextBlock Margin="25,0,0,0" x:Name="Temperature" FontSize="55" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="60"/>
-            <TextBlock HorizontalAlignment="Stretch" Text="℃" FontSize="25" TextWrapping="Wrap" VerticalAlignment="Top" Height="30" Width="30"/>
-        </StackPanel>
-        <StackPanel Grid.Column="1" HorizontalAlignment="Stretch" Grid.Row="1" VerticalAlignment="Stretch">
-            <Border BorderBrush="Black" Background="Cyan" CornerRadius="8" HorizontalAlignment="Center" Height="20" VerticalAlignment="Center" Width="97">
-                <TextBlock Name="PM" HorizontalAlignment="Stretch" TextAlignment="Center" Foreground="White" FontSize="14" VerticalAlignment="Stretch"/>
-            </Border>
-            <TextBlock Name="Wind" HorizontalAlignment="Center" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="100" Height="20" Margin="0,5"/>
-            <TextBlock Name="Humid" HorizontalAlignment="Center" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="100" Height="20"/>
-        </StackPanel>
-        <StackPanel Grid.ColumnSpan="2" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Line Stroke="Gray" HorizontalAlignment="Center" Height="4" VerticalAlignment="Center" Width="{Binding ElementName=Stk, Path=ActualWidth}" X1="0" Y1="2" X2="{Binding ElementName=Stk, Path=ActualWidth}" Y2="2"/>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Horizontal">
-                <TextBlock HorizontalAlignment="Stretch" Margin="-5,0,0,0" Name="Date1" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="62.5" Height="27"/>
-                <TextBlock HorizontalAlignment="Stretch" Margin="15,0,0,0" Name="Date2" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="62.5" Height="27"/>
-                <TextBlock HorizontalAlignment="Stretch" Margin="15,0,0,0" Name="Date3" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="62.5" Height="27"/>
-                <TextBlock HorizontalAlignment="Stretch" Margin="15,0,0,0" Name="Date4" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="62.5" Height="27"/>
+        <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Vertical">
+                <TextBlock TextAlignment="Justify" FontSize="19" Name="Location"/>
+                <StackPanel Orientation="Horizontal">
+                    <Image Width="70" Height="60" Stretch="Uniform" Name="TodayWeatherIcon"/>
+                    <StackPanel Margin="5,0,0,0" Orientation="Horizontal">
+                        <TextBlock Name="Temperature" FontSize="52" TextAlignment="Center" TextWrapping="Wrap" Width="60"/>
+                        <TextBlock HorizontalAlignment="Stretch" Text="℃" FontSize="25" TextWrapping="Wrap" VerticalAlignment="Top" Height="30" Width="30"/>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Horizontal">
-                <Image HorizontalAlignment="Stretch" Margin="-5,0,0,0" Name="WeatherIcon1" Height="50" VerticalAlignment="Stretch" Width="62.5" Stretch="Uniform"/>
-                <Image HorizontalAlignment="Stretch" Margin="15,0,0,0" Name="WeatherIcon2" Height="50" VerticalAlignment="Stretch" Width="62.5" Stretch="Uniform"/>
-                <Image HorizontalAlignment="Stretch" Margin="15,0,0,0" Name="WeatherIcon3" Height="50" VerticalAlignment="Stretch" Width="62.5" Stretch="Uniform"/>
-                <Image HorizontalAlignment="Stretch" Margin="15,0,0,0" Name="WeatherIcon4" Height="50" VerticalAlignment="Stretch" Width="62.5" Stretch="Uniform"/>
+            <Line X1="5" X2="5" Y1="5" Y2="95" Stroke="Gray"/>
+            <StackPanel Margin="10,0,0,0">
+                <TextBlock Name="Describe" FontSize="18" TextAlignment="Center" TextWrapping="Wrap"/>
+                <Border BorderBrush="Black" Margin="0,5,0,0" Background="DeepSkyBlue" CornerRadius="8" HorizontalAlignment="Center" Height="20" VerticalAlignment="Center" Width="97">
+                    <TextBlock Name="PM" HorizontalAlignment="Stretch" TextAlignment="Center" Foreground="White" FontSize="14" VerticalAlignment="Stretch"/>
+                </Border>
+                <TextBlock Name="Wind" HorizontalAlignment="Center" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="100" Margin="0,5,0,0"/>
+                <TextBlock Name="Humid" HorizontalAlignment="Center" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="100" Margin="0,5,0,0"/>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Line Stroke="Gray" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" X1="5" Y1="2" X2="280" Y2="2"/>
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Orientation="Horizontal">
+                <StackPanel Margin="3,0,0,0" Orientation="Vertical">
+                    <TextBlock HorizontalAlignment="Stretch" Name="Date1" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="50" Height="20"/>
+                    <Image HorizontalAlignment="Stretch" Name="WeatherIcon1" Height="50" VerticalAlignment="Stretch" Width="50" Stretch="Uniform"/>
+                </StackPanel>
+                <StackPanel Margin="27,0,0,0" Orientation="Vertical">
+                    <TextBlock HorizontalAlignment="Stretch" Name="Date2" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="50" Height="20"/>
+                    <Image HorizontalAlignment="Stretch" Name="WeatherIcon2" Height="50" VerticalAlignment="Stretch" Width="50" Stretch="Uniform"/>
+                </StackPanel>
+                <StackPanel Margin="27,0,0,0" Orientation="Vertical">
+                    <TextBlock HorizontalAlignment="Stretch" Name="Date3" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="50" Height="20"/>
+                    <Image HorizontalAlignment="Stretch" Name="WeatherIcon3" Height="50" VerticalAlignment="Stretch" Width="50" Stretch="Uniform"/>
+                </StackPanel>
+                <StackPanel Margin="26,0,0,0" Orientation="Vertical">
+                    <TextBlock HorizontalAlignment="Stretch" Name="Date4" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Stretch" Width="50" Height="20"/>
+                    <Image HorizontalAlignment="Stretch" Name="WeatherIcon4" Height="50" VerticalAlignment="Stretch" Width="50" Stretch="Uniform"/>
+                </StackPanel>
             </StackPanel>
             <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <TextBlock Height="20" Text="最高温" FontSize="15"/>
-                <Line Stroke="Gray" HorizontalAlignment="Stretch" Height="4" VerticalAlignment="Center" X1="0" Y1="2" X2="{Binding ElementName=Stk, Path=ActualWidth}" Y2="2"/>
-                <Canvas Margin="25,10,0,0" HorizontalAlignment="Center" Height="80" VerticalAlignment="Stretch" Width="{Binding ElementName=Stk, Path=ActualWidth}" x:Name="PolyUpContainer"/>
-                <TextBlock Height="20" Text="最低温" FontSize="15"/>
-                <Line Stroke="Gray" HorizontalAlignment="Stretch" Height="4" VerticalAlignment="Center" X1="0" Y1="2" X2="{Binding ElementName=Stk, Path=ActualWidth}" Y2="2"/>
-                <Canvas Margin="25,10,0,0" HorizontalAlignment="Center" Height="80" VerticalAlignment="Stretch" Width="{Binding ElementName=Stk, Path=ActualWidth}" x:Name="PolyDownContainer"/>
-            </StackPanel>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Horizontal">
-                <TextBlock HorizontalAlignment="Stretch" Margin="-5,0,0,0" Name="Wind1" TextAlignment="Center" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Stretch" Height="68" Width="56"/>
-                <TextBlock HorizontalAlignment="Stretch" Margin="20,0,0,0" Name="Wind2" TextAlignment="Center" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Stretch" Height="68" Width="56"/>
-                <TextBlock HorizontalAlignment="Stretch" Margin="20,0,0,0" Name="Wind3" TextAlignment="Center" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Stretch" Height="68" Width="56"/>
-                <TextBlock HorizontalAlignment="Stretch" Margin="20,0,0,0" Name="Wind4" TextAlignment="Center" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Stretch" Height="68" Width="56"/>
+                <TextBlock Height="20" Margin="5,0,0,0" Text="最高温" FontSize="15"/>
+                <Line Stroke="Gray" HorizontalAlignment="Stretch" Height="4" VerticalAlignment="Center" X1="5" Y1="2" X2="280" Y2="2"/>
+                <Canvas Margin="0,10,0,0" HorizontalAlignment="Center" Height="80" VerticalAlignment="Stretch" Width="280" x:Name="PolyUpContainer"/>
+                <TextBlock Height="20" Margin="5,0,0,0" Text="最低温" FontSize="15"/>
+                <Line Stroke="Gray" HorizontalAlignment="Stretch" Height="4" VerticalAlignment="Center" X1="5" Y1="2" X2="280" Y2="2"/>
+                <Canvas Margin="0,10,0,0" HorizontalAlignment="Center" Height="80" VerticalAlignment="Stretch" Width="280" x:Name="PolyDownContainer"/>
             </StackPanel>
         </StackPanel>
-        <Custom:Loading x:Name="LoadingControl" IsLoading="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Grid.RowSpan="3">
+        <Custom:Loading x:Name="LoadingControl" IsLoading="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Grid.RowSpan="2">
             <Custom:Loading.Background>
                 <SolidColorBrush Color="Black" Opacity="0.8"/>
             </Custom:Loading.Background>

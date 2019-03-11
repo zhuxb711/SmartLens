@@ -55,10 +55,6 @@ namespace SmartLens
             };
 
             HomePage.WeatherDataGenarated += ThisPage_WeatherDataGenarated;
-            WeatherIcon1.Source = new BitmapImage();
-            WeatherIcon2.Source = new BitmapImage();
-            WeatherIcon3.Source = new BitmapImage();
-            WeatherIcon4.Source = new BitmapImage();
         }
 
         public string GetTodayWeatherDescribtion()
@@ -109,14 +105,42 @@ namespace SmartLens
                 };
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
+                BitmapImage Image = new BitmapImage();
+                TodayWeatherIcon.Source = Image;
+                Image.UriSource = WeatherIconCollection[e.Data.forecast[0].type];
+
                 for (int i = 1; i <= 4; i++)
                 {
                     switch (i)
                     {
-                        case 1: (WeatherIcon1.Source as BitmapImage).UriSource = WeatherIconCollection[e.Data.forecast[i].type]; break;
-                        case 2: (WeatherIcon2.Source as BitmapImage).UriSource = WeatherIconCollection[e.Data.forecast[i].type]; break;
-                        case 3: (WeatherIcon3.Source as BitmapImage).UriSource = WeatherIconCollection[e.Data.forecast[i].type]; break;
-                        case 4: (WeatherIcon4.Source as BitmapImage).UriSource = WeatherIconCollection[e.Data.forecast[i].type]; break;
+                        case 1:
+                            {
+                                BitmapImage image = new BitmapImage();
+                                WeatherIcon1.Source = image;
+                                image.UriSource = WeatherIconCollection[e.Data.forecast[i].type];
+                                break;
+                            }
+                        case 2:
+                            {
+                                BitmapImage image = new BitmapImage();
+                                WeatherIcon2.Source = image;
+                                image.UriSource = WeatherIconCollection[e.Data.forecast[i].type];
+                                break;
+                            }
+                        case 3:
+                            {
+                                BitmapImage image = new BitmapImage();
+                                WeatherIcon3.Source = image;
+                                image.UriSource = WeatherIconCollection[e.Data.forecast[i].type];
+                                break;
+                            }
+                        case 4:
+                            {
+                                BitmapImage image = new BitmapImage();
+                                WeatherIcon4.Source = image;
+                                image.UriSource = WeatherIconCollection[e.Data.forecast[i].type];
+                                break;
+                            }
                     }
                 }
                 WeatherIconCollection?.Clear();
@@ -127,9 +151,9 @@ namespace SmartLens
             int[] temp = new int[4];
             int[] temp1 = new int[4];
             list.CopyTo(temp);
-            list.CopyTo(temp1);
+            list1.CopyTo(temp1);
 
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async() =>
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
                 PointCollection PCollection1 = GetPolyLineChartPoints(list);
                 PointCollection PCollection2 = GetPolyLineChartPoints(list1);
@@ -137,7 +161,9 @@ namespace SmartLens
                 await ApplyToScreen(PCollection1, PCollection2, ref temp, ref temp1);
 
                 Location.Text = e.Location;
+
                 Describe.Text = e.Data.forecast[0].type;
+
                 Temperature.Text = e.Data.wendu;
                 PM.Text = "PM2.5  " + e.Data.forecast[0].aqi.ToString();
 
@@ -149,10 +175,6 @@ namespace SmartLens
                 Date3.Text = e.Data.forecast[3].week;
                 Date4.Text = e.Data.forecast[4].week;
 
-                Wind1.Text = e.Data.forecast[1].notice;
-                Wind2.Text = e.Data.forecast[2].notice;
-                Wind3.Text = e.Data.forecast[3].notice;
-                Wind4.Text = e.Data.forecast[4].notice;
                 LoadingControl.IsLoading = false;
             });
         }
@@ -160,14 +182,15 @@ namespace SmartLens
         private PointCollection GetPolyLineChartPoints(List<int> datas, int TopHeight = 80, int MaxValue = 50)
         {
             PointCollection PCollection = new PointCollection();
-            int x = 10;
+            int x = 0;
             int[] temp = new int[4];
             datas.CopyTo(temp);
             datas.Sort();
             int Max = datas[3];
             int Min = datas[0];
             int MaxDecMin = Max - Min;
-            int DistanceBetweenXPoint = 80;
+            int DistanceBetweenXPoint = 90;
+            PCollection.Add(new Point(x, 80));
             for (int i = 0; i < 4; i++)
             {
                 int y;
@@ -184,29 +207,28 @@ namespace SmartLens
                 PCollection.Add(point);
                 x += DistanceBetweenXPoint;
             }
-
+            PCollection.Add(new Point(x - DistanceBetweenXPoint, 80));
             return PCollection;
         }
 
         private Task ApplyToScreen(PointCollection UPCollection, PointCollection DPCollection, ref int[] UDataGroup, ref int[] DDataGroup)
         {
             PolyUpContainer.Children.Clear();
-            Polyline PLU = new Polyline
+            Polygon PLU = new Polygon
             {
                 Points = UPCollection,
-                Stroke = new SolidColorBrush(Colors.Cyan),
+                Fill = new SolidColorBrush(Colors.SkyBlue),
                 Height = 80,
-                Width=350,
+                Width = 350,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                StrokeThickness = 2.5
+                HorizontalAlignment = HorizontalAlignment.Center
             };
             PolyUpContainer.Children.Add(PLU);
-            for (int i = 0; i < UPCollection.Count; i++)
+            for (int i = 1; i < 5; i++)
             {
                 TextBlock text = new TextBlock
                 {
-                    Text = UDataGroup[i].ToString(),
+                    Text = UDataGroup[i - 1].ToString(),
                     FontSize = 11,
                     TextAlignment = TextAlignment.Center
                 };
@@ -216,22 +238,21 @@ namespace SmartLens
             }
 
             PolyDownContainer.Children.Clear();
-            Polyline PLD = new Polyline
+            Polygon PLD = new Polygon
             {
                 Points = DPCollection,
-                Stroke = new SolidColorBrush(Colors.Cyan),
+                Fill = new SolidColorBrush(Colors.SkyBlue),
                 Height = 80,
-                Width=350,
+                Width = 350,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                StrokeThickness = 2.5
+                HorizontalAlignment = HorizontalAlignment.Center
             };
             PolyDownContainer.Children.Add(PLD);
-            for (int i = 0; i < DPCollection.Count; i++)
+            for (int i = 1; i < 5; i++)
             {
                 TextBlock text = new TextBlock
                 {
-                    Text = DDataGroup[i].ToString(),
+                    Text = DDataGroup[i - 1].ToString(),
                     FontSize = 11,
                     TextAlignment = TextAlignment.Center
                 };
