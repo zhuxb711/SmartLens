@@ -1080,14 +1080,18 @@ namespace SmartLens
             {
                 Nav.Navigate(typeof(USBTextViewer), ReFile, new DrillInNavigationTransitionInfo());
             }
+            else if (ReFile.File.FileType == ".pdf")
+            {
+                Nav.Navigate(typeof(USBPdfReader), ReFile.File, new DrillInNavigationTransitionInfo());
+            }
         }
 
         private void GridViewControl_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
         {
-            AddToZipQueue.Clear();
+            AddToZipQueue?.Clear();
             foreach (RemovableDeviceFile item in e.Items)
             {
-                AddToZipQueue.Enqueue(item.File);
+                AddToZipQueue?.Enqueue(item.File);
             }
         }
 

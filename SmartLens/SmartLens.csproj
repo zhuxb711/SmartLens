@@ -115,6 +115,9 @@
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="Class\ClassCollection.cs" />
+    <Compile Include="USB\USBPdfReader.xaml.cs">
+      <DependentUpon>USBPdfReader.xaml</DependentUpon>
+    </Compile>
     <Compile Include="USB\USBTextViewer.xaml.cs">
       <DependentUpon>USBTextViewer.xaml</DependentUpon>
     </Compile>
@@ -328,6 +331,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="AboutPage\About.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="USB\USBPdfReader.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -48,20 +48,29 @@ namespace SmartLens
             string Result = await GetInfoAsync(URL);
             if (Result != "")
             {
-                WeatherInfo = await GetWeatherWithCityAsync(GetDistrictByAnalysisJSON(Result));
-                if(WeatherInfo==null)
+                await Task.Run(async() =>
                 {
-                    WeatherCtr.Error(ErrorReason.APIError);
-                    return;
-                }
-                if (WeatherInfo.status == 200)
-                {
-                    WeatherDataGenarated?.Invoke(null, new WeatherData(WeatherInfo.data, jp.result.addressComponent.city + jp.result.addressComponent.district));
-                }
-                else
-                {
-                    WeatherCtr.Error(ErrorReason.APIError);
-                }
+                    WeatherInfo = await GetWeatherWithCityAsync(GetDistrictByAnalysisJSON(Result));
+                    if (WeatherInfo == null)
+                    {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            WeatherCtr.Error(ErrorReason.APIError);
+                        });
+                        return;
+                    }
+                    if (WeatherInfo.status == 200)
+                    {
+                        WeatherDataGenarated?.Invoke(null, new WeatherData(WeatherInfo.data, jp.result.addressComponent.city + jp.result.addressComponent.district));
+                    }
+                    else
+                    {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            WeatherCtr.Error(ErrorReason.APIError);
+                        });
+                    }
+                });
             }
         }
 

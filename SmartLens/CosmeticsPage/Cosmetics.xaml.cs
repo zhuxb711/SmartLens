@@ -1,6 +1,5 @@
 ﻿using DlibDotNet;
 using Microsoft.Toolkit.Uwp.Helpers;
-using OpenCVBridge;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,6 +17,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using OpenCVBridge;
 
 namespace SmartLens
 {
@@ -32,6 +32,7 @@ namespace SmartLens
         AutoResetEvent WaitForTaskComplete = null;
         AutoResetEvent WaitUntilInitialFinshed = null;
         DisplayRequest StayAwake = null;
+        SoftwareBitmapSource ImageSource = null;
         OpenCVLibrary OpenCV = null;
         List<Windows.Foundation.Point> PointsCollection = null;
         byte[] DlibImageArray;
@@ -137,7 +138,8 @@ namespace SmartLens
         {
             WaitForTaskComplete = new AutoResetEvent(false);
             WaitUntilInitialFinshed = new AutoResetEvent(false);
-            CaptureControl.Source = new SoftwareBitmapSource();
+            ImageSource = new SoftwareBitmapSource();
+            CaptureControl.Source = ImageSource;
             PointsCollection = new List<Windows.Foundation.Point>();
 
             CosmeticsList = new ObservableCollection<CosmeticsItem>();
@@ -247,13 +249,11 @@ namespace SmartLens
 
         private async void CamHelper_FrameArrived(object sender, FrameEventArgs e)
         {
-
             var softwarebitmap = e.VideoFrame?.SoftwareBitmap;
             if (softwarebitmap != null)
             {
                 try
                 {
-                    softwarebitmap = SoftwareBitmap.Convert(softwarebitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
                     softwarebitmap = Interlocked.Exchange(ref BackImageBuffer, softwarebitmap);
                 }
                 catch (Exception)
@@ -268,32 +268,33 @@ namespace SmartLens
                 }
                 IsTaskRunning = true;
 
-                SoftwareBitmap temp = null;
-                while ((temp = Interlocked.Exchange(ref BackImageBuffer, null)) != null)
+                SoftwareBitmap CapturedImage = null;
+                while ((CapturedImage = Interlocked.Exchange(ref BackImageBuffer, null)) != null)
                 {
+                    CapturedImage = SoftwareBitmap.Convert(CapturedImage, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
 
                     Windows.Storage.Streams.Buffer buffer = new Windows.Storage.Streams.Buffer(1228800);
-                    temp.CopyToBuffer(buffer);
-                    using (var dataReader = DataReader.FromBuffer(buffer))
+                    CapturedImage.CopyToBuffer(buffer);
+                    using (var Reader = DataReader.FromBuffer(buffer))
                     {
-                        dataReader.ReadBytes(DlibImageArray);
+                        Reader.ReadBytes(DlibImageArray);
                     }
-                    using (Array2D<RgbPixel> img = Dlib.LoadImageData<RgbPixel>(ImagePixelFormat.Bgra, DlibImageArray, 480, 640, 2560))
+                    using (Array2D<RgbPixel> ImageData = Dlib.LoadImageData<RgbPixel>(ImagePixelFormat.Bgra, DlibImageArray, 480, 640, 2560))
                     {
-                        var Faces = DlibFunction(img);
+                        List<FullObjectDetection> Faces = DlibFunction(ImageData);
                         if (Faces != null)
                         {
-                            foreach (var item in Faces)
+                            for (int j = 0; j < Faces.Count; j++)
                             {
-                                using (item)
+                                using (FullObjectDetection FaceObject = Faces[j])
                                 {
-                                    for (int i = 48; i < item.Parts; i++)
+                                    for (uint i = 48; i < FaceObject.Parts; i++)
                                     {
-                                        var Points = item.GetPart((uint)i);
+                                        var Points = FaceObject.GetPart(i);
                                         PointsCollection.Add(new Windows.Foundation.Point(Points.X, Points.Y));
                                     }
                                 }
-                                OpenCV.ApplyLipstickPrimaryMethod(temp, temp, PointsCollection, color);
+                                OpenCV.ApplyLipstickPrimaryMethod(CapturedImage, CapturedImage, PointsCollection, color);
                                 PointsCollection.Clear();
                             }
 
@@ -302,7 +303,7 @@ namespace SmartLens
                             {
                                 try
                                 {
-                                    var task = (CaptureControl.Source as SoftwareBitmapSource).SetBitmapAsync(temp);
+                                    var task = ImageSource.SetBitmapAsync(CapturedImage);
                                 }
                                 catch (Exception) { }
                             });
@@ -313,7 +314,7 @@ namespace SmartLens
                             {
                                 try
                                 {
-                                    var task = (CaptureControl.Source as SoftwareBitmapSource).SetBitmapAsync(temp);
+                                    var task = ImageSource.SetBitmapAsync(CapturedImage);
                                 }
                                 catch (Exception) { }
                             });
@@ -344,8 +345,8 @@ namespace SmartLens
 
             await Task.Run(() =>
             {
-                WaitForTaskComplete.WaitOne();
                 CamHelper.FrameArrived -= CamHelper_FrameArrived;
+                WaitForTaskComplete.WaitOne();
             });
 
             if (PointsCollection != null)
@@ -365,14 +366,20 @@ namespace SmartLens
             {
                 OpenCV = null;
             }
+
             BackImageBuffer?.Dispose();
             BackImageBuffer = null;
 
             CancelToken?.Dispose();
+
             CosmeticsList.Clear();
             CosmeticsList = null;
+
             CaptureControl.Source = null;
+            ImageSource?.Dispose();
+
             DlibImageArray = null;
+
             WaitForTaskComplete.Dispose();
             WaitUntilInitialFinshed.Dispose();
 
@@ -380,7 +387,6 @@ namespace SmartLens
             Windows.ApplicationModel.Core.CoreApplication.LeavingBackground -= CoreApplication_LeavingBackground;
             Windows.ApplicationModel.Core.CoreApplication.Suspending -= CoreApplication_Suspending;
             Windows.ApplicationModel.Core.CoreApplication.Resuming -= CoreApplication_Resuming;
-
         }
 
         private List<FullObjectDetection> DlibFunction(Array2D<RgbPixel> img)

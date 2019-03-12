@@ -103,32 +103,38 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="70*"/>
+            <RowDefinition Height="50"/>
             <RowDefinition Height="70"/>
             <RowDefinition Height="60"/>
             <RowDefinition Height="50"/>
-            <RowDefinition Height="35"/>
-            <RowDefinition Height="473*"/>
+            <RowDefinition/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="124*"/>
-            <ColumnDefinition Width="200"/>
-            <ColumnDefinition Width="200"/>
-            <ColumnDefinition Width="300"/>
             <ColumnDefinition Width="50"/>
-            <ColumnDefinition Width="500*"/>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <ToggleSwitch Header="蓝牙" OnContent="开" OffContent="关" HorizontalAlignment="Stretch" Grid.Row="1" VerticalAlignment="Stretch" Name="BluetoothSwitch" Toggled="BluetoothSwitch_Toggled" Grid.Column="1"/>
         <ToggleSwitch Header="WIFI" OnContent="开" OffContent="关" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Stretch" Name="WiFiSwitch" Toggled="WiFiSwitch_Toggled" Grid.Column="1"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Name="Progressing" Visibility="Collapsed" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <TextBlock Text="正在刷新" FontSize="15" MinWidth="80" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-            <ProgressRing HorizontalAlignment="Stretch" VerticalAlignment="Center" MinHeight="20" MinWidth="20" IsActive="True"/>
-        </StackPanel>
-        <ListView Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" ItemTemplate="{StaticResource WiFiNormalState}" Name="WiFiControl" VerticalAlignment="Top" MinHeight="400" MaxHeight="500" ItemClick="WiFiControl_ItemClick" IsItemClickEnabled="True" SelectionChanged="WiFiControl_SelectionChanged" x:FieldModifier="Public"/>
+        <Grid Grid.Row="3" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" Name="Progressing" Visibility="Collapsed">
+                <TextBlock Text="正在刷新" FontSize="15" MinWidth="80" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                <ProgressRing HorizontalAlignment="Stretch" VerticalAlignment="Center" MinHeight="20" MinWidth="20" IsActive="True"/>
+            </StackPanel>
+            <ListView Grid.Row="1" ItemTemplate="{StaticResource WiFiNormalState}" Name="WiFiControl" ItemClick="WiFiControl_ItemClick" IsItemClickEnabled="True" SelectionChanged="WiFiControl_SelectionChanged" x:FieldModifier="Public" Grid.RowSpan="2"/>
+        </Grid>
         <ComboBox Grid.Column="3" Grid.Row="1" Header="选择摄像头设备" HorizontalAlignment="Stretch" MinHeight="30" Name="CameraSelection" DisplayMemberPath="DisplayName"/>
-        <Button Grid.Row="2" Grid.Column="3" Width="160" Height="40" Content="重置SmartLens" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
-        <Button Grid.Row="3" Grid.Column="3" Width="160" Height="40" Content="清除缓存" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
+        <Button Grid.Row="2" Grid.Column="3" Width="160" Height="40" Content="重置SmartLens" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
+        <Button Grid.Row="3" Grid.Column="3" Width="160" Height="40" Content="清除缓存" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
         <ToggleSwitch Grid.Row="1" IsOn="{x:Bind local:ThemeSwitcher.IsLightEnabled}" Grid.Column="5" Header="切换主题模式(重启SmartLens生效)" OnContent="Light模式" OffContent="Dark模式" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Theme" Toggled="Theme_Toggled"/>
-        <Button Grid.Row="2" Grid.Column="5" Width="160" Height="40" Content="导出错误日志" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
+        <Button Grid.Row="2" Grid.Column="5" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
     </Grid>
 </Page>

@@ -174,7 +174,7 @@ namespace SmartLens
                 CurrentFolder = folder;
                 CurrentNode = args.InvokedItem as TreeViewNode;
 
-                if (Nav.CurrentSourcePageType.Name == "ZipExplorer" || Nav.CurrentSourcePageType.Name == "USBPhotoViewer" || Nav.CurrentSourcePageType.Name == "USBMediaPlayer" || Nav.CurrentSourcePageType.Name == "USBTextViewer")
+                if (Nav.CurrentSourcePageType.Name != "USBFilePresenter")
                 {
                     Nav.GoBack();
                 }

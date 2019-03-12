@@ -47,8 +47,9 @@ void OpenCVLibrary::ApplyLipstickPrimaryMethod(SoftwareBitmap ^ input, SoftwareB
 
 	Result.convertTo(Result, Result.type(), 1.2, 15);
 
-	cvtColor(Result, outputMat, COLOR_BGR2BGRA);
+	Result.copyTo(outputMat);
 
+	cvtColor(Result, outputMat, COLOR_BGR2BGRA);
 }
 
 bool OpenCVLibrary::GetPointerToPixelData(SoftwareBitmap ^ bitmap, unsigned char ** pPixelData, unsigned int * capacity)
