@@ -47,8 +47,6 @@ void OpenCVLibrary::ApplyLipstickPrimaryMethod(SoftwareBitmap ^ input, SoftwareB
 
 	Result.convertTo(Result, Result.type(), 1.2, 15);
 
-	Result.copyTo(outputMat);
-
 	cvtColor(Result, outputMat, COLOR_BGR2BGRA);
 }
 
