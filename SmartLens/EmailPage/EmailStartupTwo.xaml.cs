@@ -83,7 +83,7 @@ namespace SmartLens
 
             Data.SetExtraData(IMAPAddress, int.Parse(IMAPPort), SMTPAddress, int.Parse(SMTPPort), IsEnableSSL);
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailPresenter), Data, new DrillInNavigationTransitionInfo());
-            ApplicationData.Current.LocalSettings.Values["EmailStartup"] = "True";
+            ApplicationData.Current.RoamingSettings.Values["EmailStartup"] = "True";
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

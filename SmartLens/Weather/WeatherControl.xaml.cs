@@ -75,14 +75,25 @@ namespace SmartLens
 
         public void Error(ErrorReason reason)
         {
-            if (reason == ErrorReason.NetWork)
+            switch(reason)
             {
-                Notise.Text = "网络连接失败";
+                case ErrorReason.Location:
+                    {
+                        Notise.Text = "地理位置授权被拒绝";
+                        break;
+                    }
+                case ErrorReason.NetWork:
+                    {
+                        Notise.Text = "网络连接失败";
+                        break;
+                    }
+                case ErrorReason.APIError:
+                    {
+                        Notise.Text = "天气API异常";
+                        break;
+                    }
             }
-            else
-            {
-                Notise.Text = "地理位置授权被拒绝";
-            }
+
             Pro.Visibility = Visibility.Collapsed;
             Retry.Visibility = Visibility.Visible;
         }

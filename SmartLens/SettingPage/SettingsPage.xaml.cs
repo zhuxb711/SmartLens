@@ -1,25 +1,26 @@
 ﻿using Microsoft.Toolkit.Uwp.Connectivity;
+using Microsoft.Toolkit.Uwp.Helpers;
+using Microsoft.Toolkit.Uwp.Notifications;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Radios;
 using Windows.Devices.WiFi;
+using Windows.Media.Capture.Frames;
 using Windows.Security.Credentials;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.UI.Core;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using Windows.UI.Core;
-using System.Collections.Generic;
-using Microsoft.Toolkit.Uwp.Helpers;
-using Windows.Media.Capture.Frames;
-using Windows.Storage;
-using Windows.ApplicationModel.Core;
-using Microsoft.Toolkit.Uwp.Notifications;
-using Windows.UI.Notifications;
-using System.IO;
 
 namespace SmartLens
 {
@@ -70,6 +71,7 @@ namespace SmartLens
         {
             WiFiContainer = await SQLite.GetInstance().GetAllWiFiData();
             var Size = await GetFolderSize(ApplicationData.Current.TemporaryFolder.Path);
+
             ClearCache.Content = "清除缓存(" + (Size / 1024 < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
             (Size / 1048576 >= 1024 ? Math.Round(Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Size / 1048576f, 2).ToString() + " MB")) + ")";
@@ -136,7 +138,7 @@ namespace SmartLens
             }
             MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
 
-            if(MediaFraSourceGroup.Count==0)
+            if (MediaFraSourceGroup.Count == 0)
             {
                 CameraSelection.Items.Add(new EmptyCameraDevice());
                 CameraSelection.SelectedIndex = 0;
@@ -144,14 +146,14 @@ namespace SmartLens
             }
 
             CameraSelection.ItemsSource = MediaFraSourceGroup;
-            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] == null)
+            if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] == null)
             {
                 CameraSelection.SelectedIndex = 0;
-                ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
+                ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
             }
             else
             {
-                string LastSelectedCameraSource = ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"].ToString();
+                string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 for (int i = 0; i < MediaFraSourceGroup.Count; i++)
                 {
                     if (MediaFraSourceGroup[i].DisplayName == LastSelectedCameraSource)
@@ -163,7 +165,7 @@ namespace SmartLens
                 if (CameraSelection.SelectedIndex == -1)
                 {
                     CameraSelection.SelectedIndex = 0;
-                    ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
+                    ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
                 }
             }
 
@@ -174,7 +176,7 @@ namespace SmartLens
                     if (CameraSelection.SelectedIndex >= 0)
                     {
                         CameraProvider.SetCameraFrameSource(MediaFraSourceGroup[CameraSelection.SelectedIndex]);
-                        ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[CameraSelection.SelectedIndex].DisplayName;
+                        ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[CameraSelection.SelectedIndex].DisplayName;
                     }
                 };
             }
@@ -627,7 +629,7 @@ namespace SmartLens
 
         private void Theme_Toggled(object sender, RoutedEventArgs e)
         {
-            if(Theme.IsOn)
+            if (Theme.IsOn)
             {
                 ThemeSwitcher.IsLightEnabled = false;
             }
@@ -648,6 +650,37 @@ namespace SmartLens
             };
             await contentDialog.ShowAsync();
             ClearCache.Content = "清除缓存(0KB)";
+        }
+
+        private async void ErrorExport_Click(object sender, RoutedEventArgs e)
+        {
+            if(await ApplicationData.Current.RoamingFolder.FileExistsAsync("ErrorLog.txt"))
+            {
+                FileSavePicker Picker = new FileSavePicker
+                {
+                    SuggestedStartLocation = PickerLocationId.Desktop,
+                    CommitButtonText = "保存",
+                    DefaultFileExtension = ".txt",
+                    SuggestedFileName = "SmartLens错误日志"
+                };
+                Picker.FileTypeChoices.Add("文本文件", new List<string> { ".txt" });
+
+                if ((await Picker.PickSaveFileAsync()) is StorageFile file)
+                {
+                    var LogFile = await ApplicationData.Current.RoamingFolder.GetFileAsync("ErrorLog.txt");
+                    await LogFile.CopyAndReplaceAsync(file);
+                }
+            }
+            else
+            {
+                ContentDialog dialog = new ContentDialog
+                {
+                    Title = "提示",
+                    Content = "无可用的错误日志导出",
+                    CloseButtonText = "确定"
+                };
+                await dialog.ShowAsync();
+            }
         }
     }
 }

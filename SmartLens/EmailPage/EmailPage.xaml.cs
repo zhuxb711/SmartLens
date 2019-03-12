@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -20,12 +21,12 @@ namespace SmartLens
 
         private void EmailPage_Loaded(object sender, RoutedEventArgs e)
         {
-            string Status = ApplicationData.Current.LocalSettings.Values["EmailStartup"]?.ToString();
-            if (Status==null)
+            string Status = ApplicationData.Current.RoamingSettings.Values["EmailStartup"]?.ToString();
+            if (Status == null)
             {
                 Nav.Navigate(typeof(EmailStartupOne), Nav, new DrillInNavigationTransitionInfo());
             }
-            else if(Status=="True")
+            else if (Status == "True")
             {
                 Nav.Navigate(typeof(EmailPresenter), null, new DrillInNavigationTransitionInfo());
             }
@@ -33,7 +34,7 @@ namespace SmartLens
 
         protected async override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            if(EmailPresenter.ThisPage==null)
+            if (EmailPresenter.ThisPage == null)
             {
                 return;
             }

@@ -226,15 +226,15 @@ namespace SmartLens
     #region 联网音乐搜索提供类
     public sealed class NeteaseMusicAPI
     {
-        private string _MODULUS = "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7";
-        private string _NONCE = "0CoJUm6Qyw8W8jud";
-        private string _PUBKEY = "010001";
-        private string _VI = "0102030405060708";
-        private string _USERAGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
-        private string _COOKIE = "os=pc;osver=Microsoft-Windows-10-Professional-build-16299.125-64bit;appver=2.0.3.131777;channel=netease;__remember_me=true";
-        private string _REFERER = "http://music.163.com/";
-        private string _secretKey;
-        private string _encSecKey;
+        private readonly string _MODULUS = "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7";
+        private readonly string _NONCE = "0CoJUm6Qyw8W8jud";
+        private readonly string _PUBKEY = "010001";
+        private readonly string _VI = "0102030405060708";
+        private readonly string _USERAGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
+        private readonly string _COOKIE = "os=pc;osver=Microsoft-Windows-10-Professional-build-16299.125-64bit;appver=2.0.3.131777;channel=netease;__remember_me=true";
+        private readonly string _REFERER = "http://music.163.com/";
+        private readonly string _secretKey;
+        private readonly string _encSecKey;
         private static NeteaseMusicAPI Netease = null;
 
         private NeteaseMusicAPI()
@@ -339,7 +339,7 @@ namespace SmartLens
                 {
                     reqparm.Add(keyPair.Key, keyPair.Value);
                 }
-                flag:
+            flag:
                 try
                 {
                     byte[] responsebytes = wc.UploadValues(url, method, reqparm);
@@ -370,7 +370,7 @@ namespace SmartLens
             Radio = 1009,
         }
 
-        public Task<T> Search<T>(string keyword, int limit = 30, int offset = 0, SearchType type = SearchType.Song) where T:class
+        public Task<T> Search<T>(string keyword, int limit = 30, int offset = 0, SearchType type = SearchType.Song) where T : class
         {
             return Task.Run(() =>
             {
@@ -604,15 +604,15 @@ namespace SmartLens
     #region 专辑搜索类
     public sealed class SearchAlbum
     {
-        public Uri ImageUri { get;private set; }
+        public Uri ImageUri { get; private set; }
 
-        public string Name { get;private set; }
+        public string Name { get; private set; }
 
-        public string Artists { get;private set; }
+        public string Artists { get; private set; }
 
         public long ID { get; private set; }
 
-        public SearchAlbum(Uri ImageUri, string Name, string Artists,long ID)
+        public SearchAlbum(Uri ImageUri, string Name, string Artists, long ID)
         {
             this.ImageUri = ImageUri;
             this.Name = Name;
@@ -630,7 +630,7 @@ namespace SmartLens
 
         public long ID { get; private set; }
 
-        public SingerAlbum(string Name,long ID, Uri CoverUri)
+        public SingerAlbum(string Name, long ID, Uri CoverUri)
         {
             this.Name = Name;
             this.ID = ID;
@@ -751,7 +751,7 @@ namespace SmartLens
         }
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public PlayList(string Music, string Artist, string Album, string Duration, string ImageUrl, long SongID,long MVid, bool LoadAsGray = false)
+        public PlayList(string Music, string Artist, string Album, string Duration, string ImageUrl, long SongID, long MVid, bool LoadAsGray = false)
         {
             this.Music = Music;
             this.Artist = Artist;
@@ -798,7 +798,7 @@ namespace SmartLens
 
         public static SQLite GetInstance()
         {
-            if(Lock==null)
+            if (Lock == null)
             {
                 Lock = new object();
             }
@@ -927,7 +927,7 @@ namespace SmartLens
             }
             if (MusicList.ThisPage.MusicInfo.Count != 0)
             {
-                var bitmap= new BitmapImage();
+                var bitmap = new BitmapImage();
                 MusicList.ThisPage.Image1.Source = bitmap;
                 bitmap.UriSource = new Uri(MusicList.ThisPage.MusicInfo[0].ImageUrl);
             }
@@ -1280,7 +1280,7 @@ namespace SmartLens
             }
         }
 
-        public void FileUpdateRequested(StorageFile File,string FileSize)
+        public void FileUpdateRequested(StorageFile File, string FileSize)
         {
             this.File = File;
             OnPropertyChanged("DisplayName");
@@ -1336,14 +1336,14 @@ namespace SmartLens
         public string Type { get; private set; }
         public string IsCrypted { get; private set; }
 
-        public ZipFileDisplay(string Name,string Type, string CompresionSize, string ActualSize,string Time,bool IsCrypted)
+        public ZipFileDisplay(string Name, string Type, string CompresionSize, string ActualSize, string Time, bool IsCrypted)
         {
             this.CompresionSize = CompresionSize;
             this.Name = Name;
             this.Time = Time;
             this.Type = Type;
             this.ActualSize = ActualSize;
-            if(IsCrypted)
+            if (IsCrypted)
             {
                 this.IsCrypted = "密码保护：是";
             }
@@ -1365,18 +1365,18 @@ namespace SmartLens
     #region Zip相关枚举
     public enum KeySize
     {
-        None=0,
-        AES128=128,
-        AES256=256
+        None = 0,
+        AES128 = 128,
+        AES256 = 256
     }
 
     public enum CompressionLevel
     {
-        Max=9,
-        AboveStandard=7,
-        Standard=5,
-        BelowStandard=3,
-        PackOnly=1
+        Max = 9,
+        AboveStandard = 7,
+        Standard = 5,
+        BelowStandard = 3,
+        PackOnly = 1
     }
     #endregion
 
@@ -1391,7 +1391,7 @@ namespace SmartLens
             }
 
             var IsEnable = (bool)value;
-            if(IsEnable)
+            if (IsEnable)
             {
                 return Visibility.Visible;
             }
@@ -1518,8 +1518,7 @@ namespace SmartLens
             double originHorizontalOffset = scrollViewer.HorizontalOffset;
             double originVerticalOffset = scrollViewer.VerticalOffset;
 
-            EventHandler<object> layoutUpdatedHandler = null;
-            layoutUpdatedHandler = delegate
+            void layoutUpdatedHandler(object sender, object e)
             {
                 listViewBase.LayoutUpdated -= layoutUpdatedHandler;
 
@@ -1527,20 +1526,21 @@ namespace SmartLens
                 double targetHorizontalOffset = scrollViewer.HorizontalOffset;
                 double targetVerticalOffset = scrollViewer.VerticalOffset;
 
-                EventHandler<ScrollViewerViewChangedEventArgs> scrollHandler = null;
-                scrollHandler = delegate
+                void scrollHandler(object s, ScrollViewerViewChangedEventArgs m)
                 {
                     scrollViewer.ViewChanged -= scrollHandler;
 
                     // 最终目的，带平滑滚动效果滚动到 item。
                     scrollViewer.ChangeView(targetHorizontalOffset, targetVerticalOffset, null);
-                };
+                }
+
                 scrollViewer.ViewChanged += scrollHandler;
 
                 // 复原位置，且不需要使用动画效果。
                 scrollViewer.ChangeView(originHorizontalOffset, originVerticalOffset, null, true);
 
-            };
+            }
+
             listViewBase.LayoutUpdated += layoutUpdatedHandler;
 
             listViewBase.ScrollIntoView(item, alignment);
@@ -1550,12 +1550,12 @@ namespace SmartLens
 
     #region 主题切换器
     public sealed class ThemeSwitcher
-    { 
+    {
         public static bool IsLightEnabled
         {
             get
             {
-                if (ApplicationData.Current.LocalSettings.Values["ThemeValue"] is string Theme)
+                if (ApplicationData.Current.RoamingSettings.Values["ThemeValue"] is string Theme)
                 {
                     if (Theme == "Dark")
                     {
@@ -1568,7 +1568,7 @@ namespace SmartLens
                 }
                 else
                 {
-                    ApplicationData.Current.LocalSettings.Values["ThemeValue"] = "Dark";
+                    ApplicationData.Current.RoamingSettings.Values["ThemeValue"] = "Dark";
                     return false;
                 }
             }
@@ -1576,11 +1576,11 @@ namespace SmartLens
             {
                 if (value)
                 {
-                    ApplicationData.Current.LocalSettings.Values["ThemeValue"] = "Dark";
+                    ApplicationData.Current.RoamingSettings.Values["ThemeValue"] = "Dark";
                 }
                 else
                 {
-                    ApplicationData.Current.LocalSettings.Values["ThemeValue"] = "Light";
+                    ApplicationData.Current.RoamingSettings.Values["ThemeValue"] = "Light";
                 }
             }
         }
@@ -1604,7 +1604,8 @@ namespace SmartLens
     public enum ErrorReason
     {
         Location = 0,
-        NetWork = 1
+        NetWork = 1,
+        APIError=2
     }
     #endregion
 
@@ -1692,25 +1693,25 @@ namespace SmartLens
 
         public void GetStorageData()
         {
-            if (ApplicationData.Current.LocalSettings.Values["EmailCredentialName"] is byte[] Name && ApplicationData.Current.LocalSettings.Values["EmailCredentialPassword"] is byte[] Password)
+            if (ApplicationData.Current.RoamingSettings.Values["EmailCredentialName"] is byte[] Name && ApplicationData.Current.RoamingSettings.Values["EmailCredentialPassword"] is byte[] Password)
             {
                 string DecryptName = Encoding.UTF8.GetString(AESProvider.Decrypt(Name, AESProvider.Admin256Key, 256));
                 string DecryptPassword = Encoding.UTF8.GetString(AESProvider.Decrypt(Password, AESProvider.Admin256Key, 256));
                 Credential = new NetworkCredential(DecryptName, DecryptPassword);
             }
-            if(ApplicationData.Current.LocalSettings.Values["EmailIMAPAddress"] is string IMAPAddress && ApplicationData.Current.LocalSettings.Values["EmailIMAPPort"] is int IMAPPort)
+            if (ApplicationData.Current.RoamingSettings.Values["EmailIMAPAddress"] is string IMAPAddress && ApplicationData.Current.RoamingSettings.Values["EmailIMAPPort"] is int IMAPPort)
             {
                 IMAPServerAddress = new KeyValuePair<string, int>(IMAPAddress, IMAPPort);
             }
-            if(ApplicationData.Current.LocalSettings.Values["EmailSMTPAddress"] is string SMTPAddress && ApplicationData.Current.LocalSettings.Values["EmailSMTPPort"] is int SMTPPort)
+            if (ApplicationData.Current.RoamingSettings.Values["EmailSMTPAddress"] is string SMTPAddress && ApplicationData.Current.RoamingSettings.Values["EmailSMTPPort"] is int SMTPPort)
             {
                 SMTPServerAddress = new KeyValuePair<string, int>(SMTPAddress, SMTPPort);
             }
-            if(ApplicationData.Current.LocalSettings.Values["EmailEnableSSL"] is bool EnableSSL)
+            if (ApplicationData.Current.RoamingSettings.Values["EmailEnableSSL"] is bool EnableSSL)
             {
                 IsEnableSSL = EnableSSL;
             }
-            if (ApplicationData.Current.LocalSettings.Values["EmailCallName"] is string CallName)
+            if (ApplicationData.Current.RoamingSettings.Values["EmailCallName"] is string CallName)
             {
                 this.CallName = CallName;
             }
@@ -1738,7 +1739,7 @@ namespace SmartLens
             {
                 await IMAPClient.ConnectAsync(IMAPServerAddress.Key, IMAPServerAddress.Value, IsEnableSSL, ConnectionCancellation.Token);
             }
-            if(!IMAPClient.IsAuthenticated)
+            if (!IMAPClient.IsAuthenticated)
             {
                 await IMAPClient.AuthenticateAsync(Credential.UserName, Credential.Password, ConnectionCancellation.Token);
             }
@@ -1752,8 +1753,8 @@ namespace SmartLens
             {
                 await SMTPClient.ConnectAsync(SMTPServerAddress.Key, SMTPServerAddress.Value, IsEnableSSL, ConnectionCancellation.Token);
             }
-            if(!SMTPClient.IsAuthenticated)
-            { 
+            if (!SMTPClient.IsAuthenticated)
+            {
                 await SMTPClient.AuthenticateAsync(Credential.UserName, Credential.Password, ConnectionCancellation.Token);
             }
             SMTPOprationLock.Set();
@@ -1786,7 +1787,7 @@ namespace SmartLens
         public void SetEmailServerAddress(List<KeyValuePair<EmailProtocol, KeyValuePair<string, int>>> EmailAddress, bool IsEnableSSL)
         {
             this.IsEnableSSL = IsEnableSSL;
-            ApplicationData.Current.LocalSettings.Values["EmailEnableSSL"] = IsEnableSSL;
+            ApplicationData.Current.RoamingSettings.Values["EmailEnableSSL"] = IsEnableSSL;
 
             foreach (var Protocol in EmailAddress)
             {
@@ -1795,15 +1796,15 @@ namespace SmartLens
                     case EmailProtocol.IMAP:
                         {
                             IMAPServerAddress = Protocol.Value;
-                            ApplicationData.Current.LocalSettings.Values["EmailIMAPAddress"] = IMAPServerAddress.Key;
-                            ApplicationData.Current.LocalSettings.Values["EmailIMAPPort"] = IMAPServerAddress.Value;
+                            ApplicationData.Current.RoamingSettings.Values["EmailIMAPAddress"] = IMAPServerAddress.Key;
+                            ApplicationData.Current.RoamingSettings.Values["EmailIMAPPort"] = IMAPServerAddress.Value;
                             break;
                         }
                     case EmailProtocol.SMTP:
                         {
                             SMTPServerAddress = Protocol.Value;
-                            ApplicationData.Current.LocalSettings.Values["EmailSMTPAddress"] = SMTPServerAddress.Key;
-                            ApplicationData.Current.LocalSettings.Values["EmailSMTPPort"] = SMTPServerAddress.Value;
+                            ApplicationData.Current.RoamingSettings.Values["EmailSMTPAddress"] = SMTPServerAddress.Key;
+                            ApplicationData.Current.RoamingSettings.Values["EmailSMTPPort"] = SMTPServerAddress.Value;
                             break;
                         }
                 }
@@ -1811,15 +1812,15 @@ namespace SmartLens
 
         }
 
-        public Task SetCredential(NetworkCredential Credential,string CallName)
+        public Task SetCredential(NetworkCredential Credential, string CallName)
         {
             return Task.Run(() =>
             {
                 this.Credential = Credential;
                 this.CallName = CallName;
-                ApplicationData.Current.LocalSettings.Values["EmailCallName"] = CallName;
-                ApplicationData.Current.LocalSettings.Values["EmailCredentialName"] = AESProvider.Encrypt(Encoding.UTF8.GetBytes(Credential.UserName), AESProvider.Admin256Key, 256);
-                ApplicationData.Current.LocalSettings.Values["EmailCredentialPassword"] = AESProvider.Encrypt(Encoding.UTF8.GetBytes(Credential.Password), AESProvider.Admin256Key, 256);
+                ApplicationData.Current.RoamingSettings.Values["EmailCallName"] = CallName;
+                ApplicationData.Current.RoamingSettings.Values["EmailCredentialName"] = AESProvider.Encrypt(Encoding.UTF8.GetBytes(Credential.UserName), AESProvider.Admin256Key, 256);
+                ApplicationData.Current.RoamingSettings.Values["EmailCredentialPassword"] = AESProvider.Encrypt(Encoding.UTF8.GetBytes(Credential.Password), AESProvider.Admin256Key, 256);
             });
         }
 
@@ -1834,6 +1835,9 @@ namespace SmartLens
             SMTPClient?.Dispose();
 
             SMTPOprationLock?.Dispose();
+            IMAPClient = null;
+            SMTPClient = null;
+            SMTPOprationLock = null;
             Instance = null;
         }
     }
@@ -1859,7 +1863,7 @@ namespace SmartLens
             this.SendType = SendType;
         }
 
-        public InfomationDeliver(string From,string Title)
+        public InfomationDeliver(string From, string Title)
         {
             To = null;
             this.From = From;
@@ -1889,7 +1893,7 @@ namespace SmartLens
         ReplyToAll = 0,
         Reply = 1,
         NormalSend = 2,
-        Forward=3
+        Forward = 3
     }
     #endregion
 

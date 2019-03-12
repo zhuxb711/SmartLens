@@ -1,23 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+﻿using DlibDotNet;
 using Microsoft.Toolkit.Uwp.Helpers;
+using OpenCVBridge;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Windows.Graphics.Imaging;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using DlibDotNet;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.Storage;
-using OpenCVBridge;
-using Windows.System.Display;
 using Windows.ApplicationModel;
-using Windows.UI;
-using Windows.Storage.Streams;
+using Windows.Graphics.Imaging;
 using Windows.Media.Capture.Frames;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.System.Display;
+using Windows.UI;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
 {
@@ -67,9 +67,9 @@ namespace SmartLens
             CancelToken = new CancellationTokenSource();
             IsTaskRunning = false;
 
-            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] != null)
+            if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] != null)
             {
-                string LastSelectedCameraSource = ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"].ToString();
+                string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 var MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
                 for (int i = 0; i < MediaFraSourceGroup.Count; i++)
                 {
@@ -163,9 +163,9 @@ namespace SmartLens
             }
             CosmeticsControl.SelectedIndex = 0;
 
-            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] != null)
+            if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] != null)
             {
-                string LastSelectedCameraSource = ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"].ToString();
+                string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 var MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
                 for (int i = 0; i < MediaFraSourceGroup.Count; i++)
                 {
@@ -202,7 +202,7 @@ namespace SmartLens
                         }
                         else if (item.Subtype == "YUY2")
                         {
-                            YUY2= item.VideoFormat.MediaFrameFormat;
+                            YUY2 = item.VideoFormat.MediaFrameFormat;
                         }
                     }
                 }
@@ -210,7 +210,7 @@ namespace SmartLens
                 {
                     await CamHelper.PreviewFrameSource.SetFormatAsync(NV12);
                 }
-                else if(YUY2!=null)
+                else if (YUY2 != null)
                 {
                     await CamHelper.PreviewFrameSource.SetFormatAsync(YUY2);
                 }
@@ -227,7 +227,7 @@ namespace SmartLens
                 ContentDialog Message = new ContentDialog
                 {
                     Title = "错误",
-                    Content = "无法启动相机预览,错误消息如下：\r\r"+ex.Message,
+                    Content = "无法启动相机预览,错误消息如下：\r\r" + ex.Message,
                     CloseButtonText = "确定"
                 };
                 await Message.ShowAsync();
@@ -302,7 +302,7 @@ namespace SmartLens
                             {
                                 try
                                 {
-                                    var task=(CaptureControl.Source as SoftwareBitmapSource).SetBitmapAsync(temp);
+                                    var task = (CaptureControl.Source as SoftwareBitmapSource).SetBitmapAsync(temp);
                                 }
                                 catch (Exception) { }
                             });
@@ -313,7 +313,7 @@ namespace SmartLens
                             {
                                 try
                                 {
-                                    var task= (CaptureControl.Source as SoftwareBitmapSource).SetBitmapAsync(temp);
+                                    var task = (CaptureControl.Source as SoftwareBitmapSource).SetBitmapAsync(temp);
                                 }
                                 catch (Exception) { }
                             });

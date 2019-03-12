@@ -1,24 +1,30 @@
 ﻿using System;
+using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
 {
-    /// <summary>
-    /// 可用于自身或导航至 Frame 内部的空白页。
-    /// </summary>
     public sealed partial class BlueScreen : Page
     {
         public BlueScreen()
         {
             InitializeComponent();
+            Loaded += BlueScreen_Loaded;
+        }
+
+        private async void BlueScreen_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            var ErrorFile = await ApplicationData.Current.RoamingFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
+            string CurrentTime = DateTime.Now.ToShortDateString() + "，" + DateTime.Now.ToShortTimeString();
+            await FileIO.AppendTextAsync(ErrorFile, CurrentTime + Message.Text + "\r\r");
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if(e.Parameter is Exception exception)
+            if (e.Parameter is string ExceptionMessage)
             {
-                Message.Text = "\r以下是错误信息：\r\rException Code错误代码：" + exception.HResult + "\r\rMessage错误消息：" + exception.Message + "\r\rSource来源：" + exception.Source + "\r\rStackTrace堆栈追踪：\r" + exception.StackTrace;
+                Message.Text = ExceptionMessage;
             }
         }
     }

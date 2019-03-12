@@ -41,9 +41,9 @@ namespace SmartLens
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             EmailService = EmailProtocolServiceProvider.GetInstance();
-            if(e.Parameter is EmailLoginData data)
+            if (e.Parameter is EmailLoginData data)
             {
-                EmailService.SetCredential(new System.Net.NetworkCredential(data.EmailAddress, data.Password),data.CallName);
+                EmailService.SetCredential(new System.Net.NetworkCredential(data.EmailAddress, data.Password), data.CallName);
                 KeyValuePair<EmailProtocol, KeyValuePair<string, int>> IMAP = new KeyValuePair<EmailProtocol, KeyValuePair<string, int>>(EmailProtocol.IMAP, new KeyValuePair<string, int>(data.IMAPAddress, data.IMAPPort));
                 KeyValuePair<EmailProtocol, KeyValuePair<string, int>> SMTP = new KeyValuePair<EmailProtocol, KeyValuePair<string, int>>(EmailProtocol.SMTP, new KeyValuePair<string, int>(data.SMTPAddress, data.SMTPPort));
                 EmailService.SetEmailServerAddress(new List<KeyValuePair<EmailProtocol, KeyValuePair<string, int>>> { IMAP, SMTP }, data.IsEnableSSL);
@@ -281,7 +281,7 @@ namespace SmartLens
 
         private async void Sync_Click(object sender, RoutedEventArgs e)
         {
-            if(Updating)
+            if (Updating)
             {
                 return;
             }
@@ -440,9 +440,9 @@ namespace SmartLens
             }
         }
 
-        public void LoadingActivation(bool IsLoading,string Text=null)
+        public void LoadingActivation(bool IsLoading, string Text = null)
         {
-            if(IsLoading)
+            if (IsLoading)
             {
                 LoadingControl.IsLoading = true;
                 LoadingText.Text = Text;
@@ -503,7 +503,7 @@ namespace SmartLens
                     MarkRead.Label = "标记为已读";
                 }
             }
-            if(Nav.CurrentSourcePageType.Name=="EmailSender")
+            if (Nav.CurrentSourcePageType.Name == "EmailSender")
             {
                 Nav.GoBack();
             }
@@ -525,7 +525,7 @@ namespace SmartLens
                 Content = "此操作将注销当前账户\r\r可能需要重新输入相关信息，是否继续？",
                 Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
             };
-            if((await dialog.ShowAsync())!=ContentDialogResult.Primary)
+            if ((await dialog.ShowAsync()) != ContentDialogResult.Primary)
             {
                 return;
             }
@@ -547,15 +547,15 @@ namespace SmartLens
                 EmailProtocolServiceProvider.GetInstance().Dispose();
             }
 
-            ApplicationData.Current.LocalSettings.Values["EmailStartup"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailCredentialName"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailCredentialPassword"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailIMAPAddress"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailIMAPPort"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailSMTPAddress"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailSMTPPort"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailEnableSSL"] = null;
-            ApplicationData.Current.LocalSettings.Values["EmailCallName"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailStartup"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailCredentialName"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailCredentialPassword"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailIMAPAddress"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailIMAPPort"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailSMTPAddress"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailSMTPPort"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailEnableSSL"] = null;
+            ApplicationData.Current.RoamingSettings.Values["EmailCallName"] = null;
 
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailStartupOne), EmailPage.ThisPage.Nav, new DrillInNavigationTransitionInfo());
         }

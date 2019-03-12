@@ -126,8 +126,9 @@
         </StackPanel>
         <ListView Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" ItemTemplate="{StaticResource WiFiNormalState}" Name="WiFiControl" VerticalAlignment="Top" MinHeight="400" MaxHeight="500" ItemClick="WiFiControl_ItemClick" IsItemClickEnabled="True" SelectionChanged="WiFiControl_SelectionChanged" x:FieldModifier="Public"/>
         <ComboBox Grid.Column="3" Grid.Row="1" Header="选择摄像头设备" HorizontalAlignment="Stretch" MinHeight="30" Name="CameraSelection" DisplayMemberPath="DisplayName"/>
-        <Button Grid.Row="2" Grid.Column="3" Width="180" Height="40" Content="重置SmartLens" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
-        <Button Grid.Row="3" Grid.Column="3" Width="180" Height="40" Content="清除缓存" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
+        <Button Grid.Row="2" Grid.Column="3" Width="160" Height="40" Content="重置SmartLens" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
+        <Button Grid.Row="3" Grid.Column="3" Width="160" Height="40" Content="清除缓存" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
         <ToggleSwitch Grid.Row="1" IsOn="{x:Bind local:ThemeSwitcher.IsLightEnabled}" Grid.Column="5" Header="切换主题模式(重启SmartLens生效)" OnContent="Light模式" OffContent="Dark模式" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Theme" Toggled="Theme_Toggled"/>
+        <Button Grid.Row="2" Grid.Column="5" Width="160" Height="40" Content="导出错误日志" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
     </Grid>
 </Page>

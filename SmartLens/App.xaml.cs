@@ -47,7 +47,15 @@ namespace SmartLens
 
                 Window.Current.Content = rootFrame;
             }
-            rootFrame.Navigate(typeof(BlueScreen), e.Exception);
+
+            string Message =
+                "\r以下是错误信息：\r\rException Code错误代码：" + e.Exception.HResult +
+                "\r\rMessage错误消息：" + e.Exception.Message +
+                "\r\rSource来源：" + (string.IsNullOrEmpty(e.Exception.Source) ? "Unknown" : e.Exception.Source) +
+                "\r\rStackTrace堆栈追踪：\r" + (string.IsNullOrEmpty(e.Exception.StackTrace) ? "Unknown" : e.Exception.StackTrace);
+
+            rootFrame.Navigate(typeof(BlueScreen), Message);
+
             e.Handled = true;
         }
 
@@ -63,7 +71,7 @@ namespace SmartLens
         /// <param name="e">有关启动请求和过程的详细信息。</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            OnLaunchOrOnActivate(e,true);
+            OnLaunchOrOnActivate(e, true);
         }
 
         protected override void OnActivated(IActivatedEventArgs args)
@@ -71,7 +79,7 @@ namespace SmartLens
             OnLaunchOrOnActivate(args);
         }
 
-        private void OnLaunchOrOnActivate(IActivatedEventArgs m,bool IsLaunch=false)
+        private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)
         {
 
             if (IsLaunch)

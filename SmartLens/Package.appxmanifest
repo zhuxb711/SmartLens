@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" xmlns:iot="http://schemas.microsoft.com/appx/manifest/iot/windows10" IgnorableNamespaces="uap mp uap3 iot">
-  <Identity Name="428cf39b-0a14-4a17-b3db-521ad0abb62e" Publisher="CN=123" Version="4.1.7.0" />
+  <Identity Name="428cf39b-0a14-4a17-b3db-521ad0abb62e" Publisher="CN=123" Version="4.2.0.0" />
   <mp:PhoneIdentity PhoneProductId="428cf39b-0a14-4a17-b3db-521ad0abb62e" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>SmartLens</DisplayName>
