@@ -15,6 +15,9 @@ namespace SmartLens
 {
     public sealed partial class WeatherControl : UserControl
     {
+        /// <summary>
+        /// 天气图标集合
+        /// </summary>
         private Dictionary<string, Uri> WeatherIconCollection;
 
         public WeatherControl()
@@ -23,6 +26,9 @@ namespace SmartLens
             OnFirstLoad();
         }
 
+        /// <summary>
+        /// 仅在第一次初始化时执行
+        /// </summary>
         private void OnFirstLoad()
         {
             WeatherIconCollection = new Dictionary<string, Uri>
@@ -54,9 +60,14 @@ namespace SmartLens
                 { "雷阵雨", new Uri("ms-appx:///Weather/WeatherIcon/lquick_rain.png") }
             };
 
+            //订阅天气数据到达事件
             HomePage.WeatherDataGenarated += ThisPage_WeatherDataGenarated;
         }
 
+        /// <summary>
+        /// 获取今日天气信息描述
+        /// </summary>
+        /// <returns>天气概述</returns>
         public string GetTodayWeatherDescribtion()
         {
             if (Describe.Text == "" || Temperature.Text == "" || Humid.Text == "" || PM.Text == "")
@@ -73,6 +84,10 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 通知天气控件发生错误，并告知用户
+        /// </summary>
+        /// <param name="reason">错误原因</param>
         public void Error(ErrorReason reason)
         {
             switch(reason)
@@ -100,6 +115,7 @@ namespace SmartLens
 
         private async void ThisPage_WeatherDataGenarated(object sender, WeatherData e)
         {
+            //使用正则表达式处理最高/最低温数据，获得纯数字信息
             List<int> list = new List<int>(4)
                 {
                     int.Parse(Regex.Replace(e.Data.forecast[1].high, @"[^0-9]+", ""))/10,
@@ -114,6 +130,8 @@ namespace SmartLens
                     int.Parse(Regex.Replace(e.Data.forecast[3].low, @"[^0-9]+", "")) / 10,
                     int.Parse(Regex.Replace(e.Data.forecast[4].low, @"[^0-9]+", "")) / 10
                 };
+
+            //设置各天气图标区域的图像，完成后清空WeatherIconCollection
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 BitmapImage Image = new BitmapImage();
