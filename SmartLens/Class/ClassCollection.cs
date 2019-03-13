@@ -997,6 +997,10 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取CameraHelper实例
+        /// </summary>
+        /// <returns>CameraHelper实例</returns>
         public static CameraHelper GetCameraHelperInstance()
         {
             lock (CreateLocker)
@@ -1625,7 +1629,7 @@ namespace SmartLens
     {
         Location = 0,
         NetWork = 1,
-        APIError=2
+        APIError = 2
     }
     #endregion
 
@@ -1703,6 +1707,11 @@ namespace SmartLens
         private KeyValuePair<string, int> IMAPServerAddress = default;
         private KeyValuePair<string, int> SMTPServerAddress = default;
         private static EmailProtocolServiceProvider Instance;
+
+        /// <summary>
+        /// 获取EmailProtocolServiceProvider的实例
+        /// </summary>
+        /// <returns>实例</returns>
         public static EmailProtocolServiceProvider GetInstance()
         {
             lock (SyncRoot)
@@ -1711,7 +1720,10 @@ namespace SmartLens
             }
         }
 
-        public void GetStorageData()
+        /// <summary>
+        /// EmailProtocolServiceProvider初始化时加载账户数据
+        /// </summary>
+        private void GetStorageData()
         {
             if (ApplicationData.Current.RoamingSettings.Values["EmailCredentialName"] is byte[] Name && ApplicationData.Current.RoamingSettings.Values["EmailCredentialPassword"] is byte[] Password)
             {
@@ -1737,11 +1749,20 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取IMailFolder对象
+        /// </summary>
+        /// <returns>IMailFolder</returns>
         public IMailFolder GetMailFolder()
         {
             return IMAPClient.Inbox;
         }
 
+        /// <summary>
+        /// 异步与IMAP和SMTP服务器建立通信连接
+        /// </summary>
+        /// <param name="ConnectionCancellation">取消指令对象</param>
+        /// <returns>无</returns>
         public async Task ConnectAllServiceAsync(CancellationTokenSource ConnectionCancellation)
         {
             if (Credential == null)
@@ -1767,6 +1788,11 @@ namespace SmartLens
             await task;
         }
 
+        /// <summary>
+        /// 异步与SMTP服务器建立连接
+        /// </summary>
+        /// <param name="ConnectionCancellation">取消指令对象</param>
+        /// <returns>无</returns>
         private async Task ConnectSendServiceAsync(CancellationTokenSource ConnectionCancellation)
         {
             if (!SMTPClient.IsConnected)
@@ -1780,6 +1806,11 @@ namespace SmartLens
             SMTPOprationLock.Set();
         }
 
+        /// <summary>
+        /// 异步发送Email邮件
+        /// </summary>
+        /// <param name="SendMessage">需发送的邮件</param>
+        /// <returns>发送成功与否</returns>
         public async Task<bool> SendEmailAsync(MimeMessage SendMessage)
         {
             if (SendMessage == null)
@@ -1804,6 +1835,11 @@ namespace SmartLens
             return true;
         }
 
+        /// <summary>
+        /// 设置IMAP服务器和SMTP服务器的地址和端口，仅供首次初始化邮件模块使用
+        /// </summary>
+        /// <param name="EmailAddress">服务器地址</param>
+        /// <param name="IsEnableSSL">是否启用SSL加密</param>
         public void SetEmailServerAddress(List<KeyValuePair<EmailProtocol, KeyValuePair<string, int>>> EmailAddress, bool IsEnableSSL)
         {
             this.IsEnableSSL = IsEnableSSL;
@@ -1832,6 +1868,12 @@ namespace SmartLens
 
         }
 
+        /// <summary>
+        /// 设置用户邮箱登录凭据并加密保存，仅供首次初始化邮件模块使用
+        /// </summary>
+        /// <param name="Credential">凭据</param>
+        /// <param name="CallName">称呼</param>
+        /// <returns>无</returns>
         public Task SetCredential(NetworkCredential Credential, string CallName)
         {
             return Task.Run(() =>
@@ -1844,11 +1886,18 @@ namespace SmartLens
             });
         }
 
+        /// <summary>
+        /// 检查EmailProtocolServiceProvider实例是否被释放
+        /// </summary>
+        /// <returns></returns>
         public static bool CheckWhetherInstanceExist()
         {
             return Instance == null ? false : true;
         }
 
+        /// <summary>
+        /// 释放EmailProtocolServiceProvider资源
+        /// </summary>
         public void Dispose()
         {
             IMAPClient?.Dispose();

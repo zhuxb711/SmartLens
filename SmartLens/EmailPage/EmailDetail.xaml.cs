@@ -48,10 +48,17 @@ namespace SmartLens
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             var Attachment = FileGridView.SelectedItem as EmailAttachment;
-            await SaveAttachMent(Attachment.Entity, Attachment.FileName, Attachment.Type);
+            await SaveAttachMentAsync(Attachment.Entity, Attachment.FileName, Attachment.Type);
         }
 
-        public async Task SaveAttachMent(MimeEntity Attachments, string FileName, string Type)
+        /// <summary>
+        /// 异步保存邮件附件
+        /// </summary>
+        /// <param name="Attachments">附件数据</param>
+        /// <param name="FileName">保存文件名</param>
+        /// <param name="Type">文件类型</param>
+        /// <returns>无</returns>
+        public async Task SaveAttachMentAsync(MimeEntity Attachments, string FileName, string Type)
         {
             FileSavePicker picker = new FileSavePicker
             {
@@ -66,20 +73,18 @@ namespace SmartLens
             {
                 EmailPresenter.ThisPage.LoadingActivation(true, "正在保存...");
 
-                if (Attachments is MessagePart)
+                //附件为RFC822格式的文件
+                if (Attachments is MessagePart rfc822)
                 {
-                    var fileName = string.IsNullOrEmpty(Attachments.ContentDisposition?.FileName) ? Attachments.ContentType.Name ?? "attached.eml" : Attachments.ContentDisposition.FileName;
-                    var rfc822 = (MessagePart)Attachments;
-
                     using (var stream = await file.OpenStreamForWriteAsync())
                     {
                         await rfc822.Message.WriteToAsync(stream);
                     }
                 }
+                //附件为普通常见文件
                 else
                 {
                     var part = (MimePart)Attachments;
-                    var fileName = part.FileName;
 
                     using (var stream = await file.OpenStreamForWriteAsync())
                     {
@@ -194,10 +199,12 @@ namespace SmartLens
             EmailSender.ThisPage.SendEmailRequested += ThisPage_SendEmailRequested;
         }
 
+        //点击发送时执行此函数
         public async void ThisPage_SendEmailRequested(object sender, SendEmailData e)
         {
             EmailPresenter.ThisPage.LoadingActivation(true, "正在发送...");
 
+            //根据EmailSendType区分发送的邮件类型
             switch (e.SendType)
             {
                 case EmailSendType.NormalSend:
@@ -232,6 +239,13 @@ namespace SmartLens
             EmailPresenter.ThisPage.LoadingActivation(false);
         }
 
+        /// <summary>
+        /// 生成专用于转发的Email对象
+        /// </summary>
+        /// <param name="original">需转发的邮件</param>
+        /// <param name="from">发件人</param>
+        /// <param name="to">收件人</param>
+        /// <returns>MimeMessage</returns>
         public MimeMessage GetForwardMessage(MimeMessage original, MailboxAddress from, IEnumerable<InternetAddress> to)
         {
             var message = new MimeMessage();
@@ -262,23 +276,35 @@ namespace SmartLens
             return message;
         }
 
+        /// <summary>
+        /// 生成可供发送的Email对象
+        /// </summary>
+        /// <param name="To">收件人</param>
+        /// <param name="From">发件人</param>
+        /// <param name="Subject">主题</param>
+        /// <param name="Text">内容</param>
+        /// <param name="Attachments">附件</param>
+        /// <returns>MimeMessage</returns>
         private MimeMessage GetSendMessage(List<MailboxAddress> To, MailboxAddress From, string Subject, string Text, List<MimePart> Attachments)
         {
             MimeMessage SendMessage = new MimeMessage();
             SendMessage.From.Add(From);
             SendMessage.To.AddRange(To);
-
             SendMessage.Subject = Subject;
+
+            //指示文本为普通文本
             var EmailText = new TextPart(TextFormat.Plain)
             {
                 Text = Text.ToString()
             };
 
+            //指示该邮件包含文本和附件等混合内容
             var PartsCollection = new Multipart("mixed")
             {
                 EmailText
             };
 
+            //添加附件
             if (Attachments != null)
             {
                 foreach (var Att in Attachments)
@@ -287,9 +313,19 @@ namespace SmartLens
                 }
             }
             SendMessage.Body = PartsCollection;
+
             return SendMessage;
         }
 
+        /// <summary>
+        /// 生成专用于回复的Email对象
+        /// </summary>
+        /// <param name="Message">收到的原始邮件</param>
+        /// <param name="from">发件人</param>
+        /// <param name="Attachments">附件</param>
+        /// <param name="replyToAll">Email是否是回复全部</param>
+        /// <param name="Text">回复内容</param>
+        /// <returns>MimeMessage</returns>
         private MimeMessage GetReplyMessage(MimeMessage Message, MailboxAddress from, List<MimePart> Attachments, bool replyToAll, string Text)
         {
             var ReplyMessage = new MimeMessage();
