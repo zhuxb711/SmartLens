@@ -1251,9 +1251,29 @@ namespace SmartLens
     #endregion
 
     #region 蓝牙Obex协议对象类
-    public sealed class Obex
+    public sealed class ObexServiceProvider
     {
-        public static ObexService ObexClient = null;
+        private static ObexService ObexClient = null;
+
+        public static ObexService GetInstance()
+        {
+            return ObexClient;
+        }
+
+        public static void SetObexInstance(ObexService obex)
+        {
+            ObexClient = obex;
+        }
+
+        public static bool CheckIfInstanceExist()
+        {
+            return ObexClient != null;
+        }
+
+        public static void Dispose()
+        {
+            ObexClient = null;
+        }
     }
     #endregion
 

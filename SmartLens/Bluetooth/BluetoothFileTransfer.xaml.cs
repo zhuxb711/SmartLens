@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bluetooth.Services.Obex;
+using System;
 using System.IO;
 using Windows.Storage;
 using Windows.UI.Core;
@@ -12,8 +13,9 @@ namespace SmartLens
     {
         public Stream Filestream { private get; set; }
         public string FileName { private get; set; }
-        StorageFile DeleteQueue;
+        private StorageFile DeleteQueue;
         private bool IsUserAbort = false;
+        private ObexService ObexClient = ObexServiceProvider.GetInstance();
         public BluetoothFileTransfer()
         {
             InitializeComponent();
@@ -30,20 +32,24 @@ namespace SmartLens
             else
             {
                 await DeleteQueue.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                Filestream.Dispose();
+                Filestream = null;
+                DeleteQueue = null;
+                ObexServiceProvider.Dispose();
             }
         }
 
         private async void BluetoothFileTransfer_Loaded(object sender, RoutedEventArgs e)
         {
-            Obex.ObexClient.DataTransferFailed += async (s, arg) =>
+            ObexClient.DataTransferFailed += async (s, arg) =>
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    ProgressText.Text = ProgressText.Text + " \r传输意外中止";
+                    ProgressText.Text += " \r传输意外中止";
                     SecondaryButtonText = "完成";
                 });
             };
-            Obex.ObexClient.DataTransferProgressed += async (s, arg) =>
+            ObexClient.DataTransferProgressed += async (s, arg) =>
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -51,7 +57,7 @@ namespace SmartLens
                     ProgressText.Text = ((int)(arg.TransferInPercentage * 100)).ToString() + "%";
                 });
             };
-            Obex.ObexClient.DataTransferSucceeded += async (s, arg) =>
+            ObexClient.DataTransferSucceeded += async (s, arg) =>
             {
                 IsUserAbort = true;
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -61,7 +67,7 @@ namespace SmartLens
                     SecondaryButtonText = "完成";
                 });
             };
-            Obex.ObexClient.ConnectionFailed += async (s, arg) =>
+            ObexClient.ConnectionFailed += async (s, arg) =>
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -70,7 +76,7 @@ namespace SmartLens
                     SecondaryButtonText = "重试";
                 });
             };
-            Obex.ObexClient.Aborted += async (s, arg) =>
+            ObexClient.Aborted += async (s, arg) =>
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -79,7 +85,7 @@ namespace SmartLens
                     SecondaryButtonText = "退出";
                 });
             };
-            Obex.ObexClient.Disconnected += async (s, arg) =>
+            ObexClient.Disconnected += async (s, arg) =>
             {
                 if (IsUserAbort)
                 {
@@ -88,10 +94,10 @@ namespace SmartLens
                 }
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    ProgressText.Text = ProgressText.Text + " \r目标设备中止了文件传输";
+                    ProgressText.Text += " \r目标设备中止了文件传输";
                 });
             };
-            Obex.ObexClient.DeviceConnected += async (s, arg) =>
+            ObexClient.DeviceConnected += async (s, arg) =>
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -106,11 +112,11 @@ namespace SmartLens
                 await FileIO.WriteBytesAsync(file, bytes);
 
                 StorageFile fileOpen = await folder.GetFileAsync(FileName);
-                await Obex.ObexClient.SendFileAsync(fileOpen);
+                await ObexClient.SendFileAsync(fileOpen);
                 DeleteQueue = fileOpen;
             };
 
-            await Obex.ObexClient.ConnectAsync();
+            await ObexClient.ConnectAsync();
         }
 
         private async void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -118,14 +124,14 @@ namespace SmartLens
             if (SecondaryButtonText == "中止")
             {
                 IsUserAbort = true;
-                await Obex.ObexClient.AbortAsync();
+                await ObexClient.AbortAsync();
             }
             else if (SecondaryButtonText == "重试")
             {
                 ProgressText.Text = 0 + "%";
                 try
                 {
-                    await Obex.ObexClient.ConnectAsync();
+                    await ObexClient.ConnectAsync();
                 }
                 catch (Exception) { }
             }

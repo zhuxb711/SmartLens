@@ -90,7 +90,7 @@ namespace SmartLens
         /// <param name="reason">错误原因</param>
         public void Error(ErrorReason reason)
         {
-            switch(reason)
+            switch (reason)
             {
                 case ErrorReason.Location:
                     {
@@ -116,14 +116,14 @@ namespace SmartLens
         private async void ThisPage_WeatherDataGenarated(object sender, WeatherData e)
         {
             //使用正则表达式处理最高/最低温数据，获得纯数字信息
-            List<int> list = new List<int>(4)
+            List<int> UpDataList = new List<int>(4)
                 {
                     int.Parse(Regex.Replace(e.Data.forecast[1].high, @"[^0-9]+", ""))/10,
                     int.Parse(Regex.Replace(e.Data.forecast[2].high, @"[^0-9]+", ""))/10,
                     int.Parse(Regex.Replace(e.Data.forecast[3].high, @"[^0-9]+", ""))/10,
                     int.Parse(Regex.Replace(e.Data.forecast[4].high, @"[^0-9]+", ""))/10
                 };
-            List<int> list1 = new List<int>(4)
+            List<int> DownDataList = new List<int>(4)
                 {
                     int.Parse(Regex.Replace(e.Data.forecast[1].low, @"[^0-9]+", ""))/10,
                     int.Parse(Regex.Replace(e.Data.forecast[2].low, @"[^0-9]+", "")) / 10,
@@ -177,17 +177,17 @@ namespace SmartLens
             });
 
 
-            int[] temp = new int[4];
-            int[] temp1 = new int[4];
-            list.CopyTo(temp);
-            list1.CopyTo(temp1);
+            int[] OriginUpData = new int[4];
+            int[] OriginDownData = new int[4];
+            UpDataList.CopyTo(OriginUpData);
+            DownDataList.CopyTo(OriginDownData);
 
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                PointCollection PCollection1 = GetPolyLineChartPoints(list);
-                PointCollection PCollection2 = GetPolyLineChartPoints(list1);
+                PointCollection PCollection1 = GetPolyLineChartPointsCollection(UpDataList);
+                PointCollection PCollection2 = GetPolyLineChartPointsCollection(DownDataList);
 
-                await ApplyToScreen(PCollection1, PCollection2, ref temp, ref temp1);
+                await ApplyToScreenAsync(PCollection1, PCollection2, ref OriginUpData, ref OriginDownData);
 
                 Location.Text = e.Location;
 
@@ -208,39 +208,60 @@ namespace SmartLens
             });
         }
 
-        private PointCollection GetPolyLineChartPoints(List<int> datas, int TopHeight = 80, int MaxValue = 50)
+        /// <summary>
+        /// 由气温数据获取用于折线图的PointCollection，此函数将自动放大各点之间的差距，使最大值或最小值始终处于上界或下界
+        /// </summary>
+        /// <param name="TemperatureData">气温数据</param>
+        /// <param name="ControlHeight">折线图所在区域的高度</param>
+        /// <param name="MaxValue">气温可能的上下界</param>
+        /// <returns>表示折线图中的点的PointCollection</returns>
+        private PointCollection GetPolyLineChartPointsCollection(List<int> TemperatureData, int ControlHeight = 80, int MaxValue = 50)
         {
             PointCollection PCollection = new PointCollection();
+
+            int[] OriginData = new int[4];
+            TemperatureData.CopyTo(OriginData);
+            TemperatureData.Sort();
+
             int x = 0;
-            int[] temp = new int[4];
-            datas.CopyTo(temp);
-            datas.Sort();
-            int Max = datas[3];
-            int Min = datas[0];
+            int Max = TemperatureData[3];
+            int Min = TemperatureData[0];
             int MaxDecMin = Max - Min;
             int DistanceBetweenXPoint = 90;
-            PCollection.Add(new Point(x, 80));
+
+            PCollection.Add(new Point(x, ControlHeight));
             for (int i = 0; i < 4; i++)
             {
                 int y;
-                if (temp[i] > MaxValue || temp[i] < -MaxValue)
+                if (OriginData[i] > MaxValue || OriginData[i] < -MaxValue)
                 {
                     y = 0;
                 }
                 else if (Max == Min)
                 {
-                    y = TopHeight - temp[i];
+                    y = ControlHeight - OriginData[i];
                 }
-                else y = TopHeight - ((60 / MaxDecMin) * (temp[i] - Min) + 10);
+                else
+                {
+                    y = ControlHeight - ((60 / MaxDecMin) * (OriginData[i] - Min) + 10);
+                }
                 Point point = new Point(x, y);
                 PCollection.Add(point);
                 x += DistanceBetweenXPoint;
             }
-            PCollection.Add(new Point(x - DistanceBetweenXPoint, 80));
+            PCollection.Add(new Point(x - DistanceBetweenXPoint, ControlHeight));
             return PCollection;
         }
 
-        private Task ApplyToScreen(PointCollection UPCollection, PointCollection DPCollection, ref int[] UDataGroup, ref int[] DDataGroup)
+        /// <summary>
+        /// 将PointCollection所描绘的图像绘制到控件上并为每一个数据点贴上值标签
+        /// </summary>
+        /// <param name="UPCollection">最高气温数据</param>
+        /// <param name="DPCollection">最低气温数据</param>
+        /// <param name="UDataGroup">用作标签的原始最高气温数据</param>
+        /// <param name="DDataGroup">用作标签的原始最低气温数据</param>
+        /// <returns>无</returns>
+        private Task ApplyToScreenAsync(PointCollection UPCollection, PointCollection DPCollection, ref int[] UDataGroup, ref int[] DDataGroup)
         {
             PolyUpContainer.Children.Clear();
             Polygon PLU = new Polygon

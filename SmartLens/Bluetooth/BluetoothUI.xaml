@@ -20,24 +20,24 @@
         <RefreshContainer RefreshRequested="RefreshContainer_RefreshRequested">
             <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="BluetoothControl" ScrollViewer.VerticalScrollMode="Auto" Height="250">
                 <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:BluetoothList">
-                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="250"/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0">
-                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE702;"/>
-                        <StackPanel Orientation="Vertical">
-                            <TextBlock Text="{x:Bind Name,Mode=OneWay}"/>
-                            <TextBlock Text="{x:Bind IsPaired,Mode=OneWay}"/>
-                        </StackPanel>
-                    </StackPanel>
-                        <Button Grid.Column="1" Content="{x:Bind CancelOrPairButton,Mode=OneWay}" Name="PairOrCancelButton" Click="PairOrCancelButton_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                    <DataTemplate x:DataType="local:BluetoothList">
+                        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="250"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0">
+                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE702;"/>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="{x:Bind Name,Mode=OneWay}"/>
+                                    <TextBlock Text="{x:Bind IsPaired,Mode=OneWay}"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="{x:Bind CancelOrPairButton,Mode=OneWay}" Name="PairOrCancelButton" Click="PairOrCancelButton_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </RefreshContainer>
         <StackPanel Orientation="Horizontal">
             <TextBlock Name="Tips" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="255"/>
