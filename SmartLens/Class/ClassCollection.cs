@@ -976,7 +976,6 @@ namespace SmartLens
     }
     #endregion
 
-
     #region 摄像头实例提供类
     public sealed class CameraProvider
     {
@@ -1970,6 +1969,7 @@ namespace SmartLens
     public sealed class EmailItem : INotifyPropertyChanged
     {
         public MimeMessage Message { get; private set; }
+        public event PropertyChangedEventHandler PropertyChanged;
         public IEnumerable<MimeEntity> FileEntitys
         {
             get
@@ -2026,17 +2026,21 @@ namespace SmartLens
 
         public Color Color { get; private set; }
 
-        public void SetSeenIndicator(Visibility visibility)
+        /// <summary>
+        /// 异步设置邮件未读或已读
+        /// </summary>
+        /// <param name="visibility">已读或未读</param>
+        public async Task SetSeenIndicatorAsync(Visibility visibility)
         {
             if (visibility == Visibility.Visible)
             {
                 IsNotSeenIndicator = 1;
-                EmailProtocolServiceProvider.GetInstance().GetMailFolder().RemoveFlagsAsync(Id, MessageFlags.Seen, true);
+                await EmailProtocolServiceProvider.GetInstance().GetMailFolder().RemoveFlagsAsync(Id, MessageFlags.Seen, true);
             }
             else
             {
                 IsNotSeenIndicator = 0;
-                EmailProtocolServiceProvider.GetInstance().GetMailFolder().SetFlagsAsync(Id, MessageFlags.Seen, true);
+                await EmailProtocolServiceProvider.GetInstance().GetMailFolder().SetFlagsAsync(Id, MessageFlags.Seen, true);
             }
         }
 
@@ -2067,8 +2071,6 @@ namespace SmartLens
                 IsNotSeenIndicator = 0;
             }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged(string name)
         {
@@ -2387,6 +2389,44 @@ namespace SmartLens
             SendType = EmailSendType.NormalSend;
         }
 
+    }
+    #endregion
+
+    #region 初始化Email设置时的数据传递包
+    public sealed class EmailLoginData
+    {
+        public string EmailAddress { get; private set; }
+        public string CallName { get; private set; }
+        public string Password { get; private set; }
+        public string IMAPAddress { get; private set; }
+        public int IMAPPort { get; private set; }
+        public string SMTPAddress { get; private set; }
+        public int SMTPPort { get; private set; }
+        public bool IsEnableSSL { get; private set; }
+
+        public EmailLoginData(string EmailAddress, string CallName, string Password)
+        {
+            this.EmailAddress = EmailAddress;
+            this.CallName = CallName;
+            this.Password = Password;
+        }
+
+        /// <summary>
+        /// Email第二步设置完成时对剩余信息进行补充
+        /// </summary>
+        /// <param name="IMAPAddress">IMAP服务器地址</param>
+        /// <param name="IMAPPort">IMAP端口</param>
+        /// <param name="SMTPAddress">SMTP服务器地址</param>
+        /// <param name="SMTPPort">SMTP端口</param>
+        /// <param name="IsEnableSSL">是否启用SSL加密连接</param>
+        public void SetExtraData(string IMAPAddress, int IMAPPort, string SMTPAddress, int SMTPPort, bool IsEnableSSL)
+        {
+            this.IMAPAddress = IMAPAddress;
+            this.IMAPPort = IMAPPort;
+            this.SMTPAddress = SMTPAddress;
+            this.SMTPPort = SMTPPort;
+            this.IsEnableSSL = IsEnableSSL;
+        }
     }
     #endregion
 

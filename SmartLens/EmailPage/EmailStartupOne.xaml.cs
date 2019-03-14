@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -62,34 +61,6 @@ namespace SmartLens
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             MainPage.ThisPage.NavFrame.GoBack();
-        }
-    }
-
-    public sealed class EmailLoginData
-    {
-        public string EmailAddress { get; private set; }
-        public string CallName { get; private set; }
-        public string Password { get; private set; }
-        public string IMAPAddress { get; private set; }
-        public int IMAPPort { get; private set; }
-        public string SMTPAddress { get; private set; }
-        public int SMTPPort { get; private set; }
-        public bool IsEnableSSL { get; private set; }
-
-        public EmailLoginData(string EmailAddress, string CallName, string Password)
-        {
-            this.EmailAddress = EmailAddress;
-            this.CallName = CallName;
-            this.Password = Password;
-        }
-
-        public void SetExtraData(string IMAPAddress, int IMAPPort, string SMTPAddress, int SMTPPort, bool IsEnableSSL)
-        {
-            this.IMAPAddress = IMAPAddress;
-            this.IMAPPort = IMAPPort;
-            this.SMTPAddress = SMTPAddress;
-            this.SMTPPort = SMTPPort;
-            this.IsEnableSSL = IsEnableSSL;
         }
     }
 }

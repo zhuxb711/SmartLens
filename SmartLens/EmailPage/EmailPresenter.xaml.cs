@@ -92,6 +92,10 @@ namespace SmartLens
             EmailList.SelectedIndex = -1;
         }
 
+        /// <summary>
+        /// 激活或关闭"正在同步"的提示
+        /// </summary>
+        /// <param name="IsActivate">激活或关闭</param>
         private async void ActivateSyncNotification(bool IsActivate)
         {
             if (IsActivate)
@@ -165,12 +169,17 @@ namespace SmartLens
             Updating = false;
         }
 
+        /// <summary>
+        /// 异步获取Email邮件
+        /// </summary>
+        /// <returns>无</returns>
         private async Task LoadEmailData()
         {
             var Inbox = EmailService.GetMailFolder();
             await Inbox.OpenAsync(FolderAccess.ReadWrite);
 
-            var NotSeenSearchResult = await Inbox.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains("zhuxb711@yeah.net"))));
+            //编写查询语句，查找邮箱中标记为“未读”且来源不等于UserName的邮件
+            var NotSeenSearchResult = await Inbox.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailNotSeenItemCollection.Clear();
             NotSeenDictionary.Clear();
             foreach (var uid in NotSeenSearchResult)
@@ -189,7 +198,8 @@ namespace SmartLens
                 return;
             }
 
-            var SearchResult = await Inbox.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains("zhuxb711@yeah.net"))));
+            //编写查询语句，查找邮箱中的所有，且来源不等于UserName的邮件
+            var SearchResult = await Inbox.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailAllItemCollection.Clear();
             foreach (var uid in SearchResult)
             {
@@ -201,10 +211,15 @@ namespace SmartLens
                 EmailAllItemCollection.Add(new EmailItem(message, uid));
             }
 
+            /*
+             * 类似from EmailItem in EmailAllItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem
+             * Linq语句将EmailAllItemCollection中的元素 依据元素的Date成员 以降序的形式生成IGrouping<string, EmailItem>
+             * 以便ListView能够根据这种排序构建按日期分类的项
+             */
             switch (DisplayMode.SelectedIndex)
             {
-                case 0: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from t in EmailAllItemCollection group t by t.Date into g orderby g.Key descending select g); break;
-                case 1: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from t in EmailNotSeenItemCollection group t by t.Date into g orderby g.Key descending select g); break;
+                case 0: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem in EmailAllItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem); break;
+                case 1: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem in EmailNotSeenItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem); break;
             }
 
             NothingDisplayControl.Visibility = Visibility.Collapsed;
@@ -214,28 +229,30 @@ namespace SmartLens
         FF: return;
         }
 
-        private void EmailList_ItemClick(object sender, ItemClickEventArgs e)
+        private async void EmailList_ItemClick(object sender, ItemClickEventArgs e)
         {
             if (EmailList.SelectionMode == ListViewSelectionMode.Multiple)
             {
                 return;
             }
-            if (e.ClickedItem is EmailItem item)
+            if (e.ClickedItem is EmailItem Email)
             {
-                if (item == LastSelectedItem)
+                if (Email == LastSelectedItem)
                 {
                     return;
                 }
-                LastSelectedItem = item;
-                HtmlPreviewVisitor visitor = new HtmlPreviewVisitor(ApplicationData.Current.TemporaryFolder.Path);
-                item.Message.Accept(visitor);
+                LastSelectedItem = Email;
 
-                if (item.FileEntitys.Count() != 0)
+                //建立HtmlPreviewVisitor的实例以解析邮件中的HTML内容
+                HtmlPreviewVisitor visitor = new HtmlPreviewVisitor(ApplicationData.Current.TemporaryFolder.Path);
+                Email.Message.Accept(visitor);
+
+                if (Email.FileEntitys.Count() != 0)
                 {
                     EmailDetail.ThisPage.FileExpander.Visibility = Visibility.Visible;
 
                     EmailDetail.ThisPage.FileCollection.Clear();
-                    foreach (var Entity in item.Message.Attachments)
+                    foreach (var Entity in Email.Message.Attachments)
                     {
                         EmailDetail.ThisPage.FileCollection.Add(new EmailAttachment(Entity));
                     }
@@ -248,6 +265,7 @@ namespace SmartLens
 
                 if (EmailDetail.ThisPage.WebBrowser == null)
                 {
+                    //为获得最大的流畅性能，将WebView控件设置为具有单独的进程执行
                     EmailDetail.ThisPage.WebBrowser = new WebView(WebViewExecutionMode.SeparateProcess)
                     {
                         Visibility = Visibility.Collapsed
@@ -262,15 +280,16 @@ namespace SmartLens
                     EmailDetail.ThisPage.CommandBarContorl.Visibility = Visibility.Visible;
                 }
 
+                //将解析出来的HTML交由WebBrowser进行读取解析呈现
                 EmailDetail.ThisPage.WebBrowser.NavigateToString(visitor.HtmlBody);
 
-                if (item.IsNotSeenIndicator == 1)
+                if (Email.IsNotSeenIndicator == 1)
                 {
-                    item.SetSeenIndicator(Visibility.Collapsed);
+                    await Email.SetSeenIndicatorAsync(Visibility.Collapsed);
 
                     for (int i = 0; i < EmailNotSeenItemCollection.Count; i++)
                     {
-                        if (EmailNotSeenItemCollection[i].Id == item.Id)
+                        if (EmailNotSeenItemCollection[i].Id == Email.Id)
                         {
                             EmailNotSeenItemCollection.RemoveAt(i);
                         }
@@ -317,7 +336,7 @@ namespace SmartLens
 
             var Inbox = EmailService.GetMailFolder();
 
-            var NotSeenSearchResult = await Inbox.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains("zhuxb711@yeah.net"))));
+            var NotSeenSearchResult = await Inbox.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailNotSeenItemCollection.Clear();
             NotSeenDictionary.Clear();
             foreach (var uid in NotSeenSearchResult)
@@ -327,7 +346,7 @@ namespace SmartLens
                 EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
             }
 
-            var SearchResult = await Inbox.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains("zhuxb711@yeah.net"))));
+            var SearchResult = await Inbox.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailAllItemCollection.Clear();
             foreach (var uid in SearchResult)
             {
@@ -335,14 +354,22 @@ namespace SmartLens
                 EmailAllItemCollection.Add(new EmailItem(message, uid));
             }
 
+            /*
+             * 更新邮件列表逻辑：
+             * 将新获取到的所有邮件与现有邮件按日期分类来对比
+             * 若某个日期内的邮件数量与新邮件对应日期内的数量不对应
+             * 则认定有新邮件在该日期内出现
+             * 由于IGrouping<out TKey, out TElement>集合无法进行任何修改
+             * 因此采取删除日期内所有邮件并用新的IGrouping<out TKey, out TElement>替换的方式
+             */
             switch (DisplayMode.SelectedIndex)
             {
                 case 0:
                     {
-                        var result = from t in EmailAllItemCollection group t by t.Date into g orderby g.Key descending select g;
+                        var GroupResult = from EmailItem in EmailAllItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem;
                         for (int i = 0; i < EmailDisplayCollection.Count; i++)
                         {
-                            foreach (var item1 in result)
+                            foreach (var item1 in GroupResult)
                             {
                                 if (EmailDisplayCollection[i].Key == item1.Key)
                                 {
@@ -359,10 +386,10 @@ namespace SmartLens
                     }
                 case 1:
                     {
-                        var result = from t in EmailNotSeenItemCollection group t by t.Date into g orderby g.Key descending select g;
+                        var GroupResult = from EmailItem in EmailNotSeenItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem;
                         for (int i = 0; i < EmailDisplayCollection.Count; i++)
                         {
-                            foreach (var item1 in result)
+                            foreach (var item1 in GroupResult)
                             {
                                 if (EmailDisplayCollection[i].Key == item1.Key)
                                 {
@@ -427,6 +454,7 @@ namespace SmartLens
                 }
             }
 
+            //IMAP是双向协议，因此向服务器对应邮件设置Deleted标志
             await EmailService.GetMailFolder().SetFlagsAsync(item.Id, MessageFlags.Deleted, true);
 
             if (EmailDisplayCollection.Count == 0)
@@ -440,6 +468,11 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 显示或关闭正在加载的提示
+        /// </summary>
+        /// <param name="IsLoading">开启或关闭</param>
+        /// <param name="Text">提示内容</param>
         public void LoadingActivation(bool IsLoading, string Text = null)
         {
             if (IsLoading)
@@ -453,17 +486,17 @@ namespace SmartLens
             }
         }
 
-        private void MarkRead_Click(object sender, RoutedEventArgs e)
+        private async void MarkRead_Click(object sender, RoutedEventArgs e)
         {
-            var item = EmailList.SelectedItem as EmailItem;
+            var Email = EmailList.SelectedItem as EmailItem;
 
             if (MarkRead.Label == "标记为已读")
             {
-                item.SetSeenIndicator(Visibility.Collapsed);
+                await Email.SetSeenIndicatorAsync(Visibility.Collapsed);
 
                 for (int i = 0; i < EmailNotSeenItemCollection.Count; i++)
                 {
-                    if (EmailNotSeenItemCollection[i].Id == item.Id)
+                    if (EmailNotSeenItemCollection[i].Id == Email.Id)
                     {
                         EmailNotSeenItemCollection.RemoveAt(i);
                     }
@@ -471,9 +504,9 @@ namespace SmartLens
             }
             else
             {
-                item.SetSeenIndicator(Visibility.Visible);
+                await Email.SetSeenIndicatorAsync(Visibility.Visible);
 
-                EmailNotSeenItemCollection.Add(item);
+                EmailNotSeenItemCollection.Add(Email);
             }
         }
 

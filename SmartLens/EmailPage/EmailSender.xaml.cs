@@ -128,6 +128,7 @@ namespace SmartLens
                 return;
             }
 
+            //使用正则表达式确定Email地址是否是符合Email地址规范的
             Regex EmailCheck = new Regex("^\\s*([A-Za-z0-9_-]+(\\.\\w+)*@(\\w+\\.)+\\w{2,5})\\s*$");
             string[] Address = To.Split(";");
             if (Address.Where(x => EmailCheck.IsMatch(x)).Count() != Address.Length)
@@ -174,7 +175,7 @@ namespace SmartLens
         {
             FileOpenPicker Picker = new FileOpenPicker
             {
-                CommitButtonText = "插入",
+                CommitButtonText = "插入附件",
                 SuggestedStartLocation = PickerLocationId.Desktop,
                 ViewMode = PickerViewMode.Thumbnail
             };

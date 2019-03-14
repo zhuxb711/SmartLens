@@ -24,7 +24,7 @@ namespace SmartLens
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if(e.Parameter is EmailLoginData data)
+            if (e.Parameter is EmailLoginData data)
             {
                 Data = data;
             }
@@ -49,7 +49,7 @@ namespace SmartLens
             else
             {
                 int temp;
-                if (!int.TryParse(IMAPPort,out temp))
+                if (!int.TryParse(IMAPPort, out temp))
                 {
                     IMAPPo.BorderBrush = new SolidColorBrush(Colors.Red);
                     return;
@@ -83,6 +83,8 @@ namespace SmartLens
 
             Data.SetExtraData(IMAPAddress, int.Parse(IMAPPort), SMTPAddress, int.Parse(SMTPPort), IsEnableSSL);
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailPresenter), Data, new DrillInNavigationTransitionInfo());
+
+            //在设置中设置初始化完成标志，初始化完成
             ApplicationData.Current.RoamingSettings.Values["EmailStartup"] = "True";
         }
 
