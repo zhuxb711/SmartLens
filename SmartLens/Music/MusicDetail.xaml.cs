@@ -14,8 +14,8 @@ namespace SmartLens
     public sealed partial class MusicDetail : Page
     {
         private readonly NeteaseMusicAPI NetEaseMusic = NeteaseMusicAPI.GetInstance();
-        public DispatcherTimer timer = new DispatcherTimer();
-        private readonly DispatcherTimer timer1 = new DispatcherTimer();
+        public DispatcherTimer RollTicker = new DispatcherTimer();
+        private readonly DispatcherTimer BackBlurTicker = new DispatcherTimer();
         private long LastSongID;
 
         public MusicDetail()
@@ -25,10 +25,10 @@ namespace SmartLens
             MediaPlayList.FavouriteSongList.CurrentItemChanged += MediaList_CurrentItemChanged;
             MediaPlayList.SingerHotSongList.CurrentItemChanged += SingerHotSongList_CurrentItemChanged;
             MediaPlayList.AlbumSongList.CurrentItemChanged += AlbumSongList_CurrentItemChanged;
-            timer1.Interval = TimeSpan.FromMilliseconds(25);
-            timer1.Tick += Timer1_Tick;
-            timer.Interval = TimeSpan.FromMilliseconds(1000);
-            timer.Tick += Timer_Tick;
+            BackBlurTicker.Interval = TimeSpan.FromMilliseconds(25);
+            BackBlurTicker.Tick += BackBlurTicker_Tick;
+            RollTicker.Interval = TimeSpan.FromMilliseconds(1000);
+            RollTicker.Tick += RollTicker_Tick;
             Loaded += MusicDetail_Loaded;
         }
 
@@ -42,14 +42,14 @@ namespace SmartLens
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 BackBlurBrush.Amount = 0;
-                timer1.Start();
+                BackBlurTicker.Start();
                 LrcControl.c_lrc_items.Children.Clear();
 
                 if (MusicPage.ThisPage.MediaControl.MediaPlayer.Source == MediaPlayList.AlbumSongList)
                 {
                     try
                     {
-                        timer.Start();
+                        RollTicker.Start();
                     }
                     catch (Exception) { }
                     SearchSingleMusic PL = MediaPlayList.AlbumSongBackup[Convert.ToInt32(MediaPlayList.AlbumSongList.CurrentItemIndex)];
@@ -82,7 +82,7 @@ namespace SmartLens
                             FontSize = 18
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
-                        timer.Stop();
+                        RollTicker.Stop();
                     }
                     else
                     {
@@ -93,7 +93,7 @@ namespace SmartLens
                 {
                     try
                     {
-                        timer.Start();
+                        RollTicker.Start();
                     }
                     catch (Exception) { }
 
@@ -117,7 +117,7 @@ namespace SmartLens
                             FontSize = 18
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
-                        timer.Stop();
+                        RollTicker.Stop();
                     }
                     else
                     {
@@ -132,7 +132,7 @@ namespace SmartLens
         {
             if (MusicPage.ThisPage.MediaControl.MediaPlayer.Source == MediaPlayList.FavouriteSongList)
             {
-                PlayList PL = MusicList.ThisPage.MusicInfo[Convert.ToInt32(MediaPlayList.FavouriteSongList.CurrentItemIndex)];
+                PlayList PL = MusicList.ThisPage.FavouriteMusicCollection[Convert.ToInt32(MediaPlayList.FavouriteSongList.CurrentItemIndex)];
 
                 if (PL.SongID == LastSongID)
                 {
@@ -165,7 +165,7 @@ namespace SmartLens
                         FontSize = 18
                     };
                     LrcControl.c_lrc_items.Children.Add(TB);
-                    timer.Stop();
+                    RollTicker.Stop();
                 }
                 else
                 {
@@ -216,7 +216,7 @@ namespace SmartLens
                         FontSize = 18
                     };
                     LrcControl.c_lrc_items.Children.Add(TB);
-                    timer.Stop();
+                    RollTicker.Stop();
                 }
                 else
                 {
@@ -268,7 +268,7 @@ namespace SmartLens
                         FontSize = 18
                     };
                     LrcControl.c_lrc_items.Children.Add(TB);
-                    timer.Stop();
+                    RollTicker.Stop();
                 }
                 else
                 {
@@ -310,7 +310,7 @@ namespace SmartLens
                         FontSize = 18
                     };
                     LrcControl.c_lrc_items.Children.Add(TB);
-                    timer.Stop();
+                    RollTicker.Stop();
                 }
                 else
                 {
@@ -330,14 +330,14 @@ namespace SmartLens
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 BackBlurBrush.Amount = 0;
-                timer1.Start();
+                BackBlurTicker.Start();
                 LrcControl.c_lrc_items.Children.Clear();
 
                 if (MusicPage.ThisPage.MediaControl.MediaPlayer.Source == MediaPlayList.SingerHotSongList)
                 {
                     try
                     {
-                        timer.Start();
+                        RollTicker.Start();
                     }
                     catch (Exception) { }
                     LrcControl.c_lrc_items.Children.Clear();
@@ -371,7 +371,7 @@ namespace SmartLens
                             FontSize = 18
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
-                        timer.Stop();
+                        RollTicker.Stop();
                     }
                     else
                     {
@@ -382,7 +382,7 @@ namespace SmartLens
                 {
                     try
                     {
-                        timer.Start();
+                        RollTicker.Start();
                     }
                     catch (Exception) { }
 
@@ -406,7 +406,7 @@ namespace SmartLens
                             FontSize = 18
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
-                        timer.Stop();
+                        RollTicker.Stop();
 
                     }
                     else
@@ -417,12 +417,13 @@ namespace SmartLens
             });
         }
 
-        private void Timer1_Tick(object sender, object e)
+        //背景虚化计时器执行函数
+        private void BackBlurTicker_Tick(object sender, object e)
         {
             BackBlurBrush.Amount += 0.5;
             if (BackBlurBrush.Amount >= 15)
             {
-                timer1.Stop();
+                BackBlurTicker.Stop();
             }
         }
 
@@ -436,18 +437,18 @@ namespace SmartLens
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 BackBlurBrush.Amount = 0;
-                timer1.Start();
+                BackBlurTicker.Start();
                 LrcControl.c_lrc_items.Children.Clear();
 
                 if (MusicPage.ThisPage.MediaControl.MediaPlayer.Source == MediaPlayList.FavouriteSongList)
                 {
                     try
                     {
-                        timer.Start();
+                        RollTicker.Start();
                     }
                     catch (Exception) { }
 
-                    PlayList PL = MusicList.ThisPage.MusicInfo[Convert.ToInt32(MediaPlayList.FavouriteSongList.CurrentItemIndex)];
+                    PlayList PL = MusicList.ThisPage.FavouriteMusicCollection[Convert.ToInt32(MediaPlayList.FavouriteSongList.CurrentItemIndex)];
                     Title.Text = PL.Music;
 
                     var bitmap = new BitmapImage();
@@ -469,7 +470,7 @@ namespace SmartLens
                             FontSize = 18
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
-                        timer.Stop();
+                        RollTicker.Stop();
                     }
                     else
                     {
@@ -480,7 +481,7 @@ namespace SmartLens
                 {
                     try
                     {
-                        timer.Start();
+                        RollTicker.Start();
                     }
                     catch (Exception) { }
 
@@ -504,7 +505,7 @@ namespace SmartLens
                             FontSize = 18
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
-                        timer.Stop();
+                        RollTicker.Stop();
 
                     }
                     else
@@ -531,8 +532,8 @@ namespace SmartLens
             {
                 BackBlurBrush.Amount = 0;
                 EllStoryboard.Begin();
-                timer.Start();
-                timer1.Start();
+                RollTicker.Start();
+                BackBlurTicker.Start();
             }
         }
 
@@ -541,8 +542,8 @@ namespace SmartLens
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("DetailBackAnimation", GridBack);
 
             EllStoryboard.Stop();
-            timer.Stop();
-            timer1.Stop();
+            RollTicker.Stop();
+            BackBlurTicker.Stop();
             BackBlurBrush.Amount = 0;
         }
 
@@ -554,17 +555,17 @@ namespace SmartLens
                 if (sender.PlaybackState == MediaPlaybackState.Playing)
                 {
                     EllStoryboard.Resume();
-                    timer.Start();
+                    RollTicker.Start();
                 }
                 else if (sender.PlaybackState == MediaPlaybackState.Paused)
                 {
                     EllStoryboard.Pause();
-                    timer.Stop();
+                    RollTicker.Stop();
                 }
             });
         }
 
-        private void Timer_Tick(object sender, object e)
+        private void RollTicker_Tick(object sender, object e)
         {
             LrcControl.LrcRoll(MusicPage.ThisPage.MediaControl.MediaPlayer.PlaybackSession.Position.TotalMilliseconds);
         }

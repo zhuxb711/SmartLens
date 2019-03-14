@@ -58,16 +58,16 @@ namespace SmartLens
             };
             VoiceRec.MusicChoiceCommanded += (s, SongName) =>
             {
-                for (int i = 0; i < MusicList.ThisPage.MusicInfo.Count; i++)
+                for (int i = 0; i < MusicList.ThisPage.FavouriteMusicCollection.Count; i++)
                 {
                     string temp = string.Empty;
-                    if (MusicList.ThisPage.MusicInfo[i].Music.EndsWith(' '))
+                    if (MusicList.ThisPage.FavouriteMusicCollection[i].Music.EndsWith(' '))
                     {
-                        temp = MusicList.ThisPage.MusicInfo[i].Music.Remove(MusicList.ThisPage.MusicInfo[i].Music.Length - 1);
+                        temp = MusicList.ThisPage.FavouriteMusicCollection[i].Music.Remove(MusicList.ThisPage.FavouriteMusicCollection[i].Music.Length - 1);
                     }
                     else
                     {
-                        temp = MusicList.ThisPage.MusicInfo[i].Music;
+                        temp = MusicList.ThisPage.FavouriteMusicCollection[i].Music;
                     }
                     if (temp == SongName)
                     {
@@ -193,9 +193,9 @@ namespace SmartLens
             }
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
              {
-                 if (MusicList.ThisPage.MusicInfo.Count != 0 && MediaControl.MediaPlayer.Source == MediaPlayList.FavouriteSongList)
+                 if (MusicList.ThisPage.FavouriteMusicCollection.Count != 0 && MediaControl.MediaPlayer.Source == MediaPlayList.FavouriteSongList)
                  {
-                     var PL = MusicList.ThisPage.MusicInfo[Convert.ToInt32(temp)];
+                     var PL = MusicList.ThisPage.FavouriteMusicCollection[Convert.ToInt32(temp)];
 
                      var bitmap = new BitmapImage();
                      PicturePlaying.Source = bitmap;

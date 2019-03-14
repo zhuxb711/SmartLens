@@ -293,7 +293,7 @@ namespace SmartLens
                         break;
                     }
                 }
-                MusicList.ThisPage.MusicInfo.Add(new PlayList(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid));
+                MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid));
                 MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(MusicURL)));
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
                 Props.Type = Windows.Media.MediaPlaybackType.Music;
@@ -307,12 +307,12 @@ namespace SmartLens
             {
                 FI.Glyph = "\uEB51";
                 FI.Foreground = new SolidColorBrush(Colors.White);
-                for (int i = 0; i < MusicList.ThisPage.MusicInfo.Count; i++)
+                for (int i = 0; i < MusicList.ThisPage.FavouriteMusicCollection.Count; i++)
                 {
-                    if (MusicList.ThisPage.MusicInfo[i].SongID == SSM.SongID[0])
+                    if (MusicList.ThisPage.FavouriteMusicCollection[i].SongID == SSM.SongID[0])
                     {
-                        await SQLite.GetInstance().DelMusic(MusicList.ThisPage.MusicInfo[i]);
-                        MusicList.ThisPage.MusicInfo.RemoveAt(i);
+                        await SQLite.GetInstance().DelMusic(MusicList.ThisPage.FavouriteMusicCollection[i]);
+                        MusicList.ThisPage.FavouriteMusicCollection.RemoveAt(i);
                         MediaPlayList.FavouriteSongList.Items.RemoveAt(i);
                         break;
                     }

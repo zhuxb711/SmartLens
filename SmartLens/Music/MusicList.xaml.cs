@@ -15,17 +15,20 @@ namespace SmartLens
     public sealed partial class MusicList : Page
     {
         public static MusicList ThisPage { get; set; }
+        /// <summary>
+        /// 指示离开当前页面前收藏列表中有无音乐
+        /// </summary>
         bool LeaveWithoutObejectInList = false;
         Frame MusicNav = null;
-        public ObservableCollection<PlayList> MusicInfo = new ObservableCollection<PlayList>();
-        public HashSet<long> MusicSongIdDictionary = new HashSet<long>();
+        public ObservableCollection<PlayList> FavouriteMusicCollection = new ObservableCollection<PlayList>();
+        public HashSet<long> MusicIdDictionary = new HashSet<long>();
 
         public MusicList()
         {
             InitializeComponent();
             ThisPage = this;
-            MusicListControl.ItemsSource = MusicInfo;
-            MusicInfo.CollectionChanged += MusicInfo_CollectionChanged;
+            MusicListControl.ItemsSource = FavouriteMusicCollection;
+            FavouriteMusicCollection.CollectionChanged += MusicInfo_CollectionChanged;
             OnFirstLoad();
         }
 
@@ -35,26 +38,26 @@ namespace SmartLens
             {
                 foreach (PlayList item in e.OldItems)
                 {
-                    MusicSongIdDictionary.Remove(item.SongID);
+                    MusicIdDictionary.Remove(item.SongID);
                 }
             }
             else if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 foreach (PlayList item in e.NewItems)
                 {
-                    MusicSongIdDictionary.Add(item.SongID);
+                    MusicIdDictionary.Add(item.SongID);
                 }
             }
         }
 
         private async void OnFirstLoad()
         {
-            await SQLite.GetInstance().GetMusicData();
-            if (MusicInfo.Count > 0)
+            await SQLite.GetInstance().GetMusicDataAsync();
+            if (FavouriteMusicCollection.Count > 0)
             {
                 var bitmap = new BitmapImage();
                 MusicPage.ThisPage.PicturePlaying.Source = bitmap;
-                bitmap.UriSource = new Uri(MusicInfo[0].ImageUrl);
+                bitmap.UriSource = new Uri(FavouriteMusicCollection[0].ImageUrl);
             }
         }
 
@@ -85,7 +88,6 @@ namespace SmartLens
 
         private void SearchOnline_Click(object sender, RoutedEventArgs e)
         {
-
             MusicNav.Navigate(typeof(MusicSearch), MusicNav, new DrillInNavigationTransitionInfo());
         }
 
@@ -104,25 +106,25 @@ namespace SmartLens
                     MediaPlayList.FavouriteSongList.Items.RemoveAt(MusicListControl.SelectedIndex);
                     PlayList item = MusicListControl.SelectedItems[0] as PlayList;
                     await SQLite.GetInstance().DelMusic(item);
-                    MusicInfo.Remove(item);
+                    FavouriteMusicCollection.Remove(item);
                 }
                 MusicListControl.SelectionMode = ListViewSelectionMode.Single;
-                if (MusicInfo.Count != 0)
+                if (FavouriteMusicCollection.Count != 0)
                 {
                     var bitmap = new BitmapImage();
                     Image1.Source = bitmap;
-                    bitmap.UriSource = new Uri(MusicInfo[0].ImageUrl);
+                    bitmap.UriSource = new Uri(FavouriteMusicCollection[0].ImageUrl);
                 }
             }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (MusicInfo.Count != 0 && LeaveWithoutObejectInList)
+            if (FavouriteMusicCollection.Count != 0 && LeaveWithoutObejectInList)
             {
                 var bitmap = new BitmapImage();
                 Image1.Source = bitmap;
-                bitmap.UriSource = new Uri(MusicInfo[0].ImageUrl);
+                bitmap.UriSource = new Uri(FavouriteMusicCollection[0].ImageUrl);
 
                 LeaveWithoutObejectInList = false;
             }
@@ -131,7 +133,7 @@ namespace SmartLens
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            if (MusicInfo.Count == 0)
+            if (FavouriteMusicCollection.Count == 0)
             {
                 LeaveWithoutObejectInList = true;
             }
@@ -176,7 +178,7 @@ namespace SmartLens
         private async void MV_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             MusicListControl.SelectedItem = ((TextBlock)sender).DataContext;
-            var Result = await NeteaseMusicAPI.GetInstance().MV((int)MusicInfo[MusicListControl.SelectedIndex].MVid);
+            var Result = await NeteaseMusicAPI.GetInstance().MV((int)FavouriteMusicCollection[MusicListControl.SelectedIndex].MVid);
             MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
         }
     }

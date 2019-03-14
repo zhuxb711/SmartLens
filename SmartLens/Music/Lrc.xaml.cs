@@ -13,8 +13,6 @@ namespace SmartLens
 {
     public partial class Lrc : UserControl
     {
-
-        #region 歌词模型
         public class LrcModel
         {
             /// <summary>
@@ -32,14 +30,13 @@ namespace SmartLens
             /// </summary>
             public double Time { get; set; }
         }
-        #endregion
-        #region 变量
         //歌词集合
         public Dictionary<double, LrcModel> Lrcs = new Dictionary<double, LrcModel>();
 
         //添加当前焦点歌词变量
         public LrcModel FoucsLrc { get; set; }
 
+        //歌词翻译集合
         Dictionary<TimeSpan, string> TLrcs = new Dictionary<TimeSpan, string>();
         //非焦点歌词颜色
         public SolidColorBrush NoramlLrcColor = new SolidColorBrush(Colors.Black);
@@ -50,21 +47,24 @@ namespace SmartLens
 
         int LastIndex = -1;
 
-        #endregion
         public Lrc()
         {
             InitializeComponent();
         }
 
-        #region 加载歌词
-        public void LoadLrc(string lrcstr, string Tlrcstr)
+        /// <summary>
+        /// 加载并划分歌词
+        /// </summary>
+        /// <param name="LrcString">歌词原文</param>
+        /// <param name="TranslateLrcString">歌词翻译(若有)</param>
+        public void LoadLrc(string LrcString, string TranslateLrcString)
         {
             Lrcs.Clear();
             TLrcs.Clear();
             string[] TlrcCollection = null;
-            if (Tlrcstr != null)
+            if (TranslateLrcString != null)
             {
-                TlrcCollection = Tlrcstr.Split('\n');
+                TlrcCollection = TranslateLrcString.Split('\n');
 
                 foreach (var item in TlrcCollection)
                 {
@@ -79,7 +79,7 @@ namespace SmartLens
                     }
                 }
             }
-            string[] StrCollection = lrcstr.Split('\n');
+            string[] StrCollection = LrcString.Split('\n');
             for (int i = 0; i < StrCollection.Length; i++)
             {
                 string str = StrCollection[i];
@@ -149,8 +149,11 @@ namespace SmartLens
 
         }
 
-        //正则表达式提取时间
-
+        /// <summary>
+        /// 使用正则表达式提取时间
+        /// </summary>
+        /// <param name="str">Lrc歌词</param>
+        /// <returns></returns>
         public TimeSpan GetTime(string str)
         {
             Regex reg = new Regex(@"\[(?<time>.*)\]", RegexOptions.IgnoreCase);
@@ -192,13 +195,10 @@ namespace SmartLens
             return new TimeSpan(0, 0, m, s, f);
         }
 
-        #endregion
-
-        #region 歌词滚动
         /// <summary>
-        /// 歌词滚动、定位焦点
+        /// 滚动歌词并定位焦点
         /// </summary>
-        /// <param name="nowtime"></param>
+        /// <param name="nowtime">当前时间</param>
         public void LrcRoll(double nowtime)
         {
             if (Lrcs.Count == 0)
@@ -224,21 +224,17 @@ namespace SmartLens
 
                 FoucsLrc.LrcTb.Foreground = NoramlLrcColor;
 
-
                 FoucsLrc = lm;
                 FoucsLrc.LrcTb.Foreground = FoucsLrcColor;
                 FoucsLrc.LrcTb.FontSize = 20;
                 ResetLrcviewScroll();
-
             }
 
         }
 
-
-
-        #endregion
-
-        #region 调整歌词控件滚动条位置
+        /// <summary>
+        /// 调整歌词控件滚动条位置
+        /// </summary>
         public void ResetLrcviewScroll()
         {
             GeneralTransform gf = FoucsLrc.LrcTb.TransformToVisual(c_lrc_items);
@@ -246,6 +242,5 @@ namespace SmartLens
             double os = p.Y - (c_scrollviewer.ActualHeight / 2) + 10;
             c_scrollviewer.ChangeView(c_scrollviewer.HorizontalOffset, os, 1);
         }
-        #endregion
     }
 }

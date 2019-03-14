@@ -577,7 +577,7 @@ namespace SmartLens
             temp[0] = SongID;
             this.SongID = temp;
             ImageUrl = Url;
-            if (MusicList.ThisPage.MusicSongIdDictionary.Contains(SongID))
+            if (MusicList.ThisPage.MusicIdDictionary.Contains(SongID))
             {
                 Glyph = "\uEB52";
                 Col = new SolidColorBrush(Colors.Red);
@@ -899,13 +899,13 @@ namespace SmartLens
             return Names;
         }
 
-        public async Task GetMusicData()
+        public async Task GetMusicDataAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select * From MusicList", OLEDB);
             SqliteDataReader query = await Command.ExecuteReaderAsync();
             while (query.Read())
             {
-                MusicList.ThisPage.MusicInfo.Add(new PlayList(query[0].ToString(), query[1].ToString(), query[2].ToString(), query[3].ToString(), query[4].ToString(), (long)query[5], (long)query[6], true));
+                MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(query[0].ToString(), query[1].ToString(), query[2].ToString(), query[3].ToString(), query[4].ToString(), (long)query[5], (long)query[6], true));
             }
             query.Close();
 
@@ -923,13 +923,13 @@ namespace SmartLens
                 Props.MusicProperties.Title = query1[0].ToString();
                 Props.MusicProperties.Artist = query1[2].ToString();
                 Item.ApplyDisplayProperties(Props);
-                MusicList.ThisPage.MusicInfo[Index++].FontColor = new SolidColorBrush(Colors.White);
+                MusicList.ThisPage.FavouriteMusicCollection[Index++].FontColor = new SolidColorBrush(Colors.White);
             }
-            if (MusicList.ThisPage.MusicInfo.Count != 0)
+            if (MusicList.ThisPage.FavouriteMusicCollection.Count != 0)
             {
                 var bitmap = new BitmapImage();
                 MusicList.ThisPage.Image1.Source = bitmap;
-                bitmap.UriSource = new Uri(MusicList.ThisPage.MusicInfo[0].ImageUrl);
+                bitmap.UriSource = new Uri(MusicList.ThisPage.FavouriteMusicCollection[0].ImageUrl);
             }
         }
 
