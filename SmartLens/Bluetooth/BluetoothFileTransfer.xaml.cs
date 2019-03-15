@@ -15,7 +15,7 @@ namespace SmartLens
         public string FileName { private get; set; }
         private StorageFile DeleteQueue;
         private bool IsUserAbort = false;
-        private ObexService ObexClient = ObexServiceProvider.GetInstance();
+        private ObexService ObexClient = ObexServiceProvider.ObexClient;
         public BluetoothFileTransfer()
         {
             InitializeComponent();

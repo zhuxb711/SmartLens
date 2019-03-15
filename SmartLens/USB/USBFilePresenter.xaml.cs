@@ -42,6 +42,8 @@ namespace SmartLens
             ThisPage = this;
             FileCollection = new ObservableCollection<RemovableDeviceFile>();
             GridViewControl.ItemsSource = FileCollection;
+
+            //必须注册这个东西才能使用中文解码
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             ZipStrings.CodePage = 936;
         }
@@ -75,6 +77,11 @@ namespace SmartLens
             Ticker = null;
         }
 
+        /// <summary>
+        /// 从StorageFile获取该文件的大小，并转换为易读的描述
+        /// </summary>
+        /// <param name="file">文件</param>
+        /// <returns></returns>
         public async Task<string> GetSize(StorageFile file)
         {
             BasicProperties Properties = await file.GetBasicPropertiesAsync();
@@ -82,7 +89,10 @@ namespace SmartLens
             (Properties.Size / 1048576 >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
         }
-
+        
+        /// <summary>
+        /// 关闭右键菜单并将GridView从多选模式恢复到单选模式
+        /// </summary>
         private void Restore()
         {
             CommandsFlyout.Hide();
@@ -139,6 +149,7 @@ namespace SmartLens
                     }
                     catch (System.Runtime.InteropServices.COMException)
                     {
+                        //收集但不立刻报告错误
                         ErrorCollection.Enqueue(CutFile.Name);
                     }
                 }
@@ -161,7 +172,7 @@ namespace SmartLens
                     await contentDialog.ShowAsync();
                 }
 
-                RefreshFileDisplay();
+                await RefreshFileDisplay();
                 await Task.Delay(500);
                 LoadingActivation(false);
                 Paste.IsEnabled = false;
@@ -200,14 +211,17 @@ namespace SmartLens
                     LoadingActivation(false);
                     await contentDialog.ShowAsync();
                 }
-                RefreshFileDisplay();
+                await RefreshFileDisplay();
                 await Task.Delay(500);
                 LoadingActivation(false);
             }
             Paste.IsEnabled = false;
         }
 
-        private async void RefreshFileDisplay()
+        /// <summary>
+        /// 异步刷新并检查是否有新文件出现
+        /// </summary>
+        private async Task RefreshFileDisplay()
         {
             var FileList = await USBControl.ThisPage.CurrentFolder.GetFilesAsync();
             foreach (var file in FileList)
@@ -309,6 +323,12 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 激活或关闭正在加载提示
+        /// </summary>
+        /// <param name="IsLoading">激活或关闭</param>
+        /// <param name="Info">提示内容</param>
+        /// <param name="EnableProgressDisplay">是否使用条状进度条替代圆形进度条</param>
         private void LoadingActivation(bool IsLoading, string Info = null, bool EnableProgressDisplay = false)
         {
             if (IsLoading)
@@ -384,6 +404,17 @@ namespace SmartLens
             }
         }
 
+        /*
+         * AES模块采用了分段文件流读取，内存占用得到有效控制
+         * 可处理数据量极大的各种文件的加密和解密
+         * 加密完成后生成.sle格式的文件
+         * 其中文件名和类型以及AES加密的密钥长度以明文存储在.sle文件的开头
+         * 
+         * AES本身并不能判断解密时的密码是否正确，无论对错均可解密，因此这里取巧：
+         * 将一段字符标志“PASSWORD_CORRECT”与源文件一起加密，由于知道标志具体位置和标志原始明文内容
+         * 因此解密的时候，利用用户提供的密码对该标识符的位置进行解密，若解密出来的明文与PASSWORD_CORRECT相符
+         * 则证明该密码正确，否则密码错误。此方法可确保既不需要存储用户原始密码亦可判断密码正误
+         */
         private async void AES_Click(object sender, RoutedEventArgs e)
         {
             var FileList = new List<object>(GridViewControl.SelectedItems);
@@ -643,7 +674,7 @@ namespace SmartLens
             }
             await Task.Delay(500);
             LoadingActivation(false);
-            RefreshFileDisplay();
+            await RefreshFileDisplay();
         }
 
         private async void BluetoothShare_Click(object sender, RoutedEventArgs e)
@@ -715,7 +746,11 @@ namespace SmartLens
             }
         }
 
-
+        /// <summary>
+        /// 获得指定文件的缩略图图像
+        /// </summary>
+        /// <param name="file">文件</param>
+        /// <returns>缩略图图像</returns>
         public async Task<BitmapImage> GetThumbnail(StorageFile file)
         {
             var Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView);
@@ -778,7 +813,7 @@ namespace SmartLens
             }
             if (CheckCount == FileList.Count)
             {
-                await UnZip(FileList);
+                await UnZipAsync(FileList);
             }
             else
             {
@@ -796,13 +831,13 @@ namespace SmartLens
                     LoadingActivation(true, "正在压缩", true);
                     if (dialog.IsCryptionEnable)
                     {
-                        await CreateZip(FileList, dialog.FileName, (int)dialog.Level, true, dialog.Key, dialog.Password);
+                        await CreateZipAsync(FileList, dialog.FileName, (int)dialog.Level, true, dialog.Key, dialog.Password);
                     }
                     else
                     {
-                        await CreateZip(FileList, dialog.FileName, (int)dialog.Level);
+                        await CreateZipAsync(FileList, dialog.FileName, (int)dialog.Level);
                     }
-                    RefreshFileDisplay();
+                    await RefreshFileDisplay();
                 }
                 else
                 {
@@ -812,7 +847,12 @@ namespace SmartLens
             LoadingActivation(false);
         }
 
-        private async Task UnZip(List<object> ZFileList)
+        /// <summary>
+        /// 执行ZIP解压功能
+        /// </summary>
+        /// <param name="ZFileList">ZIP文件</param>
+        /// <returns>无</returns>
+        private async Task UnZipAsync(List<object> ZFileList)
         {
             foreach (RemovableDeviceFile ZFile in ZFileList)
             {
@@ -928,7 +968,17 @@ namespace SmartLens
             }
         }
 
-        private async Task CreateZip(List<object> FileList, string NewZipName, int ZipLevel, bool EnableCryption = false, KeySize Size = KeySize.None, string Password = null)
+        /// <summary>
+        /// 执行ZIP文件创建功能
+        /// </summary>
+        /// <param name="FileList">待压缩文件</param>
+        /// <param name="NewZipName">生成的Zip文件名</param>
+        /// <param name="ZipLevel">压缩等级</param>
+        /// <param name="EnableCryption">是否启用加密</param>
+        /// <param name="Size">AES加密密钥长度</param>
+        /// <param name="Password">密码</param>
+        /// <returns>无</returns>
+        private async Task CreateZipAsync(List<object> FileList, string NewZipName, int ZipLevel, bool EnableCryption = false, KeySize Size = KeySize.None, string Password = null)
         {
             var Newfile = await USBControl.ThisPage.CurrentFolder.CreateFileAsync(NewZipName, CreationCollisionOption.GenerateUniqueName);
             using (var NewFileStream = await Newfile.OpenStreamForWriteAsync())
@@ -1095,7 +1145,12 @@ namespace SmartLens
             }
         }
 
-        public async Task AddFileToZip(RemovableDeviceFile file)
+        /// <summary>
+        /// 向ZIP文件添加新文件
+        /// </summary>
+        /// <param name="file">待添加的文件</param>
+        /// <returns>无</returns>
+        public async Task AddFileToZipAsync(RemovableDeviceFile file)
         {
             LoadingActivation(true, "正在执行添加操作");
             using (var ZipFileStream = (await file.File.OpenAsync(FileAccessMode.ReadWrite)).AsStream())
@@ -1132,7 +1187,6 @@ namespace SmartLens
 
             await Task.Delay(500);
             LoadingActivation(false);
-
         }
     }
 }

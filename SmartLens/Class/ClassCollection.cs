@@ -42,6 +42,9 @@ using WinRTXamlToolkit.Controls.Extensions;
 namespace SmartLens
 {
     #region WIFI列表提供类
+    /// <summary>
+    /// 保存搜索到的WiFi的相关信息
+    /// </summary>
     public sealed class WiFiInfo : INotifyPropertyChanged
     {
         private WiFiAvailableNetwork AvailableWiFi;
@@ -53,13 +56,21 @@ namespace SmartLens
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(name));
             }
         }
-        public string ID
+
+        /// <summary>
+        /// 获取WiFi的MAC地址
+        /// </summary>
+        public string MAC
         {
             get
             {
                 return AvailableWiFi.Bssid;
             }
         }
+
+        /// <summary>
+        /// 获取WiFi的SSID名称
+        /// </summary>
         public string Name
         {
             get
@@ -71,11 +82,35 @@ namespace SmartLens
                 else return "未知设备";
             }
         }
+
+        /// <summary>
+        /// 获取此WiFi的连接状态
+        /// </summary>
         public bool IsConnected { get; private set; }
+
+        /// <summary>
+        /// 获取或设置此WiFi的密码
+        /// </summary>
         public string Password { get; set; } = "";
-        public Visibility MessageVisibility { get; set; } = Visibility.Collapsed;
+
+        /// <summary>
+        /// 获取消息提示的可见性
+        /// </summary>
+        public Visibility MessageVisibility { get; private set; } = Visibility.Collapsed;
+
+        /// <summary>
+        /// 获取或设置是否自动连接
+        /// </summary>
         public bool AutoConnect { get; set; } = true;
+
+        /// <summary>
+        /// 获取或设置消息提示
+        /// </summary>
         public string Message { get; set; }
+
+        /// <summary>
+        /// 获取WiFi安全性描述
+        /// </summary>
         public string Encryption
         {
             get
@@ -104,6 +139,10 @@ namespace SmartLens
                 }
             }
         }
+
+        /// <summary>
+        /// 获取WiFi信号强度
+        /// </summary>
         public byte SignalBar
         {
             get
@@ -111,12 +150,27 @@ namespace SmartLens
                 return AvailableWiFi.SignalBars;
             }
         }
+
+        /// <summary>
+        /// 获取或设置WiFi是否已经被下一次扫描所更新
+        /// </summary>
         public bool IsUpdated { get; set; } = false;
+
+        /// <summary>
+        /// 创建WiFiInfo实例
+        /// </summary>
+        /// <param name="e">WiFi网络</param>
+        /// <param name="IsConnected">连接状态</param>
         public WiFiInfo(WiFiAvailableNetwork e, bool IsConnected = false)
         {
             AvailableWiFi = e;
             this.IsConnected = IsConnected;
         }
+
+        /// <summary>
+        /// 更新WiFi信息
+        /// </summary>
+        /// <param name="e">重新扫描WiFi获取到的对应WiFiAvailableNetwork</param>
         public void Update(WiFiAvailableNetwork e)
         {
             if (Name != e.Ssid)
@@ -128,6 +182,11 @@ namespace SmartLens
             OnPropertyChanged("SignalBar");
             OnPropertyChanged("Encryption");
         }
+
+        /// <summary>
+        /// 在UI上显示消息
+        /// </summary>
+        /// <param name="msg">消息</param>
         public void ShowMessage(string msg)
         {
             Message = msg;
@@ -135,6 +194,10 @@ namespace SmartLens
             OnPropertyChanged("Message");
             OnPropertyChanged("MessageVisibility");
         }
+
+        /// <summary>
+        /// 在UI上隐藏消息
+        /// </summary>
         public void HideMessage()
         {
             Message = "";
@@ -142,19 +205,30 @@ namespace SmartLens
             OnPropertyChanged("Message");
             OnPropertyChanged("MessageVisibility");
         }
-        public async void ChangeConnectState(bool TureOrFalse, WiFiInfo info = null)
+
+        /// <summary>
+        /// 异步更改此WiFi的连接状态
+        /// </summary>
+        /// <param name="IsConnected">连接状态应改为已连接或未连接</param>
+        /// <param name="info">指示是否要将此WiFi移动到列表最上方</param>
+        public async void ChangeConnectionStateAsync(bool IsConnected, bool MoveToTop = false)
         {
-            IsConnected = TureOrFalse;
+            this.IsConnected = IsConnected;
             await SettingsPage.ThisPage.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (info != null)
+                if (MoveToTop)
                 {
-                    SettingsPage.ThisPage.WiFiList.Move(SettingsPage.ThisPage.WiFiList.IndexOf(info), 0);
-                    SettingsPage.ThisPage.WiFiControl.ScrollIntoView(info);
+                    SettingsPage.ThisPage.WiFiList.Move(SettingsPage.ThisPage.WiFiList.IndexOf(this), 0);
+                    SettingsPage.ThisPage.WiFiControl.ScrollIntoView(this);
                 }
                 OnPropertyChanged("Encryption");
             });
         }
+
+        /// <summary>
+        /// 获取WiFiInfo内部的WiFiAvailableNetwork
+        /// </summary>
+        /// <returns>WiFiAvailableNetwork</returns>
         public WiFiAvailableNetwork GetWiFiAvailableNetwork()
         {
             return AvailableWiFi;
@@ -200,11 +274,25 @@ namespace SmartLens
     #endregion
 
     #region 存储在数据库中的WiFi信息导入类
+    /// <summary>
+    /// 保存从数据库中提取的WiFi信息
+    /// </summary>
     public sealed class WiFiInDataBase
     {
+        /// <summary>
+        /// 获取WiFi的SSID名称
+        /// </summary>
         public string SSID { get; private set; }
-        public string Password { get; set; }
+
+        /// <summary>
+        /// 获取WiFi密码
+        /// </summary>
+        public string Password { get; private set; }
         private readonly string autoconnect;
+
+        /// <summary>
+        /// 获取WiFi自动连接设置
+        /// </summary>
         public bool AutoConnect
         {
             get
@@ -214,6 +302,13 @@ namespace SmartLens
                 else return false;
             }
         }
+
+        /// <summary>
+        /// 创建WiFiInDataBase实例
+        /// </summary>
+        /// <param name="SSID">SSID名称</param>
+        /// <param name="Password">密码</param>
+        /// <param name="AutoConnect">是否自动连接</param>
         public WiFiInDataBase(string SSID, string Password, string AutoConnect)
         {
             this.SSID = SSID;
@@ -224,6 +319,9 @@ namespace SmartLens
     #endregion
 
     #region 联网音乐搜索提供类
+    /// <summary>
+    /// 提供对云端音乐API的调用
+    /// </summary>
     public sealed class NeteaseMusicAPI
     {
         private readonly string _MODULUS = "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7";
@@ -243,6 +341,10 @@ namespace SmartLens
             _encSecKey = RSAEncode(_secretKey);
         }
 
+        /// <summary>
+        /// 获取NeteaseMusicAPI的实例
+        /// </summary>
+        /// <returns>实例</returns>
         public static NeteaseMusicAPI GetInstance()
         {
             return Netease ?? (Netease = new NeteaseMusicAPI());
@@ -370,7 +472,16 @@ namespace SmartLens
             Radio = 1009,
         }
 
-        public Task<T> Search<T>(string keyword, int limit = 30, int offset = 0, SearchType type = SearchType.Song) where T : class
+        /// <summary>
+        /// 搜索云端乐库
+        /// </summary>
+        /// <typeparam name="T">返回值类型</typeparam>
+        /// <param name="keyword">关键字</param>
+        /// <param name="limit">搜索返回结果限制条数</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="type">搜索类型</param>
+        /// <returns></returns>
+        public Task<T> SearchAsync<T>(string keyword, int limit = 30, int offset = 0, SearchType type = SearchType.Song) where T : class
         {
             return Task.Run(() =>
             {
@@ -391,8 +502,12 @@ namespace SmartLens
             });
         }
 
-
-        public Task<ArtistResult> Artist(long artist_id)
+        /// <summary>
+        /// 获取指定ID所代表的艺术家详细信息
+        /// </summary>
+        /// <param name="artist_id">艺术家ID</param>
+        /// <returns>ArtistResult</returns>
+        public Task<ArtistResult> GetArtistAsync(long artist_id)
         {
             return Task.Run(() =>
             {
@@ -409,7 +524,12 @@ namespace SmartLens
             });
         }
 
-        public Task<AlbumResult> Album(long album_id)
+        /// <summary>
+        /// 获取指定ID所代表的专辑详细信息
+        /// </summary>
+        /// <param name="album_id">专辑ID</param>
+        /// <returns>AlbumResult</returns>
+        public Task<AlbumResult> GetAlbumAsync(long album_id)
         {
             return Task.Run(() =>
             {
@@ -423,7 +543,12 @@ namespace SmartLens
             });
         }
 
-        public Task<DetailResult> Detail(long song_id)
+        /// <summary>
+        /// 获取指定ID所代表的歌曲的详细信息
+        /// </summary>
+        /// <param name="song_id">歌曲ID</param>
+        /// <returns>DetailResult</returns>
+        public Task<DetailResult> GetDetailAsync(long song_id)
         {
             return Task.Run(() =>
             {
@@ -450,7 +575,13 @@ namespace SmartLens
             public string csrf_token = "";
         }
 
-        public Task<SongUrls> GetSongsUrl(long[] song_id, long bitrate = 999000)
+        /// <summary>
+        /// 获取指定ID所代表的歌曲的播放链接
+        /// </summary>
+        /// <param name="song_id">歌曲ID</param>
+        /// <param name="bitrate">比特率</param>
+        /// <returns>SongUrls</returns>
+        public Task<SongUrls> GetSongsUrlAsync(long[] song_id, long bitrate = 999000)
         {
             return Task.Run(() =>
             {
@@ -469,8 +600,11 @@ namespace SmartLens
 
         }
 
-
-
+        /// <summary>
+        /// 获取指定ID所代表的歌单的详细信息
+        /// </summary>
+        /// <param name="playlist_id">歌单ID</param>
+        /// <returns>PlayListResult</returns>
         public PlayListResult Playlist(long playlist_id)
         {
             string url = "http://music.163.com/weapi/v3/playlist/detail?csrf_token=";
@@ -485,7 +619,12 @@ namespace SmartLens
             return deserialedObj;
         }
 
-        public Task<LyricResult> Lyric(long song_id)
+        /// <summary>
+        /// 获取指定ID所代表的歌曲的歌词信息
+        /// </summary>
+        /// <param name="song_id"><歌曲ID/param>
+        /// <returns>LyricResult</returns>
+        public Task<LyricResult> GetLyricAsync(long song_id)
         {
             return Task.Run(() =>
             {
@@ -506,7 +645,12 @@ namespace SmartLens
 
         }
 
-        public Task<MVResult> MV(int mv_id)
+        /// <summary>
+        /// 获取指定ID所代表的MV信息
+        /// </summary>
+        /// <param name="mv_id">MV的ID</param>
+        /// <returns>MVResult</returns>
+        public Task<MVResult> GetMVAsync(int mv_id)
         {
             return Task.Run(() =>
             {
@@ -549,22 +693,103 @@ namespace SmartLens
     }
     #endregion
 
+    #region 播放模式枚举
+    /// <summary>
+    /// 枚举播放模式
+    /// </summary>
+    public enum PlayMode
+    {
+        /// <summary>
+        /// 顺序播放
+        /// </summary>
+        Order = 0,
+
+        /// <summary>
+        /// 随机播放
+        /// </summary>
+        Shuffle = 1,
+
+        /// <summary>
+        /// 列表循环
+        /// </summary>
+        ListLoop = 2,
+
+        /// <summary>
+        /// 单曲循环
+        /// </summary>
+        Repeat = 3
+    }
+    #endregion
+
     #region 单曲搜索类
+    /// <summary>
+    /// 保存音乐搜索结果的类
+    /// </summary>
     public sealed class SearchSingleMusic
     {
-        public string Music { get; private set; }
+        /// <summary>
+        /// 音乐名称
+        /// </summary>
+        public string MusicName { get; private set; }
+
+        /// <summary>
+        /// 艺术家
+        /// </summary>
         public string Artist { get; private set; }
+
+        /// <summary>
+        /// 专辑
+        /// </summary>
         public string Album { get; private set; }
+
+        /// <summary>
+        /// 持续时间
+        /// </summary>
         public string Duration { get; private set; }
+
+        /// <summary>
+        /// 收藏按钮颜色
+        /// </summary>
         public SolidColorBrush Col { get; private set; } = new SolidColorBrush(Colors.White);
+
+        /// <summary>
+        /// 收藏按钮图形
+        /// </summary>
         public string Glyph { get; private set; } = "\uEB51";
+
+        /// <summary>
+        /// 音乐封面URL
+        /// </summary>
         public string ImageUrl { get; private set; }
+
+        /// <summary>
+        /// 音乐ID
+        /// </summary>
         public long[] SongID { get; private set; }
+
+        /// <summary>
+        /// MV的ID
+        /// </summary>
         public long MVid { get; private set; }
+
+        /// <summary>
+        /// 指示该音乐是否具有MV
+        /// </summary>
         public bool MVExists { get; private set; } = false;
-        public SearchSingleMusic(string Music, string Artist, string Album, string Duration, long SongID, string Url, long MVid)
+
+        /// <summary>
+        /// 创建SearchSingleMusic的实例
+        /// </summary>
+        /// <param name="MusicName">音乐名</param>
+        /// <param name="Artist">艺术家</param>
+        /// <param name="Album">专辑名</param>
+        /// <param name="Duration">持续时间</param>
+        /// <param name="SongID">音乐ID</param>
+        /// <param name="Url">封面图片URL</param>
+        /// <param name="MVid">MV的ID</param>
+        public SearchSingleMusic(string MusicName, string Artist, string Album, string Duration, long SongID, string Url, long MVid)
         {
-            this.Music = Music;
+            this.MusicName = MusicName;
             this.Artist = Artist;
             this.Album = Album;
             this.Duration = Duration;
@@ -587,11 +812,32 @@ namespace SmartLens
     #endregion
 
     #region 歌手搜索类
+    /// <summary>
+    /// 保存歌手搜索结果的类
+    /// </summary>
     public sealed class SearchSinger
     {
+        /// <summary>
+        /// 艺术家名称
+        /// </summary>
         public string Singer { get; private set; }
+
+        /// <summary>
+        /// 艺术家封面
+        /// </summary>
         public Uri ImageUri { get; private set; }
+
+        /// <summary>
+        /// 艺术家ID
+        /// </summary>
         public string ID { get; private set; }
+
+        /// <summary>
+        /// 创建SearchSinger的实例
+        /// </summary>
+        /// <param name="Singer">艺术家名称</param>
+        /// <param name="ImageUri">艺术家封面</param>
+        /// <param name="ID">艺术家ID</param>
         public SearchSinger(string Singer, Uri ImageUri, string ID)
         {
             this.Singer = Singer;
@@ -602,16 +848,38 @@ namespace SmartLens
     #endregion
 
     #region 专辑搜索类
+    /// <summary>
+    /// 保存专辑搜索结果的类
+    /// </summary>
     public sealed class SearchAlbum
     {
+        /// <summary>
+        /// 专辑封面URL
+        /// </summary>
         public Uri ImageUri { get; private set; }
 
+        /// <summary>
+        /// 专辑名称
+        /// </summary>
         public string Name { get; private set; }
 
+        /// <summary>
+        /// 专辑所属的艺术家名称
+        /// </summary>
         public string Artists { get; private set; }
 
+        /// <summary>
+        /// 专辑ID
+        /// </summary>
         public long ID { get; private set; }
 
+        /// <summary>
+        /// 创建SearchAlbum实例
+        /// </summary>
+        /// <param name="ImageUri">专辑封面URL</param>
+        /// <param name="Name">专辑名</param>
+        /// <param name="Artists">艺术家名</param>
+        /// <param name="ID">专辑ID</param>
         public SearchAlbum(Uri ImageUri, string Name, string Artists, long ID)
         {
             this.ImageUri = ImageUri;
@@ -621,15 +889,32 @@ namespace SmartLens
         }
     }
 
-
+    /// <summary>
+    /// 保存歌手详情页面下的专辑信息的类
+    /// </summary>
     public sealed class SingerAlbum
     {
+        /// <summary>
+        /// 专辑封面URL
+        /// </summary>
         public Uri AlbumCover { get; private set; }
 
+        /// <summary>
+        /// 专辑名称
+        /// </summary>
         public string Name { get; private set; }
 
+        /// <summary>
+        /// 专辑ID
+        /// </summary>
         public long ID { get; private set; }
 
+        /// <summary>
+        /// 创建SingerAlbum的实例
+        /// </summary>
+        /// <param name="Name">专辑名</param>
+        /// <param name="ID">专辑ID</param>
+        /// <param name="CoverUri">封面URL</param>
         public SingerAlbum(string Name, long ID, Uri CoverUri)
         {
             this.Name = Name;
@@ -641,16 +926,38 @@ namespace SmartLens
     #endregion
 
     #region MV提供类
+    /// <summary>
+    /// 保存歌手详情下的MV信息的类
+    /// </summary>
     public sealed class SingerMV
     {
+        /// <summary>
+        /// MV封面URL
+        /// </summary>
         public Uri MVCover { get; private set; }
 
+        /// <summary>
+        /// MV名称
+        /// </summary>
         public string Name { get; private set; }
 
+        /// <summary>
+        /// MV相关介绍
+        /// </summary>
         public string Introduction { get; private set; }
 
+        /// <summary>
+        /// MV的ID
+        /// </summary>
         public int MovieID { get; private set; }
 
+        /// <summary>
+        /// 创建SingerMV的新实例
+        /// </summary>
+        /// <param name="Name">MV名称</param>
+        /// <param name="Introduction">MV介绍</param>
+        /// <param name="MovieID">MV的ID</param>
+        /// <param name="CoverUri">MV的封面URI</param>
         public SingerMV(string Name, string Introduction, int MovieID, Uri CoverUri)
         {
             this.Name = Name;
@@ -701,42 +1008,98 @@ namespace SmartLens
     #endregion
 
     #region 播放列表对象提供类
+    /// <summary>
+    /// 为音乐播放提供播放列表
+    /// </summary>
     public sealed class MediaPlayList
     {
+        /// <summary>
+        /// 收藏的音乐的播放列表
+        /// </summary>
         public static MediaPlaybackList FavouriteSongList = new MediaPlaybackList()
         {
             MaxPlayedItemsToKeepOpen = 3
         };
 
+        /// <summary>
+        /// 特定歌手的热门50首歌曲播放列表
+        /// </summary>
         public static MediaPlaybackList SingerHotSongList = new MediaPlaybackList()
         {
             MaxPlayedItemsToKeepOpen = 3
         };
 
+        /// <summary>
+        /// 特定专辑内所有歌曲播放列表
+        /// </summary>
         public static MediaPlaybackList AlbumSongList = new MediaPlaybackList()
         {
             MaxPlayedItemsToKeepOpen = 3
         };
 
+        /// <summary>
+        /// 热门50首歌曲备份
+        /// </summary>
         public static List<SearchSingleMusic> HotSongBackup = new List<SearchSingleMusic>();
 
+        /// <summary>
+        /// 专辑歌曲备份
+        /// </summary>
         public static List<SearchSingleMusic> AlbumSongBackup = new List<SearchSingleMusic>();
 
     }
     #endregion
 
     #region 音乐列表信息类
+    /// <summary>
+    /// 对音乐收藏列表提供显示
+    /// </summary>
     public sealed class PlayList : INotifyPropertyChanged
     {
-        public string Music { get; set; }
-        public string Artist { get; set; }
-        public string Album { get; set; }
-        public string Duration { get; set; }
-        public string ImageUrl { get; set; }
-        public long SongID { get; set; }
+        /// <summary>
+        /// 音乐名称
+        /// </summary>
+        public string Music { get; private set; }
+
+        /// <summary>
+        /// 艺术家名称
+        /// </summary>
+        public string Artist { get; private set; }
+
+        /// <summary>
+        /// 所属专辑名称
+        /// </summary>
+        public string Album { get; private set; }
+
+        /// <summary>
+        /// 持续时间
+        /// </summary>
+        public string Duration { get; private set; }
+
+        /// <summary>
+        /// 封面图片URL
+        /// </summary>
+        public string ImageUrl { get; private set; }
+
+        /// <summary>
+        /// 音乐ID
+        /// </summary>
+        public long SongID { get; private set; }
+
+        /// <summary>
+        /// MV的ID
+        /// </summary>
         public long MVid { get; private set; }
+
+        /// <summary>
+        /// 指示是否存在MV
+        /// </summary>
         public bool MVExists { get; private set; } = false;
         private SolidColorBrush fontcolor;
+
+        /// <summary>
+        /// 当音乐处于加载状态时，为界面提供灰色或白色指示
+        /// </summary>
         public SolidColorBrush FontColor
         {
             get
@@ -751,6 +1114,17 @@ namespace SmartLens
         }
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// 创建PlayList的实例
+        /// </summary>
+        /// <param name="Music">音乐名</param>
+        /// <param name="Artist">艺术家名</param>
+        /// <param name="Album">专辑名</param>
+        /// <param name="Duration">持续时间</param>
+        /// <param name="ImageUrl">封面图片URL</param>
+        /// <param name="SongID">音乐ID</param>
+        /// <param name="MVid">MV的ID</param>
+        /// <param name="LoadAsGray">指示是否要以灰色状态加载</param>
         public PlayList(string Music, string Artist, string Album, string Duration, string ImageUrl, long SongID, long MVid, bool LoadAsGray = false)
         {
             this.Music = Music;
@@ -781,7 +1155,10 @@ namespace SmartLens
     }
     #endregion
 
-    #region SQL数据库类
+    #region SQLite数据库类
+    /// <summary>
+    /// 为SmartLens提供数据库支持
+    /// </summary>
     public sealed class SQLite : IDisposable
     {
         private SqliteConnection OLEDB = new SqliteConnection("Filename=SmartLens_SQLite.db");
@@ -796,6 +1173,10 @@ namespace SmartLens
             CreateTable.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// 提供SQLite的实例
+        /// </summary>
+        /// <returns>SQLite</returns>
         public static SQLite GetInstance()
         {
             if (Lock == null)
@@ -815,75 +1196,11 @@ namespace SmartLens
             }
         }
 
-        public async void Drop()
-        {
-            SqliteCommand Command = new SqliteCommand("Drop Table MusicList;Drop Table WiFiRecord", OLEDB);
-            await Command.ExecuteNonQueryAsync();
-        }
-
-        #region WiFi信息的SQL处理部分
-        public async Task<List<WiFiInDataBase>> GetAllWiFiData()
-        {
-            List<WiFiInDataBase> WiFiContainer = new List<WiFiInDataBase>();
-            SqliteCommand Command = new SqliteCommand("Select * From WiFiRecord", OLEDB);
-            SqliteDataReader query = await Command.ExecuteReaderAsync();
-            while (query.Read())
-            {
-                WiFiContainer.Add(new WiFiInDataBase(query[0].ToString(), query[1].ToString(), query[2].ToString()));
-            }
-            return WiFiContainer;
-        }
-
-        public async Task UpdateWiFiData(string SSID, bool AutoConnect)
-        {
-            SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set AutoConnect = @AutoConnect Where SSID = @SSID", OLEDB);
-            Command.Parameters.AddWithValue("@SSID", SSID);
-            Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
-
-            await Command.ExecuteNonQueryAsync();
-        }
-
-        public async Task UpdateWiFiData(string SSID, string Password)
-        {
-            SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set Password = @Password Where SSID = @SSID", OLEDB);
-            Command.Parameters.AddWithValue("@SSID", SSID);
-            Command.Parameters.AddWithValue("@Password", Password);
-
-            await Command.ExecuteNonQueryAsync();
-        }
-
-        public async Task SetWiFiData(string SSID, string Password, bool AutoConnect)
-        {
-            SqliteCommand Command = new SqliteCommand("Insert Into WiFiRecord Values (@SSID , @Password , @AutoConnect)", OLEDB);
-            Command.Parameters.AddWithValue("@SSID", SSID);
-            Command.Parameters.AddWithValue("@Password", Password);
-            Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
-
-            await Command.ExecuteNonQueryAsync();
-        }
-        #endregion
-
-        #region Dispose资源释放部分
-        public void Dispose()
-        {
-            if (!IsDisposed)
-            {
-                OLEDB.Dispose();
-            }
-            SQL = null;
-            Lock = null;
-            IsDisposed = true;
-        }
-
-        ~SQLite()
-        {
-            Dispose();
-        }
-        #endregion
-
-
-        #region Music的SQL处理部分
-        public async Task<string[]> GetAllMusicName()
+        /// <summary>
+        /// 异步获取SQLite数据库中存储的所有音乐名称
+        /// </summary>
+        /// <returns>string[]</returns>
+        public async Task<string[]> GetAllMusicNameAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select MusicName From MusicList", OLEDB);
             SqliteCommand Command1 = new SqliteCommand("Select Count(*) From MusicList", OLEDB);
@@ -899,6 +1216,10 @@ namespace SmartLens
             return Names;
         }
 
+        /// <summary>
+        /// 异步获取SQLite数据库中存储的所有音乐数据
+        /// </summary>
+        /// <returns></returns>
         public async Task GetMusicDataAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select * From MusicList", OLEDB);
@@ -915,7 +1236,7 @@ namespace SmartLens
             {
                 long[] temp = new long[1];
                 temp[0] = (long)query1[5];
-                MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri((await NeteaseMusicAPI.GetInstance().GetSongsUrl(temp)).Data[0].Url)));
+                MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri((await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(temp)).Data[0].Url)));
                 MediaPlayList.FavouriteSongList.Items.Add(Item);
 
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
@@ -933,7 +1254,18 @@ namespace SmartLens
             }
         }
 
-        public async Task SetMusicData(string MusicName, string Artist, string Album, string Duration, string ImageURL, long SongID, long MVid)
+        /// <summary>
+        /// 向SQLite数据库中异步存储音乐数据
+        /// </summary>
+        /// <param name="MusicName">音乐名称</param>
+        /// <param name="Artist">艺术家</param>
+        /// <param name="Album">专辑名</param>
+        /// <param name="Duration">持续时间</param>
+        /// <param name="ImageURL">封面图片URL</param>
+        /// <param name="SongID">歌曲ID</param>
+        /// <param name="MVid">MV的ID</param>
+        /// <returns></returns>
+        public async Task SetMusicDataAsync(string MusicName, string Artist, string Album, string Duration, string ImageURL, long SongID, long MVid)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into MusicList Values (@MusicName,@Artist,@Album,@Duration,@ImageURL,@SongID,@MVid)", OLEDB);
             Command.Parameters.AddWithValue("@MusicName", MusicName);
@@ -946,7 +1278,12 @@ namespace SmartLens
             await Command.ExecuteNonQueryAsync();
         }
 
-        public async Task DelMusic(PlayList list)
+        /// <summary>
+        /// 异步删除SQLite数据库中的音乐条目
+        /// </summary>
+        /// <param name="list">需要删除的对象</param>
+        /// <returns>无</returns>
+        public async Task DeleteMusicAsync(PlayList list)
         {
             SqliteCommand Command = new SqliteCommand("Delete From MusicList Where MusicName=@MusicName And Artist=@Artist And Album=@Album And Duration=@Duration", OLEDB);
             Command.Parameters.AddWithValue("@MusicName", list.Music);
@@ -955,17 +1292,127 @@ namespace SmartLens
             Command.Parameters.AddWithValue("@Duration", list.Duration);
             await Command.ExecuteNonQueryAsync();
         }
-        #endregion
+
+
+
+        /// <summary>
+        /// 从SQLite数据库中异步获取上一次保存的WiFi数据
+        /// </summary>
+        /// <returns>Task<List<WiFiInDataBase>></returns>
+        public async Task<List<WiFiInDataBase>> GetAllWiFiDataAsync()
+        {
+            List<WiFiInDataBase> WiFiContainer = new List<WiFiInDataBase>();
+            SqliteCommand Command = new SqliteCommand("Select * From WiFiRecord", OLEDB);
+            SqliteDataReader query = await Command.ExecuteReaderAsync();
+            while (query.Read())
+            {
+                WiFiContainer.Add(new WiFiInDataBase(query[0].ToString(), query[1].ToString(), query[2].ToString()));
+            }
+            return WiFiContainer;
+        }
+
+        /// <summary>
+        /// 异步更新SQLite数据库中的AutoConnnect字段
+        /// </summary>
+        /// <param name="SSID">WiFi的SSID号</param>
+        /// <param name="AutoConnect">是否自动连接</param>
+        /// <returns>无</returns>
+        public async Task UpdateWiFiDataAsync(string SSID, bool AutoConnect)
+        {
+            SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set AutoConnect = @AutoConnect Where SSID = @SSID", OLEDB);
+            Command.Parameters.AddWithValue("@SSID", SSID);
+            Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
+
+            await Command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// 异步更新SQLite数据库中的Password字段
+        /// </summary>
+        /// <param name="SSID">WiFi的SSID号</param>
+        /// <param name="Password">密码</param>
+        /// <returns></returns>
+        public async Task UpdateWiFiDataAsync(string SSID, string Password)
+        {
+            SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set Password = @Password Where SSID = @SSID", OLEDB);
+            Command.Parameters.AddWithValue("@SSID", SSID);
+            Command.Parameters.AddWithValue("@Password", Password);
+
+            await Command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// 异步向SQLite数据库中保存WiFi数据
+        /// </summary>
+        /// <param name="SSID">WiFi的SSID号</param>
+        /// <param name="Password">密码</param>
+        /// <param name="AutoConnect">是否自动连接</param>
+        /// <returns>无</returns>
+        public async Task SetWiFiDataAsync(string SSID, string Password, bool AutoConnect)
+        {
+            SqliteCommand Command = new SqliteCommand("Insert Into WiFiRecord Values (@SSID , @Password , @AutoConnect)", OLEDB);
+            Command.Parameters.AddWithValue("@SSID", SSID);
+            Command.Parameters.AddWithValue("@Password", Password);
+            Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
+
+            await Command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// 释放SQLite数据库资源
+        /// </summary>
+        public void Dispose()
+        {
+            if (!IsDisposed)
+            {
+                OLEDB.Dispose();
+                OLEDB = null;
+            }
+            SQL = null;
+            Lock = null;
+            IsDisposed = true;
+        }
+
+        ~SQLite()
+        {
+            Dispose();
+        }
     }
     #endregion
 
     #region 美妆品牌展示类
+    /// <summary>
+    /// 为美妆图片和口红颜色提供支持
+    /// </summary>
     public sealed class CosmeticsItem
     {
+        /// <summary>
+        /// 口红品牌对应的图片
+        /// </summary>
         public Uri ImageUri { get; private set; }
+
+        /// <summary>
+        /// 品牌名称
+        /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// 品牌描述
+        /// </summary>
         public string Description { get; private set; }
+
+        /// <summary>
+        /// 口红颜色
+        /// </summary>
         public Color LipColor { get; private set; }
+
+        /// <summary>
+        /// 创建CosmeticsItem的实例
+        /// </summary>
+        /// <param name="uri">品牌图片URL</param>
+        /// <param name="Name">品牌名称</param>
+        /// <param name="Description">品牌描述</param>
+        /// <param name="LipColor">口红颜色</param>
         public CosmeticsItem(Uri uri, string Name, string Description, Color LipColor)
         {
             ImageUri = uri;
@@ -977,6 +1424,9 @@ namespace SmartLens
     #endregion
 
     #region 摄像头实例提供类
+    /// <summary>
+    /// 提供摄像头的支持
+    /// </summary>
     public sealed class CameraProvider
     {
         private static CameraHelper CamHelper = null;
@@ -984,6 +1434,9 @@ namespace SmartLens
         private static readonly object CreateLocker = new object();
         private CameraProvider() { }
 
+        /// <summary>
+        /// 释放CameraProvider资源
+        /// </summary>
         public static void Dispose()
         {
             lock (DisposeLocker)
@@ -1008,6 +1461,10 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 设置视频帧采集来源
+        /// </summary>
+        /// <param name="FrameSource">来源</param>
         public static void SetCameraFrameSource(MediaFrameSourceGroup FrameSource)
         {
             if (CamHelper == null)
@@ -1195,9 +1652,16 @@ namespace SmartLens
     #endregion
 
     #region 蓝牙设备列表类
+    /// <summary>
+    /// 为蓝牙模块提供蓝牙设备信息保存功能
+    /// </summary>
     public sealed class BluetoothList : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// 表示蓝牙设备
+        /// </summary>
         public DeviceInformation DeviceInfo { get; set; }
         public void OnPropertyChanged(string name)
         {
@@ -1206,6 +1670,10 @@ namespace SmartLens
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(name));
             }
         }
+
+        /// <summary>
+        /// 获取蓝牙设备名称
+        /// </summary>
         public string Name
         {
             get
@@ -1213,6 +1681,10 @@ namespace SmartLens
                 return DeviceInfo.Name;
             }
         }
+
+        /// <summary>
+        /// 获取蓝牙标识字符串
+        /// </summary>
         public string Id
         {
             get
@@ -1220,6 +1692,10 @@ namespace SmartLens
                 return DeviceInfo.Id;
             }
         }
+
+        /// <summary>
+        /// 获取配对情况描述字符串
+        /// </summary>
         public string IsPaired
         {
             get
@@ -1229,6 +1705,10 @@ namespace SmartLens
                 else return "准备配对";
             }
         }
+
+        /// <summary>
+        /// Button显示属性
+        /// </summary>
         public string CancelOrPairButton
         {
             get
@@ -1239,6 +1719,10 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 更新蓝牙设备信息
+        /// </summary>
+        /// <param name="DeviceInfoUpdate">蓝牙设备的更新属性</param>
         public void Update(DeviceInformationUpdate DeviceInfoUpdate)
         {
             DeviceInfo.Update(DeviceInfoUpdate);
@@ -1246,6 +1730,10 @@ namespace SmartLens
             OnPropertyChanged("Name");
         }
 
+        /// <summary>
+        /// 创建BluetoothList的实例
+        /// </summary>
+        /// <param name="DeviceInfo">蓝牙设备</param>
         public BluetoothList(DeviceInformation DeviceInfo)
         {
             this.DeviceInfo = DeviceInfo;
@@ -1254,25 +1742,28 @@ namespace SmartLens
     #endregion
 
     #region 蓝牙Obex协议对象类
+    /// <summary>
+    /// 提供蓝牙OBEX协议服务
+    /// </summary>
     public sealed class ObexServiceProvider
     {
-        private static ObexService ObexClient = null;
+        /// <summary>
+        /// OBEX协议服务
+        /// </summary>
+        public static ObexService ObexClient { get; private set; }
 
-        public static ObexService GetInstance()
-        {
-            return ObexClient;
-        }
-
+        /// <summary>
+        /// 设置Obex对象的实例
+        /// </summary>
+        /// <param name="obex">OBEX对象</param>
         public static void SetObexInstance(ObexService obex)
         {
             ObexClient = obex;
         }
 
-        public static bool CheckIfInstanceExist()
-        {
-            return ObexClient != null;
-        }
-
+        /// <summary>
+        /// 释放OBEX服务资源
+        /// </summary>
         public static void Dispose()
         {
             ObexClient = null;
@@ -1281,13 +1772,32 @@ namespace SmartLens
     #endregion
 
     #region 可移动设备StorageFile类
+    /// <summary>
+    /// 提供USB设备中的文件的描述
+    /// </summary>
     public sealed class RemovableDeviceFile : INotifyPropertyChanged
     {
+        /// <summary>
+        /// 获取文件大小
+        /// </summary>
         public string Size { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
+        /// <summary>
+        /// 获取此文件的StorageFile对象
+        /// </summary>
         public StorageFile File { get; private set; }
+
+        /// <summary>
+        /// 获取此文件的缩略图
+        /// </summary>
         public BitmapImage Thumbnail { get; private set; }
 
+        /// <summary>
+        /// 创建RemovableDeviceFile实例
+        /// </summary>
+        /// <param name="Size">文件大小</param>
+        /// <param name="File">文件StorageFile对象</param>
+        /// <param name="Thumbnail">文件缩略图</param>
         public RemovableDeviceFile(string Size, StorageFile File, BitmapImage Thumbnail)
         {
             this.Size = Size;
@@ -1303,6 +1813,11 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 更新文件以及文件大小，并通知UI界面
+        /// </summary>
+        /// <param name="File"></param>
+        /// <param name="FileSize"></param>
         public void FileUpdateRequested(StorageFile File, string FileSize)
         {
             this.File = File;
@@ -1311,17 +1826,27 @@ namespace SmartLens
             OnPropertyChanged("Size");
         }
 
+        /// <summary>
+        /// 更新文件名称，并通知UI界面
+        /// </summary>
         public void NameUpdateRequested()
         {
             OnPropertyChanged("DisplayName");
         }
 
+        /// <summary>
+        /// 更新文件大小，并通知UI界面
+        /// </summary>
+        /// <param name="Size"></param>
         public void SizeUpdateRequested(string Size)
         {
             this.Size = Size;
             OnPropertyChanged("Size");
         }
 
+        /// <summary>
+        /// 获取文件的文件名(不包含后缀)
+        /// </summary>
         public string DisplayName
         {
             get
@@ -1330,6 +1855,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取文件的完整文件名(包括后缀)
+        /// </summary>
         public string Name
         {
             get
@@ -1338,6 +1866,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取文件类型描述
+        /// </summary>
         public string Type
         {
             get
@@ -1350,15 +1881,50 @@ namespace SmartLens
     #endregion
 
     #region Zip文件查看器显示类
+    /// <summary>
+    /// 提供Zip内部文件的显示
+    /// </summary>
     public sealed class ZipFileDisplay
     {
+        /// <summary>
+        /// 获取文件名
+        /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// 获取压缩后的大小
+        /// </summary>
         public string CompresionSize { get; private set; }
+
+        /// <summary>
+        /// 获取文件实际大小
+        /// </summary>
         public string ActualSize { get; private set; }
+
+        /// <summary>
+        /// 获取文件修改时间
+        /// </summary>
         public string Time { get; private set; }
+
+        /// <summary>
+        /// 获取文件类型
+        /// </summary>
         public string Type { get; private set; }
+
+        /// <summary>
+        /// 获取是否加密的描述
+        /// </summary>
         public string IsCrypted { get; private set; }
 
+        /// <summary>
+        /// 创建ZipFileDisplay的实例
+        /// </summary>
+        /// <param name="Name">文件名称</param>
+        /// <param name="Type">文件类型</param>
+        /// <param name="CompresionSize">压缩后大小</param>
+        /// <param name="ActualSize">实际大小</param>
+        /// <param name="Time">修改时间</param>
+        /// <param name="IsCrypted">加密描述</param>
         public ZipFileDisplay(string Name, string Type, string CompresionSize, string ActualSize, string Time, bool IsCrypted)
         {
             this.CompresionSize = CompresionSize;
@@ -1386,19 +1952,55 @@ namespace SmartLens
     #endregion
 
     #region Zip相关枚举
+    /// <summary>
+    /// AES加密密钥长度枚举
+    /// </summary>
     public enum KeySize
     {
+        /// <summary>
+        /// 无
+        /// </summary>
         None = 0,
+
+        /// <summary>
+        /// AES-128bit
+        /// </summary>
         AES128 = 128,
+
+        /// <summary>
+        /// AES-256bit
+        /// </summary>
         AES256 = 256
     }
 
+    /// <summary>
+    /// 压缩等级枚举
+    /// </summary>
     public enum CompressionLevel
     {
+        /// <summary>
+        /// 最大
+        /// </summary>
         Max = 9,
+
+        /// <summary>
+        /// 高于标准
+        /// </summary>
         AboveStandard = 7,
+
+        /// <summary>
+        /// 标准
+        /// </summary>
         Standard = 5,
+
+        /// <summary>
+        /// 低于标准
+        /// </summary>
         BelowStandard = 3,
+
+        /// <summary>
+        /// 仅打包
+        /// </summary>
         PackOnly = 1
     }
     #endregion
@@ -1432,14 +2034,39 @@ namespace SmartLens
     #endregion
 
     #region AES加密解密方法类
+    /// <summary>
+    /// 提供AES加密相关方法
+    /// </summary>
     public sealed class AESProvider
     {
+        /// <summary>
+        /// 默认256位密钥
+        /// </summary>
         public const string Admin256Key = "12345678876543211234567887654321";
+
+        /// <summary>
+        /// 默认128位密钥
+        /// </summary>
         public const string Admin128Key = "1234567887654321";
+
+        /// <summary>
+        /// 默认IV加密向量
+        /// </summary>
         private static readonly byte[] AdminIV = Encoding.UTF8.GetBytes("r7BXXKkLb8qrSNn0");
+
+        /// <summary>
+        /// 使用AES-CBC加密方式的加密算法
+        /// </summary>
+        /// <param name="ToEncrypt">待加密的数据</param>
+        /// <param name="key">密码</param>
+        /// <param name="KeySize">密钥长度</param>
+        /// <returns>加密后数据</returns>
         public static byte[] Encrypt(byte[] ToEncrypt, string key, int KeySize)
         {
-
+            if (KeySize != 256 || KeySize != 128)
+            {
+                throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
+            }
             byte[] KeyArray = Encoding.UTF8.GetBytes(key);
             byte[] result;
             using (RijndaelManaged Rijndael = new RijndaelManaged
@@ -1457,8 +2084,20 @@ namespace SmartLens
             return result;
         }
 
+        /// <summary>
+        /// 使用AES-CBC加密方式的解密算法
+        /// </summary>
+        /// <param name="ToDecrypt">待解密数据</param>
+        /// <param name="key">密码</param>
+        /// <param name="KeySize">密钥长度</param>
+        /// <returns>解密后数据</returns>
         public static byte[] Decrypt(byte[] ToDecrypt, string key, int KeySize)
         {
+            if (KeySize != 256 || KeySize != 128)
+            {
+                throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
+            }
+
             byte[] KeyArray = Encoding.UTF8.GetBytes(key);
             byte[] result;
             using (RijndaelManaged Rijndael = new RijndaelManaged
@@ -1476,8 +2115,19 @@ namespace SmartLens
             return result;
         }
 
+        /// <summary>
+        /// 使用AES-ECB方式的加密算法
+        /// </summary>
+        /// <param name="ToEncrypt">待加密数据</param>
+        /// <param name="key">密码</param>
+        /// <param name="KeySize">密钥长度</param>
+        /// <returns></returns>
         public static byte[] EncryptForUSB(byte[] ToEncrypt, string key, int KeySize)
         {
+            if (KeySize != 256 || KeySize != 128)
+            {
+                throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
+            }
 
             byte[] KeyArray = Encoding.UTF8.GetBytes(key);
             byte[] result;
@@ -1495,8 +2145,20 @@ namespace SmartLens
             return result;
         }
 
+        /// <summary>
+        /// 使用AES-ECB方式的解密算法
+        /// </summary>
+        /// <param name="ToDecrypt">待解密数据</param>
+        /// <param name="key">密码</param>
+        /// <param name="KeySize">密钥长度</param>
+        /// <returns>解密后数据</returns>
         public static byte[] DecryptForUSB(byte[] ToDecrypt, string key, int KeySize)
         {
+            if (KeySize != 256 || KeySize != 128)
+            {
+                throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
+            }
+
             byte[] KeyArray = Encoding.UTF8.GetBytes(key);
             byte[] result;
             using (RijndaelManaged Rijndael = new RijndaelManaged
@@ -1572,8 +2234,14 @@ namespace SmartLens
     #endregion
 
     #region 主题切换器
+    /// <summary>
+    /// 提供切换主题功能
+    /// </summary>
     public sealed class ThemeSwitcher
     {
+        /// <summary>
+        /// 获取或设置使用亮色主题或暗色主题
+        /// </summary>
         public static bool IsLightEnabled
         {
             get
@@ -1611,10 +2279,26 @@ namespace SmartLens
     #endregion
 
     #region 天气数据到达事件信息传递类
+    /// <summary>
+    /// 天气数据到达时提供数据传递方式
+    /// </summary>
     public sealed class WeatherData
     {
+        /// <summary>
+        /// 天气数据
+        /// </summary>
         public Weather.Data Data { get; private set; }
+
+        /// <summary>
+        /// 地理位置信息
+        /// </summary>
         public string Location { get; private set; }
+
+        /// <summary>
+        /// 创建WeatherData的实例
+        /// </summary>
+        /// <param name="Data">天气数据</param>
+        /// <param name="Location">地理位置信息</param>
         public WeatherData(Weather.Data Data, string Location)
         {
             this.Data = Data;
@@ -1624,18 +2308,42 @@ namespace SmartLens
     #endregion
 
     #region 天气数据获取错误枚举
+    /// <summary>
+    /// 获取天气错误类型枚举
+    /// </summary>
     public enum ErrorReason
     {
+        /// <summary>
+        /// 因地理位置授权被拒绝而无法获取天气
+        /// </summary>
         Location = 0,
+
+        /// <summary>
+        /// 因网络问题无法获取天气
+        /// </summary>
         NetWork = 1,
+
+        /// <summary>
+        /// 因天气API错误而无法获取天气
+        /// </summary>
         APIError = 2
     }
     #endregion
 
     #region USB图片展示类
+    /// <summary>
+    /// 为USB图片查看提供支持
+    /// </summary>
     public sealed class PhotoDisplaySupport
     {
+        /// <summary>
+        /// 获取Bitmap图片对象
+        /// </summary>
         public BitmapImage Bitmap { get; private set; }
+
+        /// <summary>
+        /// 获取Photo文件名称
+        /// </summary>
         public string FileName
         {
             get
@@ -1643,8 +2351,17 @@ namespace SmartLens
                 return PhotoFile.Name;
             }
         }
+
+        /// <summary>
+        /// 获取Photo的StorageFile对象
+        /// </summary>
         public StorageFile PhotoFile { get; private set; }
 
+        /// <summary>
+        /// 创建PhotoDisplaySupport的实例
+        /// </summary>
+        /// <param name="stream">缩略图的流</param>
+        /// <param name="File">图片文件</param>
         public PhotoDisplaySupport(IRandomAccessStream stream, StorageFile File)
         {
             Bitmap = new BitmapImage();
@@ -1682,6 +2399,10 @@ namespace SmartLens
             SMTPClient = new SmtpClient();
             SMTPOprationLock = new AutoResetEvent(false);
         }
+
+        /// <summary>
+        /// 获取IMAP连接状态
+        /// </summary>
         public bool IsIMAPConnected
         {
             get
@@ -1689,6 +2410,10 @@ namespace SmartLens
                 return IMAPClient.IsConnected;
             }
         }
+
+        /// <summary>
+        /// 获取用户名
+        /// </summary>
         public string UserName
         {
             get
@@ -1696,7 +2421,12 @@ namespace SmartLens
                 return Credential.UserName;
             }
         }
+
+        /// <summary>
+        /// 昵称
+        /// </summary>
         public string CallName { get; private set; }
+
         private bool IsEnableSSL;
         private static readonly object SyncRoot = new object();
         private ImapClient IMAPClient;
@@ -1912,13 +2642,38 @@ namespace SmartLens
     #endregion
 
     #region Email信息内部传递包
+    /// <summary>
+    /// Email内部信息传递包
+    /// </summary>
     public sealed class InfomationDeliver
     {
+        /// <summary>
+        /// 获取发件人
+        /// </summary>
         public string From { get; private set; }
+
+        /// <summary>
+        /// 获取收件人
+        /// </summary>
         public string To { get; private set; }
+
+        /// <summary>
+        /// 获取Email发送类型
+        /// </summary>
         public EmailSendType SendType { get; private set; }
+
+        /// <summary>
+        /// 获取Email主题
+        /// </summary>
         public string Title { get; private set; }
 
+        /// <summary>
+        /// 创建InfomationDeliver的实例
+        /// </summary>
+        /// <param name="From">发件人</param>
+        /// <param name="To">收件人</param>
+        /// <param name="Title">主题</param>
+        /// <param name="SendType">发送类型</param>
         public InfomationDeliver(string From, string To, string Title, EmailSendType SendType)
         {
             if (SendType == EmailSendType.NormalSend)
@@ -1931,6 +2686,11 @@ namespace SmartLens
             this.SendType = SendType;
         }
 
+        /// <summary>
+        /// 创建InfomationDeliver的实例
+        /// </summary>
+        /// <param name="From">发件人</param>
+        /// <param name="Title">主题</param>
         public InfomationDeliver(string From, string Title)
         {
             To = null;
@@ -1939,6 +2699,10 @@ namespace SmartLens
             SendType = EmailSendType.Forward;
         }
 
+        /// <summary>
+        /// 创建InfomationDeliver的实例
+        /// </summary>
+        /// <param name="From">发件人</param>
         public InfomationDeliver(string From)
         {
             this.From = From;
@@ -1950,26 +2714,64 @@ namespace SmartLens
     #endregion
 
     #region Email相关枚举
+    /// <summary>
+    /// Email协议枚举
+    /// </summary>
     public enum EmailProtocol
     {
+        /// <summary>
+        /// IMAP协议
+        /// </summary>
         IMAP = 0,
+
+        /// <summary>
+        /// SMTP协议
+        /// </summary>
         SMTP = 1
     }
 
+    /// <summary>
+    /// Email发送类型枚举
+    /// </summary>
     public enum EmailSendType
     {
+        /// <summary>
+        /// 回复全部
+        /// </summary>
         ReplyToAll = 0,
+
+        /// <summary>
+        /// 回复
+        /// </summary>
         Reply = 1,
+
+        /// <summary>
+        /// 新邮件
+        /// </summary>
         NormalSend = 2,
+
+        /// <summary>
+        /// 转发
+        /// </summary>
         Forward = 3
     }
     #endregion
 
     #region Email列表展示类
+    /// <summary>
+    /// 为Email邮件列表提供展示
+    /// </summary>
     public sealed class EmailItem : INotifyPropertyChanged
     {
+        /// <summary>
+        /// 获取邮件消息本体
+        /// </summary>
         public MimeMessage Message { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// 获取附件
+        /// </summary>
         public IEnumerable<MimeEntity> FileEntitys
         {
             get
@@ -1977,6 +2779,10 @@ namespace SmartLens
                 return Message.Attachments;
             }
         }
+
+        /// <summary>
+        /// 获取发件人
+        /// </summary>
         public string From
         {
             get
@@ -1984,6 +2790,10 @@ namespace SmartLens
                 return Message.From[0].Name == "" ? Message.From[0].ToString() : Message.From[0].Name;
             }
         }
+
+        /// <summary>
+        /// 获取主题
+        /// </summary>
         public string Title
         {
             get
@@ -1992,8 +2802,14 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取唯一标识符
+        /// </summary>
         public UniqueId Id { get; private set; }
 
+        /// <summary>
+        /// 获取发件人首字母
+        /// </summary>
         public string FirstWord
         {
             get
@@ -2003,6 +2819,10 @@ namespace SmartLens
         }
 
         private double Indicator;
+
+        /// <summary>
+        /// 未读指示器
+        /// </summary>
         public double IsNotSeenIndicator
         {
             get
@@ -2016,6 +2836,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取邮件的发件日期
+        /// </summary>
         public string Date
         {
             get
@@ -2024,6 +2847,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取圆圈的显示颜色
+        /// </summary>
         public Color Color { get; private set; }
 
         /// <summary>
@@ -2049,6 +2875,7 @@ namespace SmartLens
             this.Message = Message;
             this.Id = Id;
 
+            //随机数来进行颜色指定
             Random random = new Random();
             switch (random.Next(1, 7))
             {
@@ -2083,13 +2910,28 @@ namespace SmartLens
     #endregion
 
     #region Email附件展示类
+    /// <summary>
+    /// 提供Email附件信息
+    /// </summary>
     public sealed class EmailAttachment
     {
+        /// <summary>
+        /// 创建EmailAttachment的实例
+        /// </summary>
+        /// <param name="Entity"></param>
         public EmailAttachment(MimeEntity Entity)
         {
             this.Entity = Entity;
         }
+
+        /// <summary>
+        /// 获取附件对象
+        /// </summary>
         public MimeEntity Entity { get; private set; }
+
+        /// <summary>
+        /// 获取附件文件名称
+        /// </summary>
         public string FileName
         {
             get
@@ -2106,6 +2948,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取附件类型
+        /// </summary>
         public string Type
         {
             get
@@ -2117,6 +2962,9 @@ namespace SmartLens
     #endregion
 
     #region Email-HTML解析类
+    /// <summary>
+    /// 提供对Email内嵌HTML的解析
+    /// </summary>
     public sealed class HtmlPreviewVisitor : MimeVisitor
     {
         List<MultipartRelated> stack = new List<MultipartRelated>();
@@ -2327,19 +3175,51 @@ namespace SmartLens
     #endregion
 
     #region Email信息包装回传类
+    /// <summary>
+    /// Email编辑最终完成时提供数据包传递
+    /// </summary>
     public sealed class SendEmailData
     {
+        /// <summary>
+        /// 获取收件人信息
+        /// </summary>
         public List<MailboxAddress> To { get; private set; }
+
+        /// <summary>
+        /// 获取Email主题
+        /// </summary>
         public string Subject { get; set; }
+
+        /// <summary>
+        /// 获取Email正文
+        /// </summary>
         public string Text { get; private set; }
+
+        /// <summary>
+        /// 获取发送类型
+        /// </summary>
         public EmailSendType SendType { get; private set; }
+
+        /// <summary>
+        /// 获取附件
+        /// </summary>
         public List<MimePart> Attachments { get; private set; }
 
+        /// <summary>
+        /// 创建SendEmailData的实例
+        /// </summary>
+        /// <param name="Text">正文内容</param>
+        /// <param name="SendType">发送选项</param>
+        /// <param name="Attachments">附件</param>
         public SendEmailData(string Text, EmailSendType SendType, List<MimePart> Attachments)
         {
             if (SendType == EmailSendType.NormalSend)
             {
                 throw new InvalidEnumArgumentException("if EmailSendType is NormalSend ,Please use another overload");
+            }
+            else if (SendType == EmailSendType.Forward)
+            {
+                throw new InvalidEnumArgumentException("if EmailSendType is Forward ,Please use another overload");
             }
             To = null;
             Subject = null;
@@ -2355,6 +3235,10 @@ namespace SmartLens
             this.SendType = SendType;
         }
 
+        /// <summary>
+        /// 创建发送类型为Forward的SendEmailData的实例
+        /// </summary>
+        /// <param name="To">收件人</param>
         public SendEmailData(string To)
         {
             string[] temp = To.Split(";");
@@ -2367,6 +3251,13 @@ namespace SmartLens
             SendType = EmailSendType.Forward;
         }
 
+        /// <summary>
+        /// 创建发送类型为NormalSend的SendEmailData的实例
+        /// </summary>
+        /// <param name="To"></param>
+        /// <param name="Subject"></param>
+        /// <param name="Text"></param>
+        /// <param name="Attachments"></param>
         public SendEmailData(string To, string Subject, string Text, List<MimePart> Attachments)
         {
             string[] temp = To.Split(";");
@@ -2393,17 +3284,57 @@ namespace SmartLens
     #endregion
 
     #region 初始化Email设置时的数据传递包
+    /// <summary>
+    /// 提供Email初始化时的数据传递
+    /// </summary>
     public sealed class EmailLoginData
     {
+        /// <summary>
+        /// 获取Email用户名
+        /// </summary>
         public string EmailAddress { get; private set; }
+
+        /// <summary>
+        /// 获取昵称
+        /// </summary>
         public string CallName { get; private set; }
+
+        /// <summary>
+        /// 获取密码
+        /// </summary>
         public string Password { get; private set; }
+
+        /// <summary>
+        /// 获取IMAP服务器地址
+        /// </summary>
         public string IMAPAddress { get; private set; }
+
+        /// <summary>
+        /// 获取IMAP服务器端口
+        /// </summary>
         public int IMAPPort { get; private set; }
+
+        /// <summary>
+        /// 获取SMTP服务器地址
+        /// </summary>
         public string SMTPAddress { get; private set; }
+
+        /// <summary>
+        /// 获取SMTP服务器端口
+        /// </summary>
         public int SMTPPort { get; private set; }
+
+        /// <summary>
+        /// 获取是否启用SSL安全连接
+        /// </summary>
         public bool IsEnableSSL { get; private set; }
 
+        /// <summary>
+        /// 创建EmailLoginData的实例
+        /// </summary>
+        /// <param name="EmailAddress">用户名</param>
+        /// <param name="CallName">昵称</param>
+        /// <param name="Password">密码</param>
         public EmailLoginData(string EmailAddress, string CallName, string Password)
         {
             this.EmailAddress = EmailAddress;
@@ -2458,6 +3389,9 @@ namespace SmartLens
     #endregion
 
     #region 空摄像头设备显示类
+    /// <summary>
+    /// 提供下拉框的“无”选项
+    /// </summary>
     public sealed class EmptyCameraDevice
     {
         public string DisplayName { get; private set; } = "无";
@@ -2472,7 +3406,7 @@ namespace SmartLens
             return new ToastContent()
             {
                 Launch = "Restart",
-                Scenario = ToastScenario.Reminder,
+                Scenario = ToastScenario.Alarm,
 
                 Visual = new ToastVisual()
                 {
@@ -2506,7 +3440,7 @@ namespace SmartLens
                         {
                             ActivationType =ToastActivationType.Foreground
                         },
-                        new ToastButtonDismiss("取消")
+                        new ToastButtonDismiss("稍后")
                     }
                 }
             };

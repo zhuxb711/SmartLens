@@ -1,30 +1,22 @@
-﻿using System;
+﻿using SmartLens.NetEase;
+using System;
+using System.Threading.Tasks;
+using Windows.Media.Playback;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Navigation;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Core;
-using Windows.Media.Playback;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml;
-using SmartLens.NetEase;
-using System.Threading.Tasks;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
 {
     public sealed partial class MusicPage : Page
     {
-        public static MusicPage ThisPage { get; set; }
+        public static MusicPage ThisPage { get; private set; }
         private PlayMode CurrentMode = PlayMode.Order;
         private PlayModeNotification ModeNotification;
-        private enum PlayMode
-        {
-            Order = 0,
-            Shuffle = 1,
-            ListLoop = 2,
-            RepeatOnce = 3
-        }
-
         public MusicPage()
         {
             InitializeComponent();
@@ -36,8 +28,19 @@ namespace SmartLens
         {
             MediaControl.MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
             MediaControl.MediaPlayer.AudioCategory = MediaPlayerAudioCategory.Media;
+
+            //启用实时播放会增加资源占用但同时避免了进度条刷新慢和声音卡顿的问题
             MediaControl.MediaPlayer.RealTimePlayback = true;
+
             MediaControl.MediaPlayer.PlaybackSession.BufferingStarted += PlaybackSession_BufferingStarted;
+
+            /*
+             * 在此处放置异步看起来是不必要的，可能会因为不必要的异步造成开销过大
+             * 但不然，原因是异步使得MusicPage_Loaded函数能够增加async关键字
+             * async和void配合使用时，调用方将不会等待该函数执行完即返回
+             * 同时由于MusicPage_Loaded执行很多初始化操作，若等待MusicPage_Loaded执行完
+             * 则会导致进入音乐模块时出现较长的卡顿时间，但其实进入音乐模块不必等待MusicPage_Loaded执行完毕
+             */
             await Task.Run(() =>
             {
                 MediaPlayList.FavouriteSongList.CurrentItemChanged += MediaList_CurrentItemChanged;
@@ -105,8 +108,10 @@ namespace SmartLens
 
         private async void AlbumSongList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
-            uint temp = sender.CurrentItemIndex;
-            if (temp == 4294967295)
+            uint CurrentIndex = sender.CurrentItemIndex;
+
+            //由于未知原因，CurrentIndex可能出现4294967295，因此做拦截
+            if (CurrentIndex == 4294967295)
             {
                 return;
             }
@@ -114,11 +119,11 @@ namespace SmartLens
             {
                 if (MediaControl.MediaPlayer.Source == MediaPlayList.AlbumSongList && MediaPlayList.AlbumSongBackup.Count > 0)
                 {
-                    SearchSingleMusic music = MediaPlayList.AlbumSongBackup[Convert.ToInt32(temp)];
-                    var song = await NeteaseMusicAPI.GetInstance().Search<SingleMusicSearchResult>(music.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                    SearchSingleMusic music = MediaPlayList.AlbumSongBackup[Convert.ToInt32(CurrentIndex)];
+                    var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                     foreach (var item in song.Result.Songs)
                     {
-                        if (item.Name == music.Music && item.Al.Name == music.Album)
+                        if (item.Name == music.MusicName && item.Al.Name == music.Album)
                         {
                             var bitmap = new BitmapImage();
                             PicturePlaying.Source = bitmap;
@@ -126,9 +131,10 @@ namespace SmartLens
                             break;
                         }
                     }
+
                     MediaItemDisplayProperties Props = args.NewItem.GetDisplayProperties();
                     Props.Type = Windows.Media.MediaPlaybackType.Music;
-                    Props.MusicProperties.Title = music.Music;
+                    Props.MusicProperties.Title = music.MusicName;
                     Props.MusicProperties.Artist = music.Album;
                     args.NewItem.ApplyDisplayProperties(Props);
                 }
@@ -154,8 +160,9 @@ namespace SmartLens
 
         private async void SingerHotSongList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
-            uint temp = sender.CurrentItemIndex;
-            if (temp == 4294967295)
+            uint CurrentIndex = sender.CurrentItemIndex;
+
+            if (CurrentIndex == 4294967295)
             {
                 return;
             }
@@ -163,11 +170,11 @@ namespace SmartLens
             {
                 if (MediaControl.MediaPlayer.Source == MediaPlayList.SingerHotSongList && MediaPlayList.HotSongBackup.Count > 0)
                 {
-                    SearchSingleMusic music = MediaPlayList.HotSongBackup[Convert.ToInt32(temp)];
-                    var song = await NeteaseMusicAPI.GetInstance().Search<SingleMusicSearchResult>(music.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                    SearchSingleMusic music = MediaPlayList.HotSongBackup[Convert.ToInt32(CurrentIndex)];
+                    var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                     foreach (var item in song.Result.Songs)
                     {
-                        if (item.Name == music.Music && item.Al.Name == music.Album)
+                        if (item.Name == music.MusicName && item.Al.Name == music.Album)
                         {
                             var bitmap = new BitmapImage();
                             PicturePlaying.Source = bitmap;
@@ -175,9 +182,10 @@ namespace SmartLens
                             break;
                         }
                     }
+
                     MediaItemDisplayProperties Props = args.NewItem.GetDisplayProperties();
                     Props.Type = Windows.Media.MediaPlaybackType.Music;
-                    Props.MusicProperties.Title = music.Music;
+                    Props.MusicProperties.Title = music.MusicName;
                     Props.MusicProperties.Artist = music.Album;
                     args.NewItem.ApplyDisplayProperties(Props);
                 }
@@ -207,20 +215,20 @@ namespace SmartLens
 
         private async void PlaybackSession_BufferingStarted(MediaPlaybackSession sender, object args)
         {
-
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            if (args is MediaPlaybackSessionBufferingStartedEventArgs bufferingStartedEventArgs && bufferingStartedEventArgs.IsPlaybackInterruption)
             {
-                ContentDialog Dialog = new ContentDialog
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                 {
-                    Content = "无法缓冲音乐，请检测网络连接",
-                    Title = "提示",
-                    CloseButtonText = "确定"
-                };
-                if (args is MediaPlaybackSessionBufferingStartedEventArgs bufferingStartedEventArgs && bufferingStartedEventArgs.IsPlaybackInterruption)
-                {
+                    ContentDialog Dialog = new ContentDialog
+                    {
+                        Content = "无法缓冲音乐，请检测网络连接",
+                        Title = "提示",
+                        CloseButtonText = "确定"
+                    };
+
                     await Dialog.ShowAsync();
-                }
-            });
+                });
+            }
 
         }
 
@@ -243,7 +251,7 @@ namespace SmartLens
         {
             switch (CurrentMode)
             {
-                case PlayMode.RepeatOnce:
+                case PlayMode.Repeat:
                     {
                         CurrentMode = PlayMode.Order;
                         ModeNotification.Show("顺序播放");
@@ -272,7 +280,7 @@ namespace SmartLens
                     }
                 case PlayMode.ListLoop:
                     {
-                        CurrentMode = PlayMode.RepeatOnce;
+                        CurrentMode = PlayMode.Repeat;
                         ModeNotification.Show("单曲循环");
                         MediaPlayList.FavouriteSongList.AutoRepeatEnabled = false;
                         MediaControl.MediaPlayer.IsLoopingEnabled = true;
@@ -284,6 +292,8 @@ namespace SmartLens
 
         private void MusicNav_Navigating(object sender, NavigatingCancelEventArgs e)
         {
+            //若当前页面与将要导航到的页面相同，则取消导航
+            //此操作可有效阻止重复点击同一页面时候可能出现的多重导航
             if (MusicNav.CurrentSourcePageType == e.SourcePageType)
             {
                 e.Cancel = true;

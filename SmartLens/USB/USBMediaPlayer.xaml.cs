@@ -28,10 +28,11 @@ namespace SmartLens
             {
                 MusicCover.Visibility = Visibility.Visible;
 
-                var Artist = GetMusicCover();
+                var Artist = GetMusicCoverAsync();
 
                 MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(MediaFile));
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
+                //若为音乐此处必须设定为Music
                 Props.Type = Windows.Media.MediaPlaybackType.Music;
                 Props.MusicProperties.Title = MediaFile.DisplayName;
                 Props.MusicProperties.AlbumArtist = await Artist;
@@ -45,6 +46,7 @@ namespace SmartLens
 
                 MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(MediaFile));
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
+                //若为视频此处必须设定为Video
                 Props.Type = Windows.Media.MediaPlaybackType.Video;
                 Props.VideoProperties.Title = MediaFile.DisplayName;
                 Item.ApplyDisplayProperties(Props);
@@ -54,7 +56,11 @@ namespace SmartLens
 
         }
 
-        private async Task<string> GetMusicCover()
+        /// <summary>
+        /// 异步获取音乐封面
+        /// </summary>
+        /// <returns>艺术家名称</returns>
+        private async Task<string> GetMusicCoverAsync()
         {
             using (var fileStream = await MediaFile.OpenStreamForReadAsync())
             {

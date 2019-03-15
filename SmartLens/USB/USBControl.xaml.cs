@@ -45,6 +45,9 @@ namespace SmartLens
             CancelToken.Dispose();
         }
 
+        /// <summary>
+        /// 执行文件目录的初始化，查找USB设备
+        /// </summary>
         private async void InitializeTreeView()
         {
             FolderDictionary = new Dictionary<string, List<StorageFolder>>();
@@ -67,73 +70,93 @@ namespace SmartLens
             }
         }
 
-        private async Task FillTreeNode(TreeViewNode node)
+        /// <summary>
+        /// 向特定TreeViewNode节点下添加子节点
+        /// </summary>
+        /// <param name="Node">节点</param>
+        /// <returns></returns>
+        private async Task FillTreeNode(TreeViewNode Node)
         {
             StorageFolder folder;
-            if (node.HasUnrealizedChildren == true)
+            if (Node.HasUnrealizedChildren == true)
             {
-                folder = node.Content as StorageFolder;
+                folder = Node.Content as StorageFolder;
             }
             else
             {
                 return;
             }
 
-            IReadOnlyList<StorageFolder> list;
+            IReadOnlyList<StorageFolder> StorageFolderList;
+
+            /*
+             * 在FolderDictionary中查找对应文件夹的唯一ID
+             * 若存在则直接提取其下的文件夹列表
+             * 若不存在则重新查找
+             * 此处FolderDictionary作用类似缓存，任何文件夹展开一次后再次展开无需任何查询操作
+             */
             if (FolderDictionary.ContainsKey(folder.FolderRelativeId))
             {
-                list = FolderDictionary[folder.FolderRelativeId];
+                StorageFolderList = FolderDictionary[folder.FolderRelativeId];
             }
             else
             {
-                list = await folder.GetFoldersAsync();
+                StorageFolderList = await folder.GetFoldersAsync();
                 if (folder.FolderRelativeId != RootFolderId)
                 {
-                    FolderDictionary.Add(folder.FolderRelativeId, new List<StorageFolder>(list));
+                    //非根节点加入缓存，根节点因为USB设备会变动，所以不加入缓存
+                    FolderDictionary.Add(folder.FolderRelativeId, new List<StorageFolder>(StorageFolderList));
                 }
                 else
                 {
-                    if (list.Count == 0)
+                    //若当前节点为根节点，且在根节点下无任何文件夹被发现，说明无USB设备插入
+                    //因此清除根文件夹下的节点
+                    if (StorageFolderList.Count == 0)
                     {
-                        node.Children.Clear();
+                        Node.Children.Clear();
                     }
                 }
             }
 
-            if (list.Count == 0)
+            if (StorageFolderList.Count == 0)
             {
                 return;
             }
 
-            foreach (var item in list)
+            /*
+             * 每展开一次文件夹时，将自动遍历该文件夹下面的 所有子文件夹 的 所有子文件夹
+             * 一来超前缓存一级文件夹内容，二来能够确定哪些子文件夹下是不存在子文件夹的
+             * 从而决定子文件夹是否要显示展开按钮，缺点是当存在大量子文件夹嵌套时展开速度可能会比较慢
+             */
+            foreach (var SubFolder in StorageFolderList)
             {
-                IReadOnlyList<StorageFolder> list1;
-                if (FolderDictionary.ContainsKey(item.FolderRelativeId))
+                IReadOnlyList<StorageFolder> SubSubStorageFolderList;
+                if (FolderDictionary.ContainsKey(SubFolder.FolderRelativeId))
                 {
-                    list1 = FolderDictionary[item.FolderRelativeId];
+                    SubSubStorageFolderList = FolderDictionary[SubFolder.FolderRelativeId];
                 }
                 else
                 {
-                    list1 = await item.GetFoldersAsync();
-                    FolderDictionary.Add(item.FolderRelativeId, new List<StorageFolder>(list1));
+                    SubSubStorageFolderList = await SubFolder.GetFoldersAsync();
+                    FolderDictionary.Add(SubFolder.FolderRelativeId, new List<StorageFolder>(SubSubStorageFolderList));
                 }
 
-                var newNode = new TreeViewNode
+                var NewNode = new TreeViewNode
                 {
-                    Content = item
+                    Content = SubFolder
                 };
-                if (list1.Count == 0)
+                if (SubSubStorageFolderList.Count == 0)
                 {
-                    newNode.HasUnrealizedChildren = false;
+                    NewNode.HasUnrealizedChildren = false;
                 }
                 else
                 {
-                    newNode.HasUnrealizedChildren = true;
+                    NewNode.HasUnrealizedChildren = true;
                 }
 
-                node.Children.Add(newNode);
+                Node.Children.Add(NewNode);
             }
-            node.HasUnrealizedChildren = false;
+            Node.HasUnrealizedChildren = false;
         }
 
         private async void FileTree_Expanding(TreeView sender, TreeViewExpandingEventArgs args)
@@ -153,6 +176,12 @@ namespace SmartLens
 
         private async void FileTree_ItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
+            /*
+             * 同一文件夹内可能存在大量文件
+             * 因此切换不同文件夹时极有可能遍历文件夹仍未完成
+             * 此处激活取消指令，等待当前遍历结束，再开始下一次文件遍历
+             * 确保不会出现异常
+             */
             if (IsAdding)
             {
                 CancelToken.Cancel();
@@ -165,6 +194,7 @@ namespace SmartLens
 
             if ((args.InvokedItem as TreeViewNode).Content is StorageFolder folder)
             {
+                //防止多次点击同一文件夹导致的多重查找
                 if (folder.FolderRelativeId == CurrentFolder?.FolderRelativeId)
                 {
                     IsAdding = false;
@@ -174,6 +204,7 @@ namespace SmartLens
                 CurrentFolder = folder;
                 CurrentNode = args.InvokedItem as TreeViewNode;
 
+                //当处于USB其他附加功能的页面时，若点击文件目录则自动执行返回导航
                 if (Nav.CurrentSourcePageType.Name != "USBFilePresenter")
                 {
                     Nav.GoBack();
@@ -190,7 +221,9 @@ namespace SmartLens
                 }
 
                 USBFilePresenter.ThisPage.FileCollection.Clear();
+
                 var FileList = await folder.GetFilesAsync();
+
                 if (FileList.Count == 0)
                 {
                     USBFilePresenter.ThisPage.HasFile.Visibility = Visibility.Visible;
@@ -208,6 +241,7 @@ namespace SmartLens
                         ResetEvent.Set();
                         break;
                     }
+
                     var Thumbnail = await USBFilePresenter.ThisPage.GetThumbnail(file);
                     if (Thumbnail != null)
                     {
@@ -241,7 +275,7 @@ namespace SmartLens
         public async void USBControl_Drop(object sender, DragEventArgs e)
         {
             RemovableDeviceFile file = (e.OriginalSource as GridViewItem).Content as RemovableDeviceFile;
-            await USBFilePresenter.ThisPage.AddFileToZip(file);
+            await USBFilePresenter.ThisPage.AddFileToZipAsync(file);
         }
 
         private async void FolderDelete_Click(object sender, RoutedEventArgs e)
@@ -317,6 +351,7 @@ namespace SmartLens
                     return;
                 }
 
+                //重命名后需要去除原文件夹的缓存
                 FolderDictionary.Remove(Folder.FolderRelativeId);
 
                 await Folder.RenameAsync(renameDialog.DesireName, NameCollisionOption.GenerateUniqueName);

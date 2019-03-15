@@ -34,12 +34,12 @@ namespace SmartLens
                 MVControl.MediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
 
                 MVControl.Source = MediaSource.CreateFromUri(MovieUri);
-                var Result = await NetEase.Artist(ArtistID);
+                var Result = await NetEase.GetArtistAsync(ArtistID);
                 foreach (var item in Result.HotSongs)
                 {
                     if (item.Mv != 0)
                     {
-                        var MVResult = await NetEase.MV((int)item.Mv);
+                        var MVResult = await NetEase.GetMVAsync((int)item.Mv);
                         if (MVResult.Data.BriefDesc == "")
                         {
                             MVSuggestionCollection.Add(new MVSuggestion(MVResult.Data.Name, "无简介", (int)item.Mv, new Uri(MVResult.Data.Cover)));
@@ -93,8 +93,11 @@ namespace SmartLens
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
+                //播放MV前先检查音乐是否正在播放
                 if (MusicPage.ThisPage.MediaControl.MediaPlayer.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
                 {
+                    //直接暂停音乐然后播放MV的话会产生声音的争抢
+                    //此处采用将两个都暂停后再开始播放MV的方法
                     MVControl.MediaPlayer.Pause();
                     MusicPage.ThisPage.MediaControl.MediaPlayer.Pause();
                     MVControl.MediaPlayer.Play();
@@ -121,6 +124,7 @@ namespace SmartLens
                 MVIntro.Text = MVData.Desc == "" ? "无简介" : MVData.Desc;
             }
 
+            //优先选择720P视频，若不支持则依次递减清晰度
             if (MVData.Brs.The720 != null)
             {
                 MovieUri = new Uri(MVData.Brs.The720);
@@ -154,7 +158,7 @@ namespace SmartLens
 
         private async void MVSuggestControl_ItemClick(object sender, ItemClickEventArgs e)
         {
-            var Result = await NeteaseMusicAPI.GetInstance().MV((e.ClickedItem as MVSuggestion).MovieID);
+            var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((e.ClickedItem as MVSuggestion).MovieID);
             MVName.Text = Result.Data.Name;
 
             if (Result.Data.Desc == null)
@@ -166,6 +170,7 @@ namespace SmartLens
                 MVIntro.Text = Result.Data.Desc == "" ? "无简介" : Result.Data.Desc;
             }
 
+            //优先选择720P视频，若不支持则依次递减清晰度
             if (Result.Data.Brs.The720 != null)
             {
                 MovieUri = new Uri(Result.Data.Brs.The720);

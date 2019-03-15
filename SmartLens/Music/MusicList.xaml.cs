@@ -105,7 +105,7 @@ namespace SmartLens
                 {
                     MediaPlayList.FavouriteSongList.Items.RemoveAt(MusicListControl.SelectedIndex);
                     PlayList item = MusicListControl.SelectedItems[0] as PlayList;
-                    await SQLite.GetInstance().DelMusic(item);
+                    await SQLite.GetInstance().DeleteMusicAsync(item);
                     FavouriteMusicCollection.Remove(item);
                 }
                 MusicListControl.SelectionMode = ListViewSelectionMode.Single;
@@ -178,7 +178,7 @@ namespace SmartLens
         private async void MV_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             MusicListControl.SelectedItem = ((TextBlock)sender).DataContext;
-            var Result = await NeteaseMusicAPI.GetInstance().MV((int)FavouriteMusicCollection[MusicListControl.SelectedIndex].MVid);
+            var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((int)FavouriteMusicCollection[MusicListControl.SelectedIndex].MVid);
             MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
         }
     }

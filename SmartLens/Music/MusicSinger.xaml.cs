@@ -78,7 +78,7 @@ namespace SmartLens
                 }
             }
 
-            AlbumSearchResult Result = await NeteaseMusicAPI.GetInstance().Search<AlbumSearchResult>(Artist.Artist.Name, 30, 0, NeteaseMusicAPI.SearchType.Album);
+            AlbumSearchResult Result = await NeteaseMusicAPI.GetInstance().SearchAsync<AlbumSearchResult>(Artist.Artist.Name, 30, 0, NeteaseMusicAPI.SearchType.Album);
             if (Result.result.albums != null)
             {
                 foreach (var item in Result.result.albums)
@@ -95,7 +95,7 @@ namespace SmartLens
                 }
                 if (item.MVExists)
                 {
-                    var MVResult = await NeteaseMusicAPI.GetInstance().MV((int)item.MVid);
+                    var MVResult = await NeteaseMusicAPI.GetInstance().GetMVAsync((int)item.MVid);
                     MVCollection.Add(new SingerMV(MVResult.Data.Name, MVResult.Data.BriefDesc, (int)item.MVid, new Uri(MVResult.Data.Cover)));
                 }
             }
@@ -131,11 +131,13 @@ namespace SmartLens
 
                 CancelToken = new CancellationTokenSource();
                 Locker = new AutoResetEvent(false);
+
                 if (IsSame)
                 {
                     SingerImage.Opacity = 1;
                     return;
                 }
+
                 this.Artist = Artist;
                 SingerName.Text = Artist.Artist.Name;
                 SingerIntroName.Text = Artist.Artist.Name + "简介:";
@@ -216,9 +218,9 @@ namespace SmartLens
 
             foreach (SearchSingleMusic item in HotSongCollection)
             {
-                MediaPlayList.HotSongBackup.Add(new SearchSingleMusic(item.Music, item.Artist, item.Album, item.Duration, item.SongID[0], item.ImageUrl, item.MVid));
+                MediaPlayList.HotSongBackup.Add(new SearchSingleMusic(item.MusicName, item.Artist, item.Album, item.Duration, item.SongID[0], item.ImageUrl, item.MVid));
 
-                string uri = (await NeteaseMusicAPI.GetInstance().GetSongsUrl(item.SongID)).Data[0].Url;
+                string uri = (await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(item.SongID)).Data[0].Url;
                 if (uri == null)
                 {
                     ExistCannotPlay = true;
@@ -233,13 +235,15 @@ namespace SmartLens
 
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
                 Props.Type = Windows.Media.MediaPlaybackType.Music;
-                Props.MusicProperties.Title = item.Music;
+                Props.MusicProperties.Title = item.MusicName;
                 Props.MusicProperties.Artist = item.Album;
                 Item.ApplyDisplayProperties(Props);
 
                 MediaPlayList.SingerHotSongList.Items.Add(Item);
 
             }
+
+            //若存在无法播放的内容，则在此处发出警告
             if (ExistCannotPlay)
             {
                 ExistCannotPlay = false;
@@ -267,7 +271,7 @@ namespace SmartLens
             SearchSingleMusic SSM = HotSongCollection[HotSongList.SelectedIndex];
             if (((SolidColorBrush)FI.Foreground).Color == Colors.White)
             {
-                string MusicURL = (await NeteaseMusicAPI.GetInstance().GetSongsUrl(HotSongCollection[HotSongList.SelectedIndex].SongID)).Data[0].Url;
+                string MusicURL = (await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(HotSongCollection[HotSongList.SelectedIndex].SongID)).Data[0].Url;
                 if (MusicURL == null)
                 {
                     ContentDialog dialog = new ContentDialog
@@ -283,25 +287,27 @@ namespace SmartLens
                 FI.Glyph = "\uEB52";
                 FI.Foreground = new SolidColorBrush(Colors.Red);
 
-                var song = await NeteaseMusicAPI.GetInstance().Search<SingleMusicSearchResult>(SSM.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(SSM.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                 string ImgURL = "";
                 foreach (var item in song.Result.Songs)
                 {
-                    if (item.Name == SSM.Music && item.Al.Name == SSM.Album)
+                    if (item.Name == SSM.MusicName && item.Al.Name == SSM.Album)
                     {
                         ImgURL = item.Al.PicUrl;
                         break;
                     }
                 }
-                MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid));
+                MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(SSM.MusicName, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid));
                 MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(MusicURL)));
+
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
                 Props.Type = Windows.Media.MediaPlaybackType.Music;
-                Props.MusicProperties.Title = SSM.Music;
+                Props.MusicProperties.Title = SSM.MusicName;
                 Props.MusicProperties.Artist = SSM.Artist;
                 Item.ApplyDisplayProperties(Props);
                 MediaPlayList.FavouriteSongList.Items.Add(Item);
-                await SQLite.GetInstance().SetMusicData(SSM.Music, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid);
+
+                await SQLite.GetInstance().SetMusicDataAsync(SSM.MusicName, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid);
             }
             else
             {
@@ -311,7 +317,7 @@ namespace SmartLens
                 {
                     if (MusicList.ThisPage.FavouriteMusicCollection[i].SongID == SSM.SongID[0])
                     {
-                        await SQLite.GetInstance().DelMusic(MusicList.ThisPage.FavouriteMusicCollection[i]);
+                        await SQLite.GetInstance().DeleteMusicAsync(MusicList.ThisPage.FavouriteMusicCollection[i]);
                         MusicList.ThisPage.FavouriteMusicCollection.RemoveAt(i);
                         MediaPlayList.FavouriteSongList.Items.RemoveAt(i);
                         break;
@@ -324,7 +330,7 @@ namespace SmartLens
         private async void SymbolIcon_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             HotSongList.SelectedItem = ((SymbolIcon)sender).DataContext;
-            var SongURL = (await NeteaseMusicAPI.GetInstance().GetSongsUrl(HotSongCollection[HotSongList.SelectedIndex].SongID)).Data[0].Url;
+            var SongURL = (await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(HotSongCollection[HotSongList.SelectedIndex].SongID)).Data[0].Url;
             if (SongURL == null)
             {
                 ContentDialog dialog = new ContentDialog
@@ -340,10 +346,10 @@ namespace SmartLens
             MusicPage.ThisPage.MediaControl.MediaPlayer.Source = MediaSource.CreateFromUri(new Uri(SongURL));
 
             var music = HotSongCollection[HotSongList.SelectedIndex];
-            var song = await NeteaseMusicAPI.GetInstance().Search<SingleMusicSearchResult>(music.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+            var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
             foreach (var item in song.Result.Songs)
             {
-                if (item.Name == music.Music && item.Al.Name == music.Album)
+                if (item.Name == music.MusicName && item.Al.Name == music.Album)
                 {
                     var bitmap = new BitmapImage();
                     MusicPage.ThisPage.PicturePlaying.Source = bitmap;
@@ -354,7 +360,7 @@ namespace SmartLens
                 }
             }
             MusicSearch.ForDetail_ID = HotSongCollection[HotSongList.SelectedIndex].SongID[0];
-            MusicSearch.ForDetail_Name = HotSongCollection[HotSongList.SelectedIndex].Music;
+            MusicSearch.ForDetail_Name = HotSongCollection[HotSongList.SelectedIndex].MusicName;
             MusicPage.ThisPage.MediaControl.MediaPlayer.Play();
         }
 
@@ -362,7 +368,7 @@ namespace SmartLens
         {
             LoadingControl.IsLoading = true;
             HotSongList.SelectedItem = ((TextBlock)sender).DataContext;
-            var Result = await NeteaseMusicAPI.GetInstance().MV((int)HotSongCollection[HotSongList.SelectedIndex].MVid);
+            var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((int)HotSongCollection[HotSongList.SelectedIndex].MVid);
             await Task.Delay(500);
             LoadingControl.IsLoading = false;
             MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
@@ -371,7 +377,7 @@ namespace SmartLens
         private async void MVGridView_ItemClick(object sender, ItemClickEventArgs e)
         {
             LoadingControl.IsLoading = true;
-            var Result = await NeteaseMusicAPI.GetInstance().MV((e.ClickedItem as SingerMV).MovieID);
+            var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((e.ClickedItem as SingerMV).MovieID);
             await Task.Delay(500);
             LoadingControl.IsLoading = false;
             MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
@@ -379,7 +385,7 @@ namespace SmartLens
 
         private async void HotSongList_DoubleTapped(object sender, Windows.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
         {
-            var SongURL = (await NeteaseMusicAPI.GetInstance().GetSongsUrl(HotSongCollection[HotSongList.SelectedIndex].SongID)).Data[0].Url;
+            var SongURL = (await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(HotSongCollection[HotSongList.SelectedIndex].SongID)).Data[0].Url;
             if (SongURL == null)
             {
                 ContentDialog dialog = new ContentDialog
@@ -395,10 +401,10 @@ namespace SmartLens
             MusicPage.ThisPage.MediaControl.MediaPlayer.Source = MediaSource.CreateFromUri(new Uri(SongURL));
 
             var music = HotSongCollection[HotSongList.SelectedIndex];
-            var song = await NeteaseMusicAPI.GetInstance().Search<SingleMusicSearchResult>(music.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+            var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
             foreach (var item in song.Result.Songs)
             {
-                if (item.Name == music.Music && item.Al.Name == music.Album)
+                if (item.Name == music.MusicName && item.Al.Name == music.Album)
                 {
                     var bitmap = new BitmapImage();
                     MusicPage.ThisPage.PicturePlaying.Source = bitmap;
@@ -409,14 +415,14 @@ namespace SmartLens
                 }
             }
             MusicSearch.ForDetail_ID = HotSongCollection[HotSongList.SelectedIndex].SongID[0];
-            MusicSearch.ForDetail_Name = HotSongCollection[HotSongList.SelectedIndex].Music;
+            MusicSearch.ForDetail_Name = HotSongCollection[HotSongList.SelectedIndex].MusicName;
             MusicPage.ThisPage.MediaControl.MediaPlayer.Play();
         }
 
         private async void GridViewControl_ItemClick(object sender, ItemClickEventArgs e)
         {
             LoadingControl.IsLoading = true;
-            var Result = await NeteaseMusicAPI.GetInstance().Album((e.ClickedItem as SingerAlbum).ID);
+            var Result = await NeteaseMusicAPI.GetInstance().GetAlbumAsync((e.ClickedItem as SingerAlbum).ID);
             LoadingControl.IsLoading = false;
             await Task.Delay(500);
 

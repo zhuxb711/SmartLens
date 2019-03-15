@@ -53,12 +53,12 @@ namespace SmartLens
                     }
                     catch (Exception) { }
                     SearchSingleMusic PL = MediaPlayList.AlbumSongBackup[Convert.ToInt32(MediaPlayList.AlbumSongList.CurrentItemIndex)];
-                    Title.Text = PL.Music;
+                    Title.Text = PL.MusicName;
 
-                    var song = await NetEaseMusic.Search<SingleMusicSearchResult>(PL.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                    var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                     foreach (var item in song.Result.Songs)
                     {
-                        if (item.Name == PL.Music && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
+                        if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
                         {
                             var bitmap = new BitmapImage();
                             Image1.ImageSource = bitmap;
@@ -73,7 +73,7 @@ namespace SmartLens
                         Stretch = Stretch.UniformToFill
                     };
                     GridBack.Background = back;
-                    LyricResult LrcTemp = await NetEaseMusic.Lyric(PL.SongID[0]);
+                    LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                     if (LrcTemp.Lrc == null)
                     {
                         TextBlock TB = new TextBlock()
@@ -108,7 +108,7 @@ namespace SmartLens
                     };
                     GridBack.Background = back;
                     Title.Text = MusicSearch.ForDetail_Name;
-                    LyricResult LrcTemp = await NetEaseMusic.Lyric(MusicSearch.ForDetail_ID);
+                    LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                     if (LrcTemp.Lrc == null)
                     {
                         TextBlock TB = new TextBlock()
@@ -156,7 +156,7 @@ namespace SmartLens
                     Stretch = Stretch.UniformToFill
                 };
                 GridBack.Background = back;
-                LyricResult LrcTemp = await NetEaseMusic.Lyric(PL.SongID);
+                LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID);
                 if (LrcTemp.Lrc == null)
                 {
                     TextBlock TB = new TextBlock()
@@ -187,12 +187,12 @@ namespace SmartLens
 
                 LrcControl.c_lrc_items.Children.Clear();
 
-                Title.Text = PL.Music;
+                Title.Text = PL.MusicName;
 
-                var song = await NetEaseMusic.Search<SingleMusicSearchResult>(PL.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                 foreach (var item in song.Result.Songs)
                 {
-                    if (item.Name == PL.Music && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
+                    if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
                     {
                         var bitmap = new BitmapImage();
                         Image1.ImageSource = bitmap;
@@ -207,7 +207,7 @@ namespace SmartLens
                     Stretch = Stretch.UniformToFill
                 };
                 GridBack.Background = back;
-                LyricResult LrcTemp = await NetEaseMusic.Lyric(PL.SongID[0]);
+                LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                 if (LrcTemp.Lrc == null)
                 {
                     TextBlock TB = new TextBlock()
@@ -239,12 +239,12 @@ namespace SmartLens
 
                 LrcControl.c_lrc_items.Children.Clear();
 
-                Title.Text = PL.Music;
+                Title.Text = PL.MusicName;
 
-                var song = await NetEaseMusic.Search<SingleMusicSearchResult>(PL.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                 foreach (var item in song.Result.Songs)
                 {
-                    if (item.Name == PL.Music && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
+                    if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
                     {
                         var bitmap = new BitmapImage();
                         Image1.ImageSource = bitmap;
@@ -259,7 +259,7 @@ namespace SmartLens
                     Stretch = Stretch.UniformToFill
                 };
                 GridBack.Background = back;
-                LyricResult LrcTemp = await NetEaseMusic.Lyric(PL.SongID[0]);
+                LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                 if (LrcTemp.Lrc == null)
                 {
                     TextBlock TB = new TextBlock()
@@ -301,7 +301,7 @@ namespace SmartLens
                 LrcControl.c_lrc_items.Children.Clear();
 
                 Title.Text = MusicSearch.ForDetail_Name;
-                LyricResult LrcTemp = await NetEaseMusic.Lyric(MusicSearch.ForDetail_ID);
+                LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                 if (LrcTemp.Lrc == null)
                 {
                     TextBlock TB = new TextBlock()
@@ -342,12 +342,12 @@ namespace SmartLens
                     catch (Exception) { }
                     LrcControl.c_lrc_items.Children.Clear();
                     SearchSingleMusic PL = MediaPlayList.HotSongBackup[Convert.ToInt32(MediaPlayList.SingerHotSongList.CurrentItemIndex)];
-                    Title.Text = PL.Music;
+                    Title.Text = PL.MusicName;
 
-                    var song = await NetEaseMusic.Search<SingleMusicSearchResult>(PL.Music, 5, 0, NeteaseMusicAPI.SearchType.Song);
+                    var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                     foreach (var item in song.Result.Songs)
                     {
-                        if (item.Name == PL.Music && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
+                        if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
                         {
                             var bitmap = new BitmapImage();
                             Image1.ImageSource = bitmap;
@@ -362,7 +362,7 @@ namespace SmartLens
                         Stretch = Stretch.UniformToFill
                     };
                     GridBack.Background = back;
-                    LyricResult LrcTemp = await NetEaseMusic.Lyric(PL.SongID[0]);
+                    LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                     if (LrcTemp.Lrc == null)
                     {
                         TextBlock TB = new TextBlock()
@@ -397,7 +397,7 @@ namespace SmartLens
                     };
                     GridBack.Background = back;
                     Title.Text = MusicSearch.ForDetail_Name;
-                    LyricResult LrcTemp = await NetEaseMusic.Lyric(MusicSearch.ForDetail_ID);
+                    LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                     if (LrcTemp.Lrc == null)
                     {
                         TextBlock TB = new TextBlock()
@@ -461,7 +461,7 @@ namespace SmartLens
                         Stretch = Stretch.UniformToFill
                     };
                     GridBack.Background = back;
-                    LyricResult LrcTemp = await NetEaseMusic.Lyric(PL.SongID);
+                    LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID);
                     if (LrcTemp.Lrc == null)
                     {
                         TextBlock TB = new TextBlock()
@@ -496,7 +496,7 @@ namespace SmartLens
                     };
                     GridBack.Background = back;
                     Title.Text = MusicSearch.ForDetail_Name;
-                    LyricResult LrcTemp = await NetEaseMusic.Lyric(MusicSearch.ForDetail_ID);
+                    LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                     if (LrcTemp.Lrc == null)
                     {
                         TextBlock TB = new TextBlock()

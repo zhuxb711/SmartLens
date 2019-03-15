@@ -29,16 +29,20 @@ namespace SmartLens
         private WiFiAdapter WiFi = null;
         public ObservableCollection<WiFiInfo> WiFiList;
         private DispatcherTimer WiFiScanTimer = null;
-        private AutoResetEvent ScanSignal;
+        bool IsScanRunning = false;
         public static SettingsPage ThisPage { get; private set; }
         private bool IsInitializeBT = false;
-        private List<WiFiInDataBase> WiFiContainer;
+        private List<WiFiInDataBase> StoragedWiFiInfoCollection;
         IReadOnlyList<MediaFrameSourceGroup> MediaFraSourceGroup;
 
         public SettingsPage()
         {
             InitializeComponent();
             Loaded += SettingsPage_Loaded;
+            /*
+             * 监听网络变化事件是因为如果通过外部途径(如Windows)更改了当前连接的网络
+             * 则SmartLens也必须能够将当前连接的网络更改为正确的那个
+             */
             NetworkHelper.Instance.NetworkChanged += Instance_NetworkChanged;
             ThisPage = this;
             OnFirstLoad();
@@ -69,7 +73,7 @@ namespace SmartLens
 
         private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            WiFiContainer = await SQLite.GetInstance().GetAllWiFiData();
+            StoragedWiFiInfoCollection = await SQLite.GetInstance().GetAllWiFiDataAsync();
             var Size = await GetFolderSize(ApplicationData.Current.TemporaryFolder.Path);
 
             ClearCache.Content = "清除缓存(" + (Size / 1024 < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
@@ -77,6 +81,11 @@ namespace SmartLens
             Math.Round(Size / 1048576f, 2).ToString() + " MB")) + ")";
         }
 
+        /// <summary>
+        /// 获取指定路径下的文件夹及其子文件、子文件夹等的总大小
+        /// </summary>
+        /// <param name="fullPath">文件夹路径</param>
+        /// <returns>总大小</returns>
         public async Task<long> GetFolderSize(string fullPath)
         {
             if (Directory.Exists(fullPath))
@@ -103,10 +112,10 @@ namespace SmartLens
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            //处理进入后台和离开后台的事件，在进入后台时停止WiFi搜索
             CoreApplication.EnteredBackground += CoreApplication_EnteredBackground;
             CoreApplication.LeavingBackground += CoreApplication_LeavingBackground;
-            WiFiContainer = new List<WiFiInDataBase>();
-            ScanSignal = new AutoResetEvent(true);
+            StoragedWiFiInfoCollection = new List<WiFiInDataBase>();
             WiFiList = new ObservableCollection<WiFiInfo>();
             WiFiControl.ItemsSource = WiFiList;
             if (WiFiScanTimer == null && WiFi != null)
@@ -124,14 +133,14 @@ namespace SmartLens
         private async void OnFirstLoad()
         {
             var RadioDevice = await Radio.GetRadiosAsync();
-            foreach (var item in RadioDevice)
+            foreach (var Device in RadioDevice)
             {
-                if (item.Kind == RadioKind.Bluetooth && item.State == RadioState.On)
+                if (Device.Kind == RadioKind.Bluetooth && Device.State == RadioState.On)
                 {
                     IsInitializeBT = true;
                     BluetoothSwitch.IsOn = true;
                 }
-                else if (item.Kind == RadioKind.WiFi && item.State == RadioState.On)
+                else if (Device.Kind == RadioKind.WiFi && Device.State == RadioState.On)
                 {
                     WiFiSwitch.IsOn = true;
                 }
@@ -140,12 +149,17 @@ namespace SmartLens
 
             if (MediaFraSourceGroup.Count == 0)
             {
+                /*
+                 * 使用EmptyCanmeraDevice类的原因是：控件CameraSelection设置为显示(某个类下的DisplayName)属性
+                 * 因此简单添加“无”是不行的，因此构建一个具有DispalyName属性的类来实现正确显示
+                 */
                 CameraSelection.Items.Add(new EmptyCameraDevice());
                 CameraSelection.SelectedIndex = 0;
                 return;
             }
 
             CameraSelection.ItemsSource = MediaFraSourceGroup;
+
             if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] == null)
             {
                 CameraSelection.SelectedIndex = 0;
@@ -197,9 +211,8 @@ namespace SmartLens
             Progressing.Visibility = Visibility.Collapsed;
             WiFiList.Clear();
             WiFiList = null;
-            WiFiContainer.Clear();
-            WiFiContainer = null;
-            ScanSignal.Dispose();
+            StoragedWiFiInfoCollection.Clear();
+            StoragedWiFiInfoCollection = null;
         }
 
         private void Instance_NetworkChanged(object sender, EventArgs e)
@@ -210,16 +223,21 @@ namespace SmartLens
                 {
                     if (WiFiList[i].IsConnected == true)
                     {
-                        WiFiList[i].ChangeConnectState(false);
+                        WiFiList[i].ChangeConnectionStateAsync(false);
                     }
                     if (WiFiList[i].IsConnected != true && NetworkHelper.Instance.ConnectionInformation.NetworkNames[0] == WiFiList[i].Name)
                     {
-                        WiFiList[i].ChangeConnectState(true, WiFiList[i]);
+                        WiFiList[i].ChangeConnectionStateAsync(true, true);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// 异步触发蓝牙状态转换
+        /// </summary>
+        /// <param name="OnOrOff">开启或关闭</param>
+        /// <returns>成功完成与否</returns>
         private async Task<bool> ToggleBluetoothStatusAsync(bool OnOrOff)
         {
             try
@@ -277,21 +295,17 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 异步初始化WiFi适配器
+        /// </summary>
+        /// <returns>成功与否</returns>
         private async Task<bool> InitializeWiFiAdapterAsync()
         {
-            var WifiAdapterResults = await DeviceInformation.FindAllAsync(WiFiAdapter.GetDeviceSelector());
-            if (WifiAdapterResults.Count >= 1)
+            var WiFiAdapterResults = await DeviceInformation.FindAllAsync(WiFiAdapter.GetDeviceSelector());
+            if (WiFiAdapterResults.Count >= 1)
             {
-                WiFi = await WiFiAdapter.FromIdAsync(WifiAdapterResults[0].Id);
-                WiFi.AvailableNetworksChanged += async (s, e) =>
-                {
-                    ScanSignal.Set();
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                     {
-                         Progressing.Visibility = Visibility.Collapsed;
-                     });
-
-                };
+                WiFi = await WiFiAdapter.FromIdAsync(WiFiAdapterResults[0].Id);
+                WiFi.AvailableNetworksChanged += WiFi_AvailableNetworksChanged;
             }
             else
             {
@@ -300,6 +314,19 @@ namespace SmartLens
             return true;
         }
 
+        private async void WiFi_AvailableNetworksChanged(WiFiAdapter sender, object args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Progressing.Visibility = Visibility.Collapsed;
+            });
+        }
+
+        /// <summary>
+        /// 异步触发WiFi状态转换
+        /// </summary>
+        /// <param name="IsOn">开启或关闭</param>
+        /// <returns>成功与否</returns>
         private async Task<bool> ToggleWiFiStatusAsync(bool IsOn)
         {
             var access = await WiFiAdapter.RequestAccessAsync();
@@ -308,18 +335,18 @@ namespace SmartLens
                 return false;
             }
             var RadioDevice = await Radio.GetRadiosAsync();
-            foreach (var item in RadioDevice)
+            foreach (var Device in RadioDevice)
             {
-                if (item.Kind == RadioKind.WiFi)
+                if (Device.Kind == RadioKind.WiFi)
                 {
                     if (IsOn)
                     {
-                        await item.SetStateAsync(RadioState.On);
+                        await Device.SetStateAsync(RadioState.On);
                         return true;
                     }
                     else
                     {
-                        await item.SetStateAsync(RadioState.Off);
+                        await Device.SetStateAsync(RadioState.Off);
                         return true;
                     }
                 }
@@ -366,6 +393,11 @@ namespace SmartLens
                         WiFiScanTimer.Stop();
                         WiFiScanTimer = null;
                     }
+                    if (WiFi != null)
+                    {
+                        WiFi.AvailableNetworksChanged -= WiFi_AvailableNetworksChanged;
+                        WiFi = null;
+                    }
                     Progressing.Visibility = Visibility.Collapsed;
                     WiFiList.Clear();
                 }
@@ -384,30 +416,31 @@ namespace SmartLens
 
         private async void WiFiScanTimer_Tick(object sender, object e)
         {
-            await Task.Run(() =>
+            if(IsScanRunning)
             {
-                ScanSignal.WaitOne();
-            });
+                return;
+            }
+            IsScanRunning = true;
 
             Progressing.Visibility = Visibility.Visible;
             await WiFi.ScanAsync();
             if (WiFiList.Count != 0)
             {
-                foreach (var item in WiFi.NetworkReport.AvailableNetworks)
+                foreach (var WiFiNetwork in WiFi.NetworkReport.AvailableNetworks)
                 {
                     bool IsExist = false;
                     for (int i = 0; i < WiFiList.Count; i++)
                     {
-                        if (item.Bssid == WiFiList[i].ID)
+                        if (WiFiNetwork.Bssid == WiFiList[i].MAC)
                         {
-                            WiFiList[i].Update(item);
+                            WiFiList[i].Update(WiFiNetwork);
                             IsExist = true;
                             break;
                         }
                     }
                     if (!IsExist)
                     {
-                        WiFiList.Add(new WiFiInfo(item));
+                        WiFiList.Add(new WiFiInfo(WiFiNetwork));
                         WiFiList[WiFiList.Count - 1].IsUpdated = true;
                         IsExist = false;
                     }
@@ -430,84 +463,84 @@ namespace SmartLens
             }
             else
             {
-                foreach (var item in WiFi.NetworkReport.AvailableNetworks)
+                foreach (var WiFiNetwork in WiFi.NetworkReport.AvailableNetworks)
                 {
-                    if (NetworkHelper.Instance.ConnectionInformation.NetworkNames.Count > 0 && NetworkHelper.Instance.ConnectionInformation.NetworkNames[0] == item.Ssid)
+                    if (NetworkHelper.Instance.ConnectionInformation.NetworkNames.Count > 0 && NetworkHelper.Instance.ConnectionInformation.NetworkNames[0] == WiFiNetwork.Ssid)
                     {
-                        WiFiList.Add(new WiFiInfo(item, true));
-                        WiFiList.Move(WiFiList.Count - 1, 0);
+                        WiFiList.Insert(0, new WiFiInfo(WiFiNetwork, true));
                     }
                     else
                     {
-                        WiFiList.Add(new WiFiInfo(item));
+                        WiFiList.Add(new WiFiInfo(WiFiNetwork));
                     }
                 }
             }
-            ScanSignal.Set();
-
+            IsScanRunning = false;
         }
 
 
         private void WiFiControl_ItemClick(object sender, ItemClickEventArgs e)
         {
-            var item = WiFiControl.ContainerFromItem(e.ClickedItem) as ListViewItem;
-            var it = e.ClickedItem as WiFiInfo;
-            if (it.IsConnected)
+            var ItemInWiFiControl = WiFiControl.ContainerFromItem(e.ClickedItem) as ListViewItem;
+            var ClickedItem = e.ClickedItem as WiFiInfo;
+            if (ClickedItem.IsConnected)
             {
-                item.ContentTemplate = WiFiConnectedState;
+                ItemInWiFiControl.ContentTemplate = WiFiConnectedState;
                 return;
             }
 
-            if (item.ContentTemplate == WiFiNormalState)
+            if (ItemInWiFiControl.ContentTemplate == WiFiNormalState)
             {
-                foreach (var ite in WiFiContainer)
+                foreach (var WiFiInfo in StoragedWiFiInfoCollection)
                 {
-                    if (ite.SSID == it.Name)
+                    if (WiFiInfo.SSID == ClickedItem.Name)
                     {
-                        it.AutoConnect = ite.AutoConnect;
+                        ClickedItem.AutoConnect = WiFiInfo.AutoConnect;
                         break;
                     }
                 }
-                item.ContentTemplate = WiFiPressState;
+                ItemInWiFiControl.ContentTemplate = WiFiPressState;
             }
         }
 
         private void WiFiControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            foreach (var item in e.RemovedItems)
+            foreach (var RemovedItem in e.RemovedItems)
             {
-                var it = WiFiControl.ContainerFromItem(item) as ListViewItem;
-                if (it.ContentTemplate != WiFiNormalState)
+                var ItemInWiFiControl = WiFiControl.ContainerFromItem(RemovedItem) as ListViewItem;
+                if (ItemInWiFiControl.ContentTemplate != WiFiNormalState)
                 {
-                    it.ContentTemplate = WiFiNormalState;
+                    ItemInWiFiControl.ContentTemplate = WiFiNormalState;
                 }
             }
-            foreach (var item in WiFiList)
+            foreach (var WiFi in WiFiList)
             {
-                item.HideMessage();
+                WiFi.HideMessage();
             }
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            var Item = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
-            foreach (var item in WiFiContainer)
+            var ItemInWiFiControl = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
+            foreach (var WiFiInfo in StoragedWiFiInfoCollection)
             {
-                if (item.SSID == WiFiList[WiFiControl.SelectedIndex].Name)
+                if (WiFiInfo.SSID == WiFiList[WiFiControl.SelectedIndex].Name)
                 {
-                    WiFiList[WiFiControl.SelectedIndex].Password = item.Password;
+                    WiFiList[WiFiControl.SelectedIndex].Password = WiFiInfo.Password;
                     break;
                 }
             }
             if (WiFiList[WiFiControl.SelectedIndex].Password != "")
             {
-                Item.ContentTemplate = WiFiConnectingState;
+                ItemInWiFiControl.ContentTemplate = WiFiConnectingState;
                 ConfirmButton_Click(null, null);
             }
             else
             {
-                Item.ContentTemplate = WiFiPasswordState;
+                ItemInWiFiControl.ContentTemplate = WiFiPasswordState;
             }
+
+            //连接WiFi期间需要暂时停止搜索，因为此时搜索将导致WiFi列表位移
             WiFiScanTimer.Tick -= WiFiScanTimer_Tick;
             WiFiScanTimer.Stop();
             Progressing.Visibility = Visibility.Collapsed;
@@ -515,55 +548,58 @@ namespace SmartLens
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            var Item = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
+            var ItemInWiFiControl = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
             WiFiList[WiFiControl.SelectedIndex].HideMessage();
-            Item.ContentTemplate = WiFiPressState;
+            ItemInWiFiControl.ContentTemplate = WiFiPressState;
         }
 
         private async void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
             string Pass = WiFiList[WiFiControl.SelectedIndex].Password;
-            if (Pass != "" && Pass.ToCharArray().Length >= 8)
+            if (Pass != "" && Pass.Length >= 8)
             {
                 WiFiList[WiFiControl.SelectedIndex].HideMessage();
                 (WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem).ContentTemplate = WiFiConnectingState;
 
-                WiFiInfo info = WiFiList[WiFiControl.SelectedIndex];
+                WiFiInfo Info = WiFiList[WiFiControl.SelectedIndex];
                 PasswordCredential Credential = new PasswordCredential
                 {
-                    Password = info.Password
+                    Password = Info.Password
                 };
 
-                var ConnectResult = await WiFi.ConnectAsync(info.GetWiFiAvailableNetwork(), info.AutoConnect ? WiFiReconnectionKind.Automatic : WiFiReconnectionKind.Manual, Credential);
+                var ConnectResult = await WiFi.ConnectAsync(Info.GetWiFiAvailableNetwork(), Info.AutoConnect ? WiFiReconnectionKind.Automatic : WiFiReconnectionKind.Manual, Credential);
                 if (ConnectResult.ConnectionStatus == WiFiConnectionStatus.Success)
                 {
-                    foreach (var item in WiFiList)
+                    foreach (var WiFiInfo in WiFiList)
                     {
-                        if (item.IsConnected == true)
+                        if (WiFiInfo.IsConnected == true)
                         {
-                            item.ChangeConnectState(false);
+                            WiFiInfo.ChangeConnectionStateAsync(false);
                         }
                     }
-                    info.HideMessage();
-                    info.ChangeConnectState(true, info);
+                    Info.HideMessage();
+                    Info.ChangeConnectionStateAsync(true, true);
+
                     (WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem).ContentTemplate = WiFiConnectedState;
+
                     bool IsExist = false;
-                    foreach (var item in WiFiContainer)
+
+                    foreach (var item in StoragedWiFiInfoCollection)
                     {
-                        if (item.SSID == info.Name)
+                        if (item.SSID == Info.Name)
                         {
-                            if (item.Password != info.Password)
+                            if (item.Password != Info.Password)
                             {
-                                await SQLite.GetInstance().UpdateWiFiData(info.Name, info.Password);
+                                await SQLite.GetInstance().UpdateWiFiDataAsync(Info.Name, Info.Password);
                             }
-                            else if (item.Password == info.Password)
+                            else if (item.Password == Info.Password)
                             {
                                 IsExist = true;
                             }
 
-                            if (item.AutoConnect != info.AutoConnect)
+                            if (item.AutoConnect != Info.AutoConnect)
                             {
-                                await SQLite.GetInstance().UpdateWiFiData(info.Name, info.AutoConnect);
+                                await SQLite.GetInstance().UpdateWiFiDataAsync(Info.Name, Info.AutoConnect);
                             }
                             break;
                         }
@@ -571,16 +607,18 @@ namespace SmartLens
                     if (!IsExist)
                     {
                         IsExist = false;
-                        WiFiContainer.Add(new WiFiInDataBase(info.Name, info.Password, info.AutoConnect ? "True" : "False"));
-                        await SQLite.GetInstance().SetWiFiData(info.Name, info.Password, info.AutoConnect);
+                        StoragedWiFiInfoCollection.Add(new WiFiInDataBase(Info.Name, Info.Password, Info.AutoConnect ? "True" : "False"));
+                        await SQLite.GetInstance().SetWiFiDataAsync(Info.Name, Info.Password, Info.AutoConnect);
                     }
                 }
                 else
                 {
                     WiFi.Disconnect();
                     (WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem).ContentTemplate = WiFiErrorState;
-                    info.ShowMessage("连接失败");
+                    Info.ShowMessage("连接失败");
                 }
+
+                //连接完成后重新开始搜索
                 WiFiScanTimer.Tick += WiFiScanTimer_Tick;
                 WiFiScanTimer.Start();
             }
@@ -595,16 +633,16 @@ namespace SmartLens
             WiFi.Disconnect();
             var item = WiFiList[WiFiControl.SelectedIndex];
             item.AutoConnect = false;
-            await SQLite.GetInstance().UpdateWiFiData(item.Name, false);
-            WiFiList[WiFiControl.SelectedIndex].ChangeConnectState(false);
+            await SQLite.GetInstance().UpdateWiFiDataAsync(item.Name, false);
+            WiFiList[WiFiControl.SelectedIndex].ChangeConnectionStateAsync(false);
             (WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem).ContentTemplate = WiFiPressState;
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            var Item = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
+            var ItemInWiFiControl = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
             WiFiList[WiFiControl.SelectedIndex].HideMessage();
-            Item.ContentTemplate = WiFiPressState;
+            ItemInWiFiControl.ContentTemplate = WiFiPressState;
         }
 
         private async void ResetButton_Click(object sender, RoutedEventArgs e)
@@ -618,7 +656,14 @@ namespace SmartLens
             };
             if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
-                await WebView.ClearTemporaryWebDataAsync();
+                /*
+                 * 以下操作主要有：
+                 * 关闭SQL数据库
+                 * 清除应用程序所有存储数据
+                 * 准备Toast弹出通知
+                 * 启动弹出通知
+                 * 关闭SmartLens本身
+                 */
                 SQLite.GetInstance().Dispose();
                 await ApplicationData.Current.ClearAsync();
                 ToastContent content = PopToast.GenerateToastContent();
@@ -629,6 +674,10 @@ namespace SmartLens
 
         private void Theme_Toggled(object sender, RoutedEventArgs e)
         {
+            /*
+             * 不能立即更改主题，当且仅当应用程序启动时才能够更改
+             * 启动时，将在App.cs中查询并更改完成
+             */
             if (Theme.IsOn)
             {
                 ThemeSwitcher.IsLightEnabled = false;
@@ -654,7 +703,7 @@ namespace SmartLens
 
         private async void ErrorExport_Click(object sender, RoutedEventArgs e)
         {
-            if(await ApplicationData.Current.RoamingFolder.FileExistsAsync("ErrorLog.txt"))
+            if (await ApplicationData.Current.RoamingFolder.FileExistsAsync("ErrorLog.txt"))
             {
                 FileSavePicker Picker = new FileSavePicker
                 {

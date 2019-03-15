@@ -48,6 +48,7 @@ namespace SmartLens
                 return;
             }
 
+            //若密码长度不够则自动用0补齐
             if(KeySize==128)
             {
                 if (Key.Length < 16)

@@ -96,7 +96,7 @@
                                         <ColumnDefinition Width="100*"/>
                                         <ColumnDefinition Width="50*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="16" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind Music}"/>
+                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="16" Style="{ThemeResource BaseTextBlockStyle}" Text="{x:Bind MusicName}"/>
                                     <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind Glyph}" PointerPressed="FontIcon_PointerPressed" Foreground="{x:Bind Col}" Grid.Column="1"/>
                                     <SymbolIcon Symbol="Play" PointerPressed="SymbolIcon_PointerPressed" Grid.Column="2"/>
                                     <Border Margin="5,0,0,0" Grid.Column="3" BorderBrush="OrangeRed" BorderThickness="1" Height="{Binding ElementName=MV,Path=ActualHeight}" Visibility="{x:Bind MVExists}">

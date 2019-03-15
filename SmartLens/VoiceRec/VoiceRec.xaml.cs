@@ -44,7 +44,7 @@ namespace SmartLens
                 var GrammarFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///VoiceRec/SRGS.grxml"));
                 var SRGSConstraint = new SpeechRecognitionGrammarFileConstraint(GrammarFile, "Control");
                 SpeechRec?.Constraints.Add(SRGSConstraint);
-                var SongNames = await SQLite.GetInstance().GetAllMusicName();
+                var SongNames = await SQLite.GetInstance().GetAllMusicNameAsync();
                 if (SongNames == null)
                 {
                     await SpeechRec.CompileConstraintsAsync();
