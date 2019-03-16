@@ -135,6 +135,7 @@
         <Button Grid.Row="2" Grid.Column="3" Width="160" Height="40" Content="重置SmartLens" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
         <Button Grid.Row="3" Grid.Column="3" Width="160" Height="40" Content="清除缓存" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
         <ToggleSwitch Grid.Row="1" IsOn="{x:Bind local:ThemeSwitcher.IsLightEnabled}" Grid.Column="5" Header="切换主题模式(重启SmartLens生效)" OnContent="Light模式" OffContent="Dark模式" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Theme" Toggled="Theme_Toggled"/>
-        <Button Grid.Row="2" Grid.Column="5" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
+        <ToggleSwitch Grid.Row="2" Grid.Column="5" Header="完整性校验(推荐)" OnContent="开" OffContent="关" Name="Integrity" Toggled="Integrity_Toggled"/>
+        <Button Grid.Row="3" Grid.Column="5" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
     </Grid>
 </Page>

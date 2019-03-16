@@ -145,8 +145,13 @@ namespace SmartLens
                     WiFiSwitch.IsOn = true;
                 }
             }
-            MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
 
+            if (ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+            {
+                Integrity.IsOn = IsEnable;
+            }
+
+            MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
             if (MediaFraSourceGroup.Count == 0)
             {
                 /*
@@ -724,6 +729,18 @@ namespace SmartLens
                     CloseButtonText = "确定"
                 };
                 await dialog.ShowAsync();
+            }
+        }
+
+        private void Integrity_Toggled(object sender, RoutedEventArgs e)
+        {
+            if(Integrity.IsOn)
+            {
+                ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = true;
+            }
+            else
+            {
+                ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = false;
             }
         }
     }

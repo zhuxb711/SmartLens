@@ -22,6 +22,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.Devices.Enumeration;
 using Windows.Devices.WiFi;
 using Windows.Media.Capture.Frames;
@@ -1170,7 +1171,9 @@ namespace SmartLens
         private SQLite()
         {
             OLEDB.Open();
-            string Command = "Create Table If Not Exists MusicList (MusicName Text Not Null, Artist Text Not Null, Album Text Not Null, Duration Text Not Null, ImageURL Text Not Null, SongID Int Not Null ,MVid Int Not Null, Primary Key (MusicName,Artist,Album,Duration));Create Table If Not Exists WiFiRecord (SSID Text Not Null, Password Text Not Null, AutoConnect Text Not Null, Primary Key (SSID,Password,AutoConnect))";
+            string Command = @"Create Table If Not Exists MusicList (MusicName Text Not Null, Artist Text Not Null, Album Text Not Null, Duration Text Not Null, ImageURL Text Not Null, SongID Int Not Null ,MVid Int Not Null, Primary Key (MusicName,Artist,Album,Duration));
+                               Create Table If Not Exists WiFiRecord (SSID Text Not Null, Password Text Not Null, AutoConnect Text Not Null, Primary Key (SSID,Password,AutoConnect));
+                               Create Table If Not Exists HashTable (FileName Text Not Null, HashValue Text Not Null, Primary Key (FileName,HashValue))";
             SqliteCommand CreateTable = new SqliteCommand(Command, OLEDB);
             CreateTable.ExecuteNonQuery();
         }
@@ -1187,14 +1190,7 @@ namespace SmartLens
             }
             lock (Lock)
             {
-                if (SQL == null)
-                {
-                    return SQL = new SQLite();
-                }
-                else
-                {
-                    return SQL;
-                }
+                return SQL ?? (SQL = new SQLite());
             }
         }
 
@@ -1255,6 +1251,31 @@ namespace SmartLens
                 bitmap.UriSource = new Uri(MusicList.ThisPage.FavouriteMusicCollection[0].ImageUrl);
             }
         }
+
+        public async Task SetMD5ValueAsync(List<KeyValuePair<string, string>> Hash)
+        {
+            StringBuilder sb = new StringBuilder("Delete From HashTable;");
+            foreach (var Command in from Command in Hash
+                                    select "Insert Into HashTable Values ('" + Command.Key + "','" + Command.Value + "');")
+            {
+                sb.Append(Command);
+            }
+            SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB);
+            await SQLCommand.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<KeyValuePair<string, string>>> GetMD5ValueAsync()
+        {
+            SqliteCommand Command = new SqliteCommand("Select * From HashTable", OLEDB);
+            SqliteDataReader query = await Command.ExecuteReaderAsync();
+            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+            while (query.Read())
+            {
+                list.Add(new KeyValuePair<string, string>(query[0].ToString(), query[1].ToString()));
+            }
+            return list;
+        }
+
 
         /// <summary>
         /// 向SQLite数据库中异步存储音乐数据
@@ -3450,4 +3471,68 @@ namespace SmartLens
     }
 
     #endregion
+
+    public sealed class MD5Util
+    {
+        public static async Task CalculateAndStorageMD5Async()
+        {
+            var InstallFolder = Package.Current.InstalledLocation;
+            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
+            await CalculateMD5(InstallFolder, CalculateResult);
+            await SQLite.GetInstance().SetMD5ValueAsync(CalculateResult);
+        }
+
+        public static async Task<KeyValuePair<bool, string>> CheckSmartLensIntegrity()
+        {
+            var InstallFolder = Package.Current.InstalledLocation;
+            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
+            await CalculateMD5(InstallFolder, CalculateResult);
+            var DataBaseResult = await SQLite.GetInstance().GetMD5ValueAsync();
+
+            foreach (var ErrorPart in from item in DataBaseResult
+                                      from item1 in CalculateResult
+                                      where item.Key == item1.Key
+                                      where item.Value != item1.Value
+                                      select item.Key)
+            {
+                return new KeyValuePair<bool, string>(false, ErrorPart);
+            }
+
+            return new KeyValuePair<bool, string>(true, null);
+        }
+
+        private static async Task CalculateMD5(StorageFolder Folder, List<KeyValuePair<string, string>> MD5List)
+        {
+            var FileList = await Folder.GetFilesAsync();
+            using (MD5 md5 = new MD5CryptoServiceProvider())
+            {
+                foreach (var file in FileList)
+                {
+                    if (file.Name == "SmartLens.exe")
+                    {
+                        continue;
+                    }
+                    using (Stream stream = await file.OpenStreamForReadAsync())
+                    {
+                        byte[] Val = md5.ComputeHash(stream);
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < Val.Length; i++)
+                        {
+                            sb.Append(Val[i].ToString("x2"));
+                        }
+                        MD5List.Add(new KeyValuePair<string, string>(file.Name, sb.ToString()));
+                    }
+                }
+            }
+
+            var FolderList = await Folder.GetFoldersAsync();
+            if (FolderList.Count != 0)
+            {
+                foreach (var folder in FolderList)
+                {
+                    await CalculateMD5(folder, MD5List);
+                }
+            }
+        }
+    }
 }

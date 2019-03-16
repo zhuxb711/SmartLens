@@ -78,47 +78,15 @@ namespace SmartLens
 
             if (IsLaunch)
             {
-                var e = m as LaunchActivatedEventArgs;
-
-                if (!(Window.Current.Content is Frame rootFrame))
-                {
-                    rootFrame = new Frame();
-
-                    rootFrame.NavigationFailed += OnNavigationFailed;
-
-                    if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
-                    {
-                        //TODO: 从之前挂起的应用程序加载状态
-                    }
-
-                    Window.Current.Content = rootFrame;
-                }
-
-                if (e.PrelaunchActivated == false)
-                {
-                    if (rootFrame.Content == null)
-                    {
-                        rootFrame.Navigate(typeof(MainPage), e.Arguments);
-                    }
-                }
+                var args = m as LaunchActivatedEventArgs;
+                ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                Window.Current.Content = extendedSplash;
             }
             else
             {
                 ToastNotificationManager.History.Clear();
-
-                if (!(Window.Current.Content is Frame rootFrame))
-                {
-                    rootFrame = new Frame();
-
-                    rootFrame.NavigationFailed += OnNavigationFailed;
-
-                    Window.Current.Content = rootFrame;
-                }
-
-                if (rootFrame.Content == null)
-                {
-                    rootFrame.Navigate(typeof(MainPage));
-                }
+                ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
+                Window.Current.Content = extendedSplash;
             }
 
             Window.Current.Activate();
