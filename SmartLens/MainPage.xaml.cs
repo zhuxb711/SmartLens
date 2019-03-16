@@ -37,7 +37,6 @@ namespace SmartLens
 
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            NavigationView.IsPaneOpen = false;
             foreach (var MenuItem in from NavigationViewItemBase MenuItem in NavigationView.MenuItems
                                      where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == "主页"
                                      select MenuItem)

@@ -52,7 +52,7 @@ namespace SmartLens
 
         private async void DismissExtendedSplash()
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 var rootFrame = new Frame();
                 Window.Current.Content = rootFrame;

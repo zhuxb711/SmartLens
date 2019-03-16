@@ -15,7 +15,6 @@
             x:Name="NavigationView" 
             AlwaysShowHeader="False" 
             x:FieldModifier="Public"
-            IsPaneOpen="False" 
             ItemInvoked="NavigationView_ItemInvoked"
             FontSize="26" 
             animations:Connected.Key="item" 
