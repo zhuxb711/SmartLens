@@ -3,6 +3,7 @@ using Bluetooth.Services.Obex;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth.Rfcomm;
@@ -11,7 +12,6 @@ using Windows.Foundation;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-
 
 namespace SmartLens
 {
@@ -85,15 +85,14 @@ namespace SmartLens
 
                 //能到这里说明该设备已经配对，启动搜索，完成后PairedBluetoothDeviceCollection被填充
                 await BTService.SearchForPairedDevicesAsync();
-                foreach (var item in PairedBluetoothDeviceCollection)
+                foreach (var BTDevice in from BTDevice in PairedBluetoothDeviceCollection
+                                             //找到符合刚刚RFComm服务获取到的规范名称的蓝牙设备
+                                         where BTDevice.DeviceHost.CanonicalName == CanonicalName
+                                         select BTDevice)
                 {
-                    //找到符合刚刚RFComm服务获取到的规范名称的蓝牙设备
-                    if (item.DeviceHost.CanonicalName == CanonicalName)
-                    {
-                        //从该设备的BluetoothDevice对象获取到Obex服务的实例
-                        ObexServiceProvider.SetObexInstance(ObexService.GetDefaultForBluetoothDevice(item));
-                        break;
-                    }
+                    //从该设备的BluetoothDevice对象获取到Obex服务的实例
+                    ObexServiceProvider.SetObexInstance(ObexService.GetDefaultForBluetoothDevice(BTDevice));
+                    break;
                 }
 
                 WebPage.ThisPage?.ResetEvent?.Set();

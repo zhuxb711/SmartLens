@@ -12,9 +12,8 @@ namespace SmartLens
     public sealed partial class WebTab : Page
     {
         public static WebTab ThisPage { get; set; }
-        private AutoResetEvent Locker2 = new AutoResetEvent(true);
         public ObservableCollection<TabViewItem> TabCollection = new ObservableCollection<TabViewItem>();
-
+        private readonly object SyncRoot = new object();
         public WebTab()
         {
             InitializeComponent();
@@ -34,18 +33,22 @@ namespace SmartLens
             CreateNewTab();
         }
 
+        /// <summary>
+        /// 创建新的WebTab标签页
+        /// </summary>
+        /// <param name="uri">导航网址</param>
         private void CreateNewTab(Uri uri = null)
         {
-            Locker2.WaitOne();
-            var temp = new WebPage(uri);
-            TabCollection.Add(new TabViewItem()
+            lock (SyncRoot)
             {
-                Header = "空白页",
-                Icon = new SymbolIcon(Symbol.Document),
-                Content = temp
-            });
-            TabControl.SelectedIndex = TabCollection.Count - 1;
-            Locker2.Set();
+                TabCollection.Add(new TabViewItem()
+                {
+                    Header = "空白页",
+                    Icon = new SymbolIcon(Symbol.Document),
+                    Content = new WebPage(uri)
+                });
+                TabControl.SelectedIndex = TabCollection.Count - 1;
+            }
         }
 
 

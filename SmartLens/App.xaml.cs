@@ -27,14 +27,8 @@ namespace SmartLens
             Resuming += App_Resuming;
             UnhandledException += App_UnhandledException;
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Auto;
-            if (ThemeSwitcher.IsLightEnabled)
-            {
-                RequestedTheme = ApplicationTheme.Light;
-            }
-            else
-            {
-                RequestedTheme = ApplicationTheme.Dark;
-            }
+
+            RequestedTheme = ThemeSwitcher.IsLightEnabled ? ApplicationTheme.Light : ApplicationTheme.Dark;
         }
 
         private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
@@ -145,7 +139,21 @@ namespace SmartLens
         ///<param name="e">有关导航失败的详细信息</param>
         void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
-            throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
+            if (!(Window.Current.Content is Frame rootFrame))
+            {
+                rootFrame = new Frame();
+
+                rootFrame.NavigationFailed += OnNavigationFailed;
+
+                Window.Current.Content = rootFrame;
+            }
+            string Message =
+                "\r以下是错误信息：\r\rException Code错误代码：" + e.Exception.HResult +
+                "\r\rMessage错误消息：" + e.Exception.Message +
+                "\r\rSource来源：" + (string.IsNullOrEmpty(e.Exception.Source) ? "Unknown" : e.Exception.Source) +
+                "\r\rStackTrace堆栈追踪：\r" + (string.IsNullOrEmpty(e.Exception.StackTrace) ? "Unknown" : e.Exception.StackTrace);
+
+            rootFrame.Navigate(typeof(BlueScreen), Message);
         }
 
         /// <summary>

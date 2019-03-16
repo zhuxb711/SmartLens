@@ -798,9 +798,11 @@ namespace SmartLens
             {
                 MVExists = true;
             }
+
             long[] temp = new long[1];
             temp[0] = SongID;
             this.SongID = temp;
+
             ImageUrl = Url;
             if (MusicList.ThisPage.MusicIdDictionary.Contains(SongID))
             {
@@ -1234,9 +1236,9 @@ namespace SmartLens
             int Index = 0;
             while (query1.Read())
             {
-                long[] temp = new long[1];
-                temp[0] = (long)query1[5];
-                MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri((await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(temp)).Data[0].Url)));
+                long[] SongID = new long[1];
+                SongID[0] = (long)query1[5];
+                MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri((await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(SongID)).Data[0].Url)));
                 MediaPlayList.FavouriteSongList.Items.Add(Item);
 
                 MediaItemDisplayProperties Props = Item.GetDisplayProperties();
@@ -2063,7 +2065,7 @@ namespace SmartLens
         /// <returns>加密后数据</returns>
         public static byte[] Encrypt(byte[] ToEncrypt, string key, int KeySize)
         {
-            if (KeySize != 256 || KeySize != 128)
+            if (KeySize != 256 && KeySize != 128)
             {
                 throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
             }
@@ -2093,7 +2095,7 @@ namespace SmartLens
         /// <returns>解密后数据</returns>
         public static byte[] Decrypt(byte[] ToDecrypt, string key, int KeySize)
         {
-            if (KeySize != 256 || KeySize != 128)
+            if (KeySize != 256 && KeySize != 128)
             {
                 throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
             }
@@ -2124,7 +2126,7 @@ namespace SmartLens
         /// <returns></returns>
         public static byte[] EncryptForUSB(byte[] ToEncrypt, string key, int KeySize)
         {
-            if (KeySize != 256 || KeySize != 128)
+            if (KeySize != 256 && KeySize != 128)
             {
                 throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
             }
@@ -2154,7 +2156,7 @@ namespace SmartLens
         /// <returns>解密后数据</returns>
         public static byte[] DecryptForUSB(byte[] ToDecrypt, string key, int KeySize)
         {
-            if (KeySize != 256 || KeySize != 128)
+            if (KeySize != 256 && KeySize != 128)
             {
                 throw new InvalidEnumArgumentException("AES密钥长度仅支持128或256任意一种");
             }
@@ -3241,11 +3243,11 @@ namespace SmartLens
         /// <param name="To">收件人</param>
         public SendEmailData(string To)
         {
-            string[] temp = To.Split(";");
-            List<MailboxAddress> Address = new List<MailboxAddress>(temp.Length);
-            foreach (var item in temp)
+            string[] ToGroup = To.Split(";");
+            List<MailboxAddress> Address = new List<MailboxAddress>(ToGroup.Length);
+            foreach (var Person in ToGroup)
             {
-                Address.Add(new MailboxAddress(item));
+                Address.Add(new MailboxAddress(Person));
             }
             this.To = Address;
             SendType = EmailSendType.Forward;
@@ -3260,11 +3262,11 @@ namespace SmartLens
         /// <param name="Attachments"></param>
         public SendEmailData(string To, string Subject, string Text, List<MimePart> Attachments)
         {
-            string[] temp = To.Split(";");
-            List<MailboxAddress> Address = new List<MailboxAddress>(temp.Length);
-            foreach (var item in temp)
+            string[] ToGroup = To.Split(";");
+            List<MailboxAddress> Address = new List<MailboxAddress>(ToGroup.Length);
+            foreach (var Person in ToGroup)
             {
-                Address.Add(new MailboxAddress(item));
+                Address.Add(new MailboxAddress(Person));
             }
             this.To = Address;
             this.Subject = Subject;

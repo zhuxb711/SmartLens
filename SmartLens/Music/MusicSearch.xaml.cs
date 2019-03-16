@@ -107,29 +107,28 @@ namespace SmartLens
         private async void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             LoadingControl.IsLoading = true;
-            if (args.ChosenSuggestion is Song song)
+            switch (args.ChosenSuggestion)
             {
-                await GetSingleMusicAsync(song.Name);
-                await GetArtistsAsync(song.Name);
-                await GetAlbumAsync(song.Name);
-            }
-            else if (args.ChosenSuggestion is ArtistSearchResult.Artists art)
-            {
-                await GetSingleMusicAsync(art.name);
-                await GetArtistsAsync(art.name);
-                await GetAlbumAsync(art.name);
-            }
-            else if (args.ChosenSuggestion is AlbumSearchResult.AlbumsItem bum)
-            {
-                await GetSingleMusicAsync(bum.name);
-                await GetArtistsAsync(bum.name);
-                await GetAlbumAsync(bum.name);
-            }
-            else if (args.ChosenSuggestion == null && args.QueryText != "")
-            {
-                await GetSingleMusicAsync(args.QueryText);
-                await GetArtistsAsync(args.QueryText);
-                await GetAlbumAsync(args.QueryText);
+                case Song song:
+                    await GetSingleMusicAsync(song.Name);
+                    await GetArtistsAsync(song.Name);
+                    await GetAlbumAsync(song.Name);
+                    break;
+                case ArtistSearchResult.Artists art:
+                    await GetSingleMusicAsync(art.name);
+                    await GetArtistsAsync(art.name);
+                    await GetAlbumAsync(art.name);
+                    break;
+                case AlbumSearchResult.AlbumsItem bum:
+                    await GetSingleMusicAsync(bum.name);
+                    await GetArtistsAsync(bum.name);
+                    await GetAlbumAsync(bum.name);
+                    break;
+                case null when args.QueryText != "":
+                    await GetSingleMusicAsync(args.QueryText);
+                    await GetArtistsAsync(args.QueryText);
+                    await GetAlbumAsync(args.QueryText);
+                    break;
             }
             LoadingControl.IsLoading = false;
         }
@@ -155,26 +154,27 @@ namespace SmartLens
                 return;
             }
             SingleMusicList.Clear();
-            foreach (var item in Result.Result.Songs)
+
+            foreach (var Song in Result.Result.Songs)
             {
-                TimeSpan Duration = TimeSpan.FromMilliseconds(item.Dt);
-                if (item.Ar.Count == 1)
+                TimeSpan Duration = TimeSpan.FromMilliseconds(Song.Dt);
+                if (Song.Ar.Count == 1)
                 {
-                    SingleMusicList.Add(new SearchSingleMusic(item.Name, item.Ar[0].Name, item.Al.Name, string.Format("{0:D2}:{1:D2}", Duration.Minutes, Duration.Seconds), item.Id, item.Al.PicUrl, item.Mv));
+                    SingleMusicList.Add(new SearchSingleMusic(Song.Name, Song.Ar[0].Name, Song.Al.Name, string.Format("{0:D2}:{1:D2}", Duration.Minutes, Duration.Seconds), Song.Id, Song.Al.PicUrl, Song.Mv));
                 }
-                else if (item.Ar.Count > 1)
+                else if (Song.Ar.Count > 1)
                 {
                     string CombineName = string.Empty;
-                    foreach (var names in item.Ar)
+                    foreach (var names in Song.Ar)
                     {
                         CombineName = CombineName + names.Name + "/";
                     }
                     CombineName = CombineName.Remove(CombineName.Length - 1);
-                    SingleMusicList.Add(new SearchSingleMusic(item.Name, CombineName, item.Al.Name, string.Format("{0:D2}:{1:D2}", Duration.Minutes, Duration.Seconds), item.Id, item.Al.PicUrl, item.Mv));
+                    SingleMusicList.Add(new SearchSingleMusic(Song.Name, CombineName, Song.Al.Name, string.Format("{0:D2}:{1:D2}", Duration.Minutes, Duration.Seconds), Song.Id, Song.Al.PicUrl, Song.Mv));
                 }
                 else
                 {
-                    SingleMusicList.Add(new SearchSingleMusic(item.Name, "Unknown", item.Al.Name, string.Format("{0:D2}:{1:D2}", Duration.Minutes, Duration.Seconds), item.Id, item.Al.PicUrl, item.Mv));
+                    SingleMusicList.Add(new SearchSingleMusic(Song.Name, "Unknown", Song.Al.Name, string.Format("{0:D2}:{1:D2}", Duration.Minutes, Duration.Seconds), Song.Id, Song.Al.PicUrl, Song.Mv));
                 }
             }
 

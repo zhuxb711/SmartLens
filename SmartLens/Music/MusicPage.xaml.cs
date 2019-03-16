@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using System.Linq;
 
 namespace SmartLens
 {
@@ -63,16 +64,16 @@ namespace SmartLens
             {
                 for (int i = 0; i < MusicList.ThisPage.FavouriteMusicCollection.Count; i++)
                 {
-                    string temp = string.Empty;
+                    string Music = string.Empty;
                     if (MusicList.ThisPage.FavouriteMusicCollection[i].Music.EndsWith(' '))
                     {
-                        temp = MusicList.ThisPage.FavouriteMusicCollection[i].Music.Remove(MusicList.ThisPage.FavouriteMusicCollection[i].Music.Length - 1);
+                        Music = MusicList.ThisPage.FavouriteMusicCollection[i].Music.Remove(MusicList.ThisPage.FavouriteMusicCollection[i].Music.Length - 1);
                     }
                     else
                     {
-                        temp = MusicList.ThisPage.FavouriteMusicCollection[i].Music;
+                        Music = MusicList.ThisPage.FavouriteMusicCollection[i].Music;
                     }
-                    if (temp == SongName)
+                    if (Music == SongName)
                     {
                         if (MediaControl.MediaPlayer.Source != MediaPlayList.FavouriteSongList)
                         {
@@ -120,16 +121,14 @@ namespace SmartLens
                 if (MediaControl.MediaPlayer.Source == MediaPlayList.AlbumSongList && MediaPlayList.AlbumSongBackup.Count > 0)
                 {
                     SearchSingleMusic music = MediaPlayList.AlbumSongBackup[Convert.ToInt32(CurrentIndex)];
-                    var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-                    foreach (var item in song.Result.Songs)
+                    var SongSearchResult = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
+
+                    foreach (var Song in SongSearchResult.Result.Songs.Where(Song => Song.Name == music.MusicName && Song.Al.Name == music.Album).Select(Song => Song))
                     {
-                        if (item.Name == music.MusicName && item.Al.Name == music.Album)
-                        {
-                            var bitmap = new BitmapImage();
-                            PicturePlaying.Source = bitmap;
-                            bitmap.UriSource = new Uri(item.Al.PicUrl);
-                            break;
-                        }
+                        var bitmap = new BitmapImage();
+                        PicturePlaying.Source = bitmap;
+                        bitmap.UriSource = new Uri(Song.Al.PicUrl);
+                        break;
                     }
 
                     MediaItemDisplayProperties Props = args.NewItem.GetDisplayProperties();
@@ -171,16 +170,14 @@ namespace SmartLens
                 if (MediaControl.MediaPlayer.Source == MediaPlayList.SingerHotSongList && MediaPlayList.HotSongBackup.Count > 0)
                 {
                     SearchSingleMusic music = MediaPlayList.HotSongBackup[Convert.ToInt32(CurrentIndex)];
-                    var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-                    foreach (var item in song.Result.Songs)
+                    var SongSearchResult = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
+
+                    foreach (var Song in SongSearchResult.Result.Songs.Where(Song => Song.Name == music.MusicName && Song.Al.Name == music.Album).Select(Song => Song))
                     {
-                        if (item.Name == music.MusicName && item.Al.Name == music.Album)
-                        {
-                            var bitmap = new BitmapImage();
-                            PicturePlaying.Source = bitmap;
-                            bitmap.UriSource = new Uri(item.Al.PicUrl);
-                            break;
-                        }
+                        var bitmap = new BitmapImage();
+                        PicturePlaying.Source = bitmap;
+                        bitmap.UriSource = new Uri(Song.Al.PicUrl);
+                        break;
                     }
 
                     MediaItemDisplayProperties Props = args.NewItem.GetDisplayProperties();
@@ -194,8 +191,8 @@ namespace SmartLens
 
         private async void MediaList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
-            uint temp = sender.CurrentItemIndex;
-            if (temp == 4294967295)
+            uint Index = sender.CurrentItemIndex;
+            if (Index == 4294967295)
             {
                 return;
             }
@@ -203,7 +200,7 @@ namespace SmartLens
              {
                  if (MusicList.ThisPage.FavouriteMusicCollection.Count != 0 && MediaControl.MediaPlayer.Source == MediaPlayList.FavouriteSongList)
                  {
-                     var PL = MusicList.ThisPage.FavouriteMusicCollection[Convert.ToInt32(temp)];
+                     var PL = MusicList.ThisPage.FavouriteMusicCollection[Convert.ToInt32(Index)];
 
                      var bitmap = new BitmapImage();
                      PicturePlaying.Source = bitmap;

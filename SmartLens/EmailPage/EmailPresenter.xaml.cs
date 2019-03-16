@@ -366,40 +366,32 @@ namespace SmartLens
             {
                 case 0:
                     {
-                        var GroupResult = from EmailItem in EmailAllItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem;
                         for (int i = 0; i < EmailDisplayCollection.Count; i++)
                         {
-                            foreach (var item1 in GroupResult)
+                            foreach (var Grouping in from Grouping in from EmailItem in EmailAllItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem
+                                                     where EmailDisplayCollection[i].Key == Grouping.Key
+                                                     where EmailDisplayCollection[i].Count() != Grouping.Count()
+                                                     select Grouping)
                             {
-                                if (EmailDisplayCollection[i].Key == item1.Key)
-                                {
-                                    if (EmailDisplayCollection[i].Count() != item1.Count())
-                                    {
-                                        EmailDisplayCollection.Remove(EmailDisplayCollection[i]);
-                                        EmailDisplayCollection.Insert(i, item1);
-                                        break;
-                                    }
-                                }
+                                EmailDisplayCollection.Remove(EmailDisplayCollection[i]);
+                                EmailDisplayCollection.Insert(i, Grouping);
+                                break;
                             }
                         }
                         break;
                     }
                 case 1:
                     {
-                        var GroupResult = from EmailItem in EmailNotSeenItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem;
                         for (int i = 0; i < EmailDisplayCollection.Count; i++)
                         {
-                            foreach (var item1 in GroupResult)
+                            foreach (var Grouping in from Grouping in from EmailItem in EmailNotSeenItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem
+                                                     where EmailDisplayCollection[i].Key == Grouping.Key
+                                                     where EmailDisplayCollection[i].Count() != Grouping.Count()
+                                                     select Grouping)
                             {
-                                if (EmailDisplayCollection[i].Key == item1.Key)
-                                {
-                                    if (EmailDisplayCollection[i].Count() != item1.Count())
-                                    {
-                                        EmailDisplayCollection.Remove(EmailDisplayCollection[i]);
-                                        EmailDisplayCollection.Insert(i, item1);
-                                        break;
-                                    }
-                                }
+                                EmailDisplayCollection.Remove(EmailDisplayCollection[i]);
+                                EmailDisplayCollection.Insert(i, Grouping);
+                                break;
                             }
                         }
                         break;

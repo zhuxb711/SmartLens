@@ -6,13 +6,15 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
+using System.Linq;
 
 namespace SmartLens
 {
     public sealed partial class MainPage : Page
     {
         public static MainPage ThisPage { get; set; }
-        Dictionary<Type, string> lookup = new Dictionary<Type, string>()
+
+        private readonly Dictionary<Type, string> PageDictionary = new Dictionary<Type, string>()
         {
             {typeof(HomePage), "主页"},
             {typeof(MusicPage), "音乐"},
@@ -36,14 +38,13 @@ namespace SmartLens
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             NavigationView.IsPaneOpen = false;
-            foreach (NavigationViewItemBase item in NavigationView.MenuItems)
+            foreach (var MenuItem in from NavigationViewItemBase MenuItem in NavigationView.MenuItems
+                                     where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == "主页"
+                                     select MenuItem)
             {
-                if (item is NavigationViewItem && item.Content.ToString() == "主页")
-                {
-                    NavigationView.SelectedItem = item;
-                    NavFrame.Navigate(typeof(HomePage), NavFrame);
-                    break;
-                }
+                NavigationView.SelectedItem = MenuItem;
+                NavFrame.Navigate(typeof(HomePage), NavFrame);
+                break;
             }
         }
 
@@ -94,7 +95,9 @@ namespace SmartLens
             args.Handled = true;
         }
 
-
+        /// <summary>
+        /// 请求后退
+        /// </summary>
         private async void BackRequested()
         {
             switch (NavFrame.CurrentSourcePageType.Name)
@@ -172,14 +175,14 @@ namespace SmartLens
             }
             else
             {
-                string stringTag = lookup[NavFrame.SourcePageType];
-                foreach (NavigationViewItemBase item in NavigationView.MenuItems)
+                string stringTag = PageDictionary[NavFrame.SourcePageType];
+
+                foreach (var MenuItem in from NavigationViewItemBase MenuItem in NavigationView.MenuItems
+                                         where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == stringTag
+                                         select MenuItem)
                 {
-                    if (item is NavigationViewItem && item.Content.ToString() == stringTag)
-                    {
-                        item.IsSelected = true;
-                        break;
-                    }
+                    MenuItem.IsSelected = true;
+                    break;
                 }
             }
         }

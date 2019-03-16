@@ -20,33 +20,35 @@ namespace SmartLens
         public USBPhotoViewer()
         {
             InitializeComponent();
-            ImageList.ItemsSource = PhotoCollection;
             Loaded += USBPhotoViewer_Loaded;
         }
 
         private async void USBPhotoViewer_Loaded(object sender, RoutedEventArgs e)
         {
+            PhotoCollection = new ObservableCollection<PhotoDisplaySupport>();
+            ImageList.ItemsSource = PhotoCollection;
+
             DisplayImage.Source = new BitmapImage();
 
-            var FileCollection =await USBControl.ThisPage.CurrentFolder.GetFilesAsync();
-            PhotoDisplaySupport temp = null;
-            foreach(var item in FileCollection)
+            var FileCollection = await USBControl.ThisPage.CurrentFolder.GetFilesAsync();
+            PhotoDisplaySupport SelectedPhoto = null;
+
+            foreach (StorageFile File in FileCollection.Where(File => File.FileType == ".png" || File.FileType == ".jpg" || File.FileType == ".jpeg" || File.FileType == ".bmp").Select(File => File))
             {
-                if(item.FileType==".png"||item.FileType==".jpg"||item.FileType==".jpeg"||item.FileType==".bmp")
+                using (var Thumbnail = await File.GetThumbnailAsync(ThumbnailMode.PicturesView))
                 {
-                    using (var Thumbnail = await item.GetThumbnailAsync(ThumbnailMode.PicturesView))
-                    {
-                        PhotoCollection.Add(new PhotoDisplaySupport(Thumbnail,item));
-                    }
-                    if(item.FolderRelativeId==SelectedPhotoID)
-                    {
-                        temp = PhotoCollection.Last();
-                    }
+                    PhotoCollection.Add(new PhotoDisplaySupport(Thumbnail, File));
+                }
+
+                if (File.FolderRelativeId == SelectedPhotoID)
+                {
+                    SelectedPhoto = PhotoCollection.Last();
                 }
             }
+
             await Task.Delay(800);
-            ImageList.ScrollIntoViewSmoothly(temp, ScrollIntoViewAlignment.Leading);
-            ImageList.SelectedItem = temp;
+            ImageList.ScrollIntoViewSmoothly(SelectedPhoto, ScrollIntoViewAlignment.Leading);
+            ImageList.SelectedItem = SelectedPhoto;
 
             await Task.Delay(500);
             ChangeDisplayImage(ImageList.SelectedItem as PhotoDisplaySupport);
@@ -54,12 +56,10 @@ namespace SmartLens
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if(e.Parameter is string ID)
+            if (e.Parameter is string ID)
             {
                 SelectedPhotoID = ID;
             }
-
-            PhotoCollection = new ObservableCollection<PhotoDisplaySupport>();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -73,13 +73,17 @@ namespace SmartLens
 
         private void ImageList_ItemClick(object sender, ItemClickEventArgs e)
         {
-            var item = e.ClickedItem as PhotoDisplaySupport;
-            if (item.PhotoFile.FolderRelativeId != SelectedPhotoID)
+            var SelectedPhoto = e.ClickedItem as PhotoDisplaySupport;
+            if (SelectedPhoto.PhotoFile.FolderRelativeId != SelectedPhotoID)
             {
-                ChangeDisplayImage(item);
+                ChangeDisplayImage(SelectedPhoto);
             }
         }
 
+        /// <summary>
+        /// 使用动画效果更改当前显示的图片
+        /// </summary>
+        /// <param name="e">需要显示的图片</param>
         private async void ChangeDisplayImage(PhotoDisplaySupport e)
         {
             FileName.Text = e.FileName;

@@ -12,7 +12,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-
+using System.Linq;
 
 namespace SmartLens
 {
@@ -219,14 +219,13 @@ namespace SmartLens
 
                 var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(SSM.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
                 string ImgURL = "";
-                foreach (var item in song.Result.Songs)
+
+                foreach (var Song in song.Result.Songs.Where(Song => Song.Name == SSM.MusicName && Song.Al.Name == SSM.Album).Select(Song => Song))
                 {
-                    if (item.Name == SSM.MusicName && item.Al.Name == SSM.Album)
-                    {
-                        ImgURL = item.Al.PicUrl;
-                        break;
-                    }
+                    ImgURL = Song.Al.PicUrl;
+                    break;
                 }
+
                 MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(SSM.MusicName, SSM.Artist, SSM.Album, SSM.Duration, ImgURL, SSM.SongID[0], SSM.MVid));
                 MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(MusicURL)));
 
@@ -277,18 +276,16 @@ namespace SmartLens
 
             var music = AlbumCollection[AlbumList.SelectedIndex];
             var song = await NeteaseMusicAPI.GetInstance().SearchAsync<SingleMusicSearchResult>(music.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-            foreach (var item in song.Result.Songs)
-            {
-                if (item.Name == music.MusicName && item.Al.Name == music.Album)
-                {
-                    var bitmap = new BitmapImage();
-                    MusicPage.ThisPage.PicturePlaying.Source = bitmap;
-                    bitmap.UriSource = new Uri(item.Al.PicUrl);
 
-                    MusicSearch.ForDetail_ImageURL = item.Al.PicUrl;
-                    break;
-                }
+            foreach (var item in song.Result.Songs.Where(item => item.Name == music.MusicName && item.Al.Name == music.Album).Select(item => item))
+            {
+                var bitmap = new BitmapImage();
+                MusicPage.ThisPage.PicturePlaying.Source = bitmap;
+                bitmap.UriSource = new Uri(item.Al.PicUrl);
+                MusicSearch.ForDetail_ImageURL = item.Al.PicUrl;
+                break;
             }
+
             MusicSearch.ForDetail_ID = AlbumCollection[AlbumList.SelectedIndex].SongID[0];
             MusicSearch.ForDetail_Name = AlbumCollection[AlbumList.SelectedIndex].MusicName;
             MusicPage.ThisPage.MediaControl.MediaPlayer.Play();

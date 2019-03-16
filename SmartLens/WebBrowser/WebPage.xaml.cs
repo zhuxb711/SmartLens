@@ -18,7 +18,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace SmartLens
 {
-    public sealed partial class WebPage : Page , IDisposable
+    public sealed partial class WebPage : Page
     {
         private bool CanCancelLoading;
         public AutoResetEvent ResetEvent = null;
@@ -50,6 +50,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 初始化WebView
+        /// </summary>
         private void InitializeWebView()
         {
             Gr.Children.Add(WebBrowser);
@@ -97,31 +100,13 @@ namespace SmartLens
 
         private void WebBrowser_ContentLoading(WebView sender, WebViewContentLoadingEventArgs args)
         {
-            if (WebBrowser.DocumentTitle != "")
-            {
-                (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle;
-            }
-            else
-            {
-                (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = "正在加载...";
-            }
+            (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle != "" ? WebBrowser.DocumentTitle : "正在加载...";
+
             AutoSuggest.Text = args.Uri.ToString();
-            if (WebBrowser.CanGoBack)
-            {
-                Back.IsEnabled = true;
-            }
-            else
-            {
-                Back.IsEnabled = false;
-            }
-            if (WebBrowser.CanGoForward)
-            {
-                Forward.IsEnabled = true;
-            }
-            else
-            {
-                Forward.IsEnabled = false;
-            }
+
+            Back.IsEnabled = WebBrowser.CanGoBack;
+
+            Forward.IsEnabled = WebBrowser.CanGoForward;
         }
 
         private void WebBrowser_NewWindowRequested(WebView sender, WebViewNewWindowRequestedEventArgs args)
@@ -167,9 +152,9 @@ namespace SmartLens
         {
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput && sender.Text != "")
             {
-                if (JsonConvert.DeserializeObject<WebSearchResult>(GetJsonFromWeb(sender.Text)) is WebSearchResult temp)
+                if (JsonConvert.DeserializeObject<WebSearchResult>(GetJsonFromWeb(sender.Text)) is WebSearchResult SearchResult)
                 {
-                    sender.ItemsSource = temp.s;
+                    sender.ItemsSource = SearchResult.s;
                 }
             }
         }
@@ -237,7 +222,7 @@ namespace SmartLens
 
         private void WebBrowser_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
-            if ((string)((WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header) == "正在加载...")
+            if ((string)(WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header == "正在加载...")
             {
                 (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle;
             }
@@ -255,7 +240,7 @@ namespace SmartLens
 
         private async void WebBrowser_LongRunningScriptDetected(WebView sender, WebViewLongRunningScriptDetectedEventArgs args)
         {
-            if (args.ExecutionTime.TotalMilliseconds >= 4000)
+            if (args.ExecutionTime.TotalMilliseconds >= 5000)
             {
                 args.StopPageScriptExecution = true;
                 ContentDialog dialog = new ContentDialog

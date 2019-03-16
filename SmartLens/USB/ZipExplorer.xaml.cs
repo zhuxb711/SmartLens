@@ -3,6 +3,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -84,6 +85,11 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取文件大小的描述
+        /// </summary>
+        /// <param name="Size">大小</param>
+        /// <returns>大小描述</returns>
         private string GetSize(long Size)
         {
             return Size / 1024 < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
@@ -91,6 +97,11 @@ namespace SmartLens
             Math.Round(Size / 1048576f, 2).ToString() + " MB");
         }
 
+        /// <summary>
+        /// 获取创建时间的描述
+        /// </summary>
+        /// <param name="time">时间</param>
+        /// <returns></returns>
         private string GetDate(DateTime time)
         {
             return "创建时间：" + time.Year + "年" + time.Month + "月" + time.Day + "日" + (time.Hour < 10 ? "0" + time.Hour : time.Hour.ToString()) + ":" + (time.Minute < 10 ? "0" + time.Minute : time.Minute.ToString()) + ":" + (time.Second < 10 ? "0" + time.Second : time.Second.ToString());
@@ -145,21 +156,19 @@ namespace SmartLens
                 }
             }
 
-            OriginFile.SizeUpdateRequested(await GetSize(OriginFile.File));
+            OriginFile.SizeUpdateRequested(await GetSizeAsync(OriginFile.File));
             await Task.Delay(500);
             LoadingActivation(false);
 
-            if (FileCollection.Count == 0)
-            {
-                HasFile.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                HasFile.Visibility = Visibility.Collapsed;
-            }
+            HasFile.Visibility = FileCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        public async Task<string> GetSize(StorageFile file)
+        /// <summary>
+        /// 从文件获取文件大小的描述
+        /// </summary>
+        /// <param name="file">文件</param>
+        /// <returns></returns>
+        public async Task<string> GetSizeAsync(StorageFile file)
         {
             BasicProperties Properties = await file.GetBasicPropertiesAsync();
             return Properties.Size / 1024 < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
@@ -171,12 +180,12 @@ namespace SmartLens
         {
             LoadingActivation(true, "正在检验文件");
             var file = GridControl.SelectedItem as ZipFileDisplay;
-            using (var ZipFileStream = (await OriginFile.File.OpenStreamForReadAsync()))
+            using (var ZipFileStream = await OriginFile.File.OpenStreamForReadAsync())
             {
                 ZipFile zipFile = new ZipFile(ZipFileStream);
                 try
                 {
-                    bool Mode = default(bool);
+                    bool Mode = default;
                     switch ((sender as MenuFlyoutItem).Name)
                     {
                         case "Simple": Mode = false; break;
@@ -307,12 +316,11 @@ namespace SmartLens
                             });
                             string RelativeId = (USBControl.ThisPage.CurrentNode.Content as StorageFolder).FolderRelativeId;
 
-                            foreach (var item in USBControl.ThisPage.CurrentNode.Children)
+                            foreach (var _ in from Node in USBControl.ThisPage.CurrentNode.Children
+                                              where (Node.Content as StorageFolder).FolderRelativeId == NewFolder.FolderRelativeId
+                                              select new { })
                             {
-                                if ((item.Content as StorageFolder).FolderRelativeId == NewFolder.FolderRelativeId)
-                                {
-                                    goto JUMP;
-                                }
+                                goto JUMP;
                             }
 
                             USBControl.ThisPage.CurrentNode.Children.Add(new TreeViewNode
@@ -321,7 +329,7 @@ namespace SmartLens
                                 HasUnrealizedChildren = false
                             });
                             USBControl.ThisPage.FolderDictionary[RelativeId].Add(NewFolder);
-                            JUMP: break;
+                        JUMP: break;
                         }
                     }
 

@@ -99,23 +99,24 @@ namespace SmartLens
             await CamHelper.InitializeAndStartCaptureAsync();
 
             //读取摄像头支持的格式，并选择预定的格式
-            var FormatCollection = CamHelper.PreviewFrameSource.SupportedFormats;
+            var SupportedFormats = CamHelper.PreviewFrameSource.SupportedFormats;
             MediaFrameFormat NV12 = null;
             MediaFrameFormat YUY2 = null;
-            foreach (var item in FormatCollection)
+
+            foreach (var FrameFormat in from FrameFormat in SupportedFormats
+                                        where FrameFormat.VideoFormat.Width == 640 && FrameFormat.VideoFormat.Height == 480
+                                        select FrameFormat)
             {
-                if (item.VideoFormat.Width == 640 && item.VideoFormat.Height == 480)
+                if (FrameFormat.Subtype == "NV12")
                 {
-                    if (item.Subtype == "NV12")
-                    {
-                        NV12 = item.VideoFormat.MediaFrameFormat;
-                    }
-                    else if (item.Subtype == "YUY2")
-                    {
-                        YUY2 = item.VideoFormat.MediaFrameFormat;
-                    }
+                    NV12 = FrameFormat.VideoFormat.MediaFrameFormat;
+                }
+                else if (FrameFormat.Subtype == "YUY2")
+                {
+                    YUY2 = FrameFormat.VideoFormat.MediaFrameFormat;
                 }
             }
+
             if (NV12 != null)
             {
                 await CamHelper.PreviewFrameSource.SetFormatAsync(NV12);
@@ -175,17 +176,17 @@ namespace SmartLens
             var LipLogo = await LipFolder.GetFilesAsync();
             for (int i = 0; i < LipLogo.Count; i++)
             {
-                Color temp = Colors.Red;
-                string describe = string.Empty;
+                Color LipColor = Colors.Red;
+                string Describe = string.Empty;
                 switch (LipLogo[i].DisplayName)
                 {
-                    case "Dior": temp = Color.FromArgb(1, 100, 0, 30); describe = "法国著名时尚消费品牌"; break;
-                    case "CHANEL": temp = Color.FromArgb(1, 70, 0, 0); describe = "法国著名奢侈品品牌"; break;
-                    case "GIVENCHY": temp = Color.FromArgb(1, 100, 30, 30); describe = "法国著名时尚消费品牌"; break;
-                    case "M.A.C": temp = Color.FromArgb(1, 50, 0, 50); describe = "美国著名化妆品品牌"; break;
-                    case "LANCOME": temp = Color.FromArgb(1, 100, 0, 0); describe = "法国著名化妆品品牌"; break;
+                    case "Dior": LipColor = Color.FromArgb(1, 100, 0, 30); Describe = "法国著名时尚消费品牌"; break;
+                    case "CHANEL": LipColor = Color.FromArgb(1, 70, 0, 0); Describe = "法国著名奢侈品品牌"; break;
+                    case "GIVENCHY": LipColor = Color.FromArgb(1, 100, 30, 30); Describe = "法国著名时尚消费品牌"; break;
+                    case "M.A.C": LipColor = Color.FromArgb(1, 50, 0, 50); Describe = "美国著名化妆品品牌"; break;
+                    case "LANCOME": LipColor = Color.FromArgb(1, 100, 0, 0); Describe = "法国著名化妆品品牌"; break;
                 }
-                CosmeticsList.Add(new CosmeticsItem(new Uri("ms-appx:///CosmeticsPage/LipLogo/" + LipLogo[i].Name), LipLogo[i].DisplayName, describe, temp));
+                CosmeticsList.Add(new CosmeticsItem(new Uri("ms-appx:///CosmeticsPage/LipLogo/" + LipLogo[i].Name), LipLogo[i].DisplayName, Describe, LipColor));
             }
             CosmeticsControl.SelectedIndex = 0;
 
@@ -220,23 +221,24 @@ namespace SmartLens
             {
                 CamHelper = CameraProvider.GetCameraHelperInstance();
                 await CamHelper.InitializeAndStartCaptureAsync();
-                var temp = CamHelper.PreviewFrameSource.SupportedFormats;
+                var SupportedFormats = CamHelper.PreviewFrameSource.SupportedFormats;
                 MediaFrameFormat NV12 = null;
                 MediaFrameFormat YUY2 = null;
-                foreach (var item in temp)
+
+                foreach (var FrameFormat in from FrameFormat in SupportedFormats
+                                            where FrameFormat.VideoFormat.Width == 640 && FrameFormat.VideoFormat.Height == 480
+                                            select FrameFormat)
                 {
-                    if (item.VideoFormat.Width == 640 && item.VideoFormat.Height == 480)
+                    if (FrameFormat.Subtype == "NV12")
                     {
-                        if (item.Subtype == "NV12")
-                        {
-                            NV12 = item.VideoFormat.MediaFrameFormat;
-                        }
-                        else if (item.Subtype == "YUY2")
-                        {
-                            YUY2 = item.VideoFormat.MediaFrameFormat;
-                        }
+                        NV12 = FrameFormat.VideoFormat.MediaFrameFormat;
+                    }
+                    else if (FrameFormat.Subtype == "YUY2")
+                    {
+                        YUY2 = FrameFormat.VideoFormat.MediaFrameFormat;
                     }
                 }
+
                 if (NV12 != null)
                 {
                     await CamHelper.PreviewFrameSource.SetFormatAsync(NV12);
@@ -456,20 +458,8 @@ namespace SmartLens
         private List<FullObjectDetection> DlibFunction(Array2D<RgbPixel> img)
         {
             Rectangle[] dets = FaceDetector.Operator(img);
-            List<FullObjectDetection> FaceLandMarkContainer = new List<FullObjectDetection>();
-            foreach (var rect in dets)
-            {
-                FullObjectDetection FaceLandMarkRawData = FaceModel.Detect(img, rect);
-                if (FaceLandMarkRawData.Parts > 2)
-                {
-                    FaceLandMarkContainer.Add(FaceLandMarkRawData);
-                }
-            }
-            if (FaceLandMarkContainer.Any())
-            {
-                return FaceLandMarkContainer;
-            }
-            else return null;
+            List<FullObjectDetection> FaceLandMarkContainer = (from rect in dets let FaceLandMarkRawData = FaceModel.Detect(img, rect) where FaceLandMarkRawData.Parts > 2 select FaceLandMarkRawData).ToList();
+            return FaceLandMarkContainer.Any() ? FaceLandMarkContainer : null;
         }
 
         private void CosmeticsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)

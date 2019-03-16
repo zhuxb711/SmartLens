@@ -57,7 +57,7 @@ namespace SmartLens
             if (Result != "")
             {
                 //异步运行以在完成诸多解析任务的同时保持UI响应能力
-                await Task.Run(async() =>
+                await Task.Run(async () =>
                 {
                     var WeatherInfo = await GetWeatherInfoAsync(GetDistrictByAnalysisJSON(Result));
                     if (WeatherInfo == null)
@@ -160,13 +160,13 @@ namespace SmartLens
                     }
                 }
 
-                string temp = await GetWebResponseAsync(URL);
-                Weather.Root js = new Weather.Root();
-                if (temp != "")
+                string JSON = await GetWebResponseAsync(URL);
+                Weather.Root WeatherResult = new Weather.Root();
+                if (JSON != "")
                 {
-                    js = JsonConvert.DeserializeObject<Weather.Root>(temp);
+                    WeatherResult = JsonConvert.DeserializeObject<Weather.Root>(JSON);
                 }
-                return js;
+                return WeatherResult;
             }
             catch (Exception)
             {

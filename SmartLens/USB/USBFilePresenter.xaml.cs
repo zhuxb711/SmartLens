@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
@@ -16,7 +17,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-
 
 namespace SmartLens
 {
@@ -89,7 +89,7 @@ namespace SmartLens
             (Properties.Size / 1048576 >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
         }
-        
+
         /// <summary>
         /// 关闭右键菜单并将GridView从多选模式恢复到单选模式
         /// </summary>
@@ -104,14 +104,9 @@ namespace SmartLens
         private void MulSelection_Click(object sender, RoutedEventArgs e)
         {
             CommandsFlyout.Hide();
-            if (GridViewControl.SelectionMode != ListViewSelectionMode.Multiple)
-            {
-                GridViewControl.SelectionMode = ListViewSelectionMode.Multiple;
-            }
-            else
-            {
-                GridViewControl.SelectionMode = ListViewSelectionMode.Single;
-            }
+            GridViewControl.SelectionMode = GridViewControl.SelectionMode != ListViewSelectionMode.Multiple
+                ? ListViewSelectionMode.Multiple
+                : ListViewSelectionMode.Single;
         }
 
         private void Copy_Click(object sender, RoutedEventArgs e)
@@ -156,15 +151,15 @@ namespace SmartLens
 
                 if (ErrorCollection.Count != 0)
                 {
-                    string temp = "";
+                    string ErrorFileList = "";
                     while (ErrorCollection.Count != 0)
                     {
-                        temp = temp + ErrorCollection.Dequeue() + "\r";
+                        ErrorFileList = ErrorFileList + ErrorCollection.Dequeue() + "\r";
                     }
                     ContentDialog contentDialog = new ContentDialog
                     {
                         Title = "错误",
-                        Content = "因设备剩余空间大小不足\r以下文件无法剪切：\r" + temp,
+                        Content = "因设备剩余空间大小不足\r以下文件无法剪切：\r" + ErrorFileList,
                         CloseButtonText = "确定",
                         Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                     };
@@ -196,15 +191,15 @@ namespace SmartLens
                 }
                 if (ErrorCollection.Count != 0)
                 {
-                    string temp = "";
+                    string ErrorFileList = "";
                     while (ErrorCollection.Count != 0)
                     {
-                        temp = temp + ErrorCollection.Dequeue() + "\r";
+                        ErrorFileList = ErrorFileList + ErrorCollection.Dequeue() + "\r";
                     }
                     ContentDialog contentDialog = new ContentDialog
                     {
                         Title = "错误",
-                        Content = "因设备剩余空间大小不足\r以下文件无法复制：\r\r" + temp,
+                        Content = "因设备剩余空间大小不足\r以下文件无法复制：\r\r" + ErrorFileList,
                         CloseButtonText = "确定",
                         Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                     };
@@ -287,14 +282,10 @@ namespace SmartLens
                 Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
             };
 
-            if (FileList.Count == 1)
-            {
-                contentDialog.Content = "此操作将永久删除 \"" + (FileList[0] as RemovableDeviceFile).Name + " \"\r\r是否继续?";
-            }
-            else
-            {
-                contentDialog.Content = "此操作将永久删除 \"" + (FileList[0] as RemovableDeviceFile).Name + "\" 等" + FileList.Count + "个文件\r\r是否继续?";
-            }
+            contentDialog.Content = FileList.Count == 1
+                ? "此操作将永久删除 \"" + (FileList[0] as RemovableDeviceFile).Name + " \"\r\r是否继续?"
+                : "此操作将永久删除 \"" + (FileList[0] as RemovableDeviceFile).Name + "\" 等" + FileList.Count + "个文件\r\r是否继续?";
+
             if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 LoadingActivation(true, "正在删除");
@@ -440,13 +431,12 @@ namespace SmartLens
                 await dialog.ShowAsync();
                 return;
             }
-            foreach (RemovableDeviceFile AESFile in FileList)
+
+            foreach (var SelectedFile in from RemovableDeviceFile AESFile in FileList select AESFile.File)
             {
-                StorageFile SelectedFile = AESFile.File;
                 int KeySizeRequest;
                 string KeyRequest;
                 bool IsDeleteRequest;
-
                 if (SelectedFile.FileType != ".sle")
                 {
                     AESDialog Dialog = new AESDialog(true, SelectedFile.Name);
@@ -569,17 +559,17 @@ namespace SmartLens
                             StringBuilder builder = new StringBuilder();
                             for (int i = 1; ; i++)
                             {
-                                string temp = Encoding.UTF8.GetString(DecryptByteBuffer, i, 1);
-                                if (temp == "|")
+                                string Char = Encoding.UTF8.GetString(DecryptByteBuffer, i, 1);
+                                if (Char == "|")
                                 {
                                     EncryptKeySize = int.Parse(builder.ToString());
                                     KeyRequest = KeyRequest.PadRight(EncryptKeySize / 8, '0');
                                     builder.Clear();
                                     continue;
                                 }
-                                if (temp != "$")
+                                if (Char != "$")
                                 {
-                                    builder.Append(temp);
+                                    builder.Append(Char);
                                 }
                                 else
                                 {
@@ -669,9 +659,11 @@ namespace SmartLens
                         }
                     }
                 }
+
                 DecryptByteBuffer = null;
                 EncryptByteBuffer = null;
             }
+
             await Task.Delay(500);
             LoadingActivation(false);
             await RefreshFileDisplay();
@@ -723,14 +715,14 @@ namespace SmartLens
                     Rename.IsEnabled = true;
                     AES.IsEnabled = true;
                     AES.Label = "AES加密";
-                    foreach (RemovableDeviceFile item in e.AddedItems)
+                    foreach (var _ in from RemovableDeviceFile item in e.AddedItems
+                                      where item.File.FileType == ".sle"
+                                      select new { })
                     {
-                        if (item.File.FileType == ".sle")
-                        {
-                            AES.Label = "AES解密";
-                            break;
-                        }
+                        AES.Label = "AES解密";
+                        break;
                     }
+
                     Delete.IsEnabled = true;
                 }
             }
@@ -817,15 +809,8 @@ namespace SmartLens
             }
             else
             {
-                ZipDialog dialog;
-                if (FileList.Count == 1)
-                {
-                    dialog = new ZipDialog(true, (FileList[0] as RemovableDeviceFile).DisplayName);
-                }
-                else
-                {
-                    dialog = new ZipDialog(true);
-                }
+                ZipDialog dialog = FileList.Count == 1 ? new ZipDialog(true, (FileList[0] as RemovableDeviceFile).DisplayName) : new ZipDialog(true);
+
                 if ((await dialog.ShowAsync()) == ContentDialogResult.Primary)
                 {
                     LoadingActivation(true, "正在压缩", true);
@@ -950,12 +935,11 @@ namespace SmartLens
                 }
                 string RelativeId = (USBControl.ThisPage.CurrentNode.Content as StorageFolder).FolderRelativeId;
 
-                foreach (var item in USBControl.ThisPage.CurrentNode.Children)
+                foreach (var _ in from item in USBControl.ThisPage.CurrentNode.Children
+                                  where (item.Content as StorageFolder).FolderRelativeId == NewFolder.FolderRelativeId
+                                  select new { })
                 {
-                    if ((item.Content as StorageFolder).FolderRelativeId == NewFolder.FolderRelativeId)
-                    {
-                        goto JUMP;
-                    }
+                    goto JUMP;
                 }
 
                 USBControl.ThisPage.CurrentNode.Children.Add(new TreeViewNode
@@ -995,16 +979,16 @@ namespace SmartLens
                         ZipStream.Password = Password;
                         await Task.Run(async () =>
                         {
-                            foreach (RemovableDeviceFile ZipFile in FileList)
+                            foreach (var (ZipFile, NewEntry) in from RemovableDeviceFile ZipFile in FileList
+                                                                let NewEntry = new ZipEntry(ZipFile.File.Name)
+                                                                {
+                                                                    DateTime = DateTime.Now,
+                                                                    AESKeySize = (int)Size,
+                                                                    IsCrypted = true,
+                                                                    CompressionMethod = CompressionMethod.Deflated
+                                                                }
+                                                                select (ZipFile, NewEntry))
                             {
-                                ZipEntry NewEntry = new ZipEntry(ZipFile.File.Name)
-                                {
-                                    DateTime = DateTime.Now,
-                                    AESKeySize = (int)Size,
-                                    IsCrypted = true,
-                                    CompressionMethod = CompressionMethod.Deflated
-                                };
-
                                 ZipStream.PutNextEntry(NewEntry);
                                 using (Stream stream = await ZipFile.File.OpenStreamForReadAsync())
                                 {
@@ -1044,13 +1028,13 @@ namespace SmartLens
                     {
                         await Task.Run(async () =>
                         {
-                            foreach (RemovableDeviceFile ZipFile in FileList)
+                            foreach (var (ZipFile, NewEntry) in from RemovableDeviceFile ZipFile in FileList
+                                                                let NewEntry = new ZipEntry(ZipFile.File.Name)
+                                                                {
+                                                                    DateTime = DateTime.Now
+                                                                }
+                                                                select (ZipFile, NewEntry))
                             {
-                                ZipEntry NewEntry = new ZipEntry(ZipFile.File.Name)
-                                {
-                                    DateTime = DateTime.Now
-                                };
-
                                 ZipStream.PutNextEntry(NewEntry);
                                 using (Stream stream = await ZipFile.File.OpenStreamForReadAsync())
                                 {
@@ -1110,29 +1094,31 @@ namespace SmartLens
 
         private void GridViewControl_DoubleTapped(object sender, Windows.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
         {
-            if (!((e.OriginalSource as FrameworkElement)?.DataContext is RemovableDeviceFile ReFile))
+            if ((e.OriginalSource as FrameworkElement)?.DataContext is RemovableDeviceFile ReFile)
             {
-                return;
-            }
-            if (ReFile.File.FileType == ".zip")
-            {
-                Nav.Navigate(typeof(ZipExplorer), ReFile, new DrillInNavigationTransitionInfo());
-            }
-            else if (ReFile.File.FileType == ".jpg" || ReFile.File.FileType == ".png" || ReFile.File.FileType == ".bmp")
-            {
-                Nav.Navigate(typeof(USBPhotoViewer), ReFile.File.FolderRelativeId, new DrillInNavigationTransitionInfo());
-            }
-            else if (ReFile.File.FileType == ".mkv" || ReFile.File.FileType == ".mp4" || ReFile.File.FileType == ".mp3" || ReFile.File.FileType == ".flac")
-            {
-                Nav.Navigate(typeof(USBMediaPlayer), ReFile.File, new DrillInNavigationTransitionInfo());
-            }
-            else if (ReFile.File.FileType == ".txt")
-            {
-                Nav.Navigate(typeof(USBTextViewer), ReFile, new DrillInNavigationTransitionInfo());
-            }
-            else if (ReFile.File.FileType == ".pdf")
-            {
-                Nav.Navigate(typeof(USBPdfReader), ReFile.File, new DrillInNavigationTransitionInfo());
+                switch (ReFile.File.FileType)
+                {
+                    case ".zip":
+                        Nav.Navigate(typeof(ZipExplorer), ReFile, new DrillInNavigationTransitionInfo());
+                        break;
+                    case ".jpg":
+                    case ".png":
+                    case ".bmp":
+                        Nav.Navigate(typeof(USBPhotoViewer), ReFile.File.FolderRelativeId, new DrillInNavigationTransitionInfo());
+                        break;
+                    case ".mkv":
+                    case ".mp4":
+                    case ".mp3":
+                    case ".flac":
+                        Nav.Navigate(typeof(USBMediaPlayer), ReFile.File, new DrillInNavigationTransitionInfo());
+                        break;
+                    case ".txt":
+                        Nav.Navigate(typeof(USBTextViewer), ReFile, new DrillInNavigationTransitionInfo());
+                        break;
+                    case ".pdf":
+                        Nav.Navigate(typeof(USBPdfReader), ReFile.File, new DrillInNavigationTransitionInfo());
+                        break;
+                }
             }
         }
 

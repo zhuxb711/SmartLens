@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using System.Linq;
 
 namespace SmartLens
 {
@@ -210,14 +211,13 @@ namespace SmartLens
                     Nav.GoBack();
                 }
 
-                foreach (RemovableDeviceFile item in USBFilePresenter.ThisPage.FileCollection)
+                foreach (var GridItem in from RemovableDeviceFile DeviceFile in USBFilePresenter.ThisPage.FileCollection
+                                         where DeviceFile.File.FileType == ".zip"
+                                         let GridItem = USBFilePresenter.ThisPage.GridViewControl.ContainerFromItem(DeviceFile) as GridViewItem
+                                         select GridItem)
                 {
-                    if (item.File.FileType == ".zip")
-                    {
-                        GridViewItem GridItem = USBFilePresenter.ThisPage.GridViewControl.ContainerFromItem(item) as GridViewItem;
-                        GridItem.Drop -= USBControl_Drop;
-                        GridItem.DragOver -= Item_DragOver;
-                    }
+                    GridItem.Drop -= USBControl_Drop;
+                    GridItem.DragOver -= Item_DragOver;
                 }
 
                 USBFilePresenter.ThisPage.FileCollection.Clear();
@@ -313,14 +313,7 @@ namespace SmartLens
         {
             if ((CurrentNode = (e.OriginalSource as FrameworkElement)?.DataContext as TreeViewNode) != null)
             {
-                if (FolderTree.RootNodes[0].Children.Contains(CurrentNode) || FolderTree.RootNodes[0] == CurrentNode)
-                {
-                    CreateFolder.IsEnabled = false;
-                }
-                else
-                {
-                    CreateFolder.IsEnabled = true;
-                }
+                CreateFolder.IsEnabled = !FolderTree.RootNodes[0].Children.Contains(CurrentNode) && FolderTree.RootNodes[0] != CurrentNode;
             }
             else
             {

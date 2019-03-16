@@ -74,14 +74,9 @@ namespace SmartLens
             {
                 return null;
             }
-            if (Describe.Text == "多云" || Describe.Text == "晴" || Describe.Text == "阴")
-            {
-                return "今天天气" + Describe.Text + "，气温" + Temperature.Text + "℃，" + Humid.Text + "，" + PM.Text.Insert(6, "指数");
-            }
-            else
-            {
-                return "今天有" + Describe.Text + "，气温" + Temperature.Text + "℃，" + Humid.Text + "，" + PM.Text.Insert(6, "指数");
-            }
+            return Describe.Text == "多云" || Describe.Text == "晴" || Describe.Text == "阴"
+                ? "今天天气" + Describe.Text + "，气温" + Temperature.Text + "℃，" + Humid.Text + "，" + PM.Text.Insert(6, "指数")
+                : "今天有" + Describe.Text + "，气温" + Temperature.Text + "℃，" + Humid.Text + "，" + PM.Text.Insert(6, "指数");
         }
 
         /// <summary>

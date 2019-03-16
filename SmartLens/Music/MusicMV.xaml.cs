@@ -5,6 +5,7 @@ using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Linq;
 
 namespace SmartLens
 {
@@ -35,25 +36,25 @@ namespace SmartLens
 
                 MVControl.Source = MediaSource.CreateFromUri(MovieUri);
                 var Result = await NetEase.GetArtistAsync(ArtistID);
-                foreach (var item in Result.HotSongs)
+
+                foreach (var Song in Result.HotSongs.Where(Song => Song.Mv != 0).Select(Song => Song))
                 {
-                    if (item.Mv != 0)
+                    var MVResult = await NetEase.GetMVAsync((int)Song.Mv);
+                    if (MVResult.Data.BriefDesc == "")
                     {
-                        var MVResult = await NetEase.GetMVAsync((int)item.Mv);
-                        if (MVResult.Data.BriefDesc == "")
-                        {
-                            MVSuggestionCollection.Add(new MVSuggestion(MVResult.Data.Name, "无简介", (int)item.Mv, new Uri(MVResult.Data.Cover)));
-                        }
-                        else
-                        {
-                            MVSuggestionCollection.Add(new MVSuggestion(MVResult.Data.Name, MVResult.Data.BriefDesc, (int)item.Mv, new Uri(MVResult.Data.Cover)));
-                        }
-                        if (MVName.Text == MVResult.Data.Name)
-                        {
-                            MVSuggestControl.SelectedItem = MVSuggestionCollection[MVSuggestionCollection.Count - 1];
-                        }
+                        MVSuggestionCollection.Add(new MVSuggestion(MVResult.Data.Name, "无简介", (int)Song.Mv, new Uri(MVResult.Data.Cover)));
+                    }
+                    else
+                    {
+                        MVSuggestionCollection.Add(new MVSuggestion(MVResult.Data.Name, MVResult.Data.BriefDesc, (int)Song.Mv, new Uri(MVResult.Data.Cover)));
+                    }
+
+                    if (MVName.Text == MVResult.Data.Name)
+                    {
+                        MVSuggestControl.SelectedItem = MVSuggestionCollection[MVSuggestionCollection.Count - 1];
                     }
                 }
+
                 if (MVSuggestControl.SelectedItem != null)
                 {
                     MVSuggestControl.ScrollIntoViewSmoothly(MVSuggestControl.SelectedItem, ScrollIntoViewAlignment.Leading);

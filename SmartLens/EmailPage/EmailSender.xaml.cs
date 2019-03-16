@@ -182,14 +182,14 @@ namespace SmartLens
             Picker.FileTypeFilter.Add("*");
             if ((await Picker.PickMultipleFilesAsync()) is IReadOnlyList<StorageFile> FileList)
             {
-                foreach (var item in FileList)
+                foreach (var File in FileList)
                 {
-                    var attachment = new MimePart(item.ContentType, item.FileType)
+                    var attachment = new MimePart(File.ContentType, File.FileType)
                     {
-                        Content = new MimeContent(await item.OpenStreamForReadAsync(), ContentEncoding.Default),
+                        Content = new MimeContent(await File.OpenStreamForReadAsync(), ContentEncoding.Default),
                         ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
                         ContentTransferEncoding = ContentEncoding.Base64,
-                        FileName = item.Name
+                        FileName = File.Name
                     };
                     Attachments.Add(attachment);
                 }

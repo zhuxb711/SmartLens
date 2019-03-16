@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Devices.Bluetooth;
@@ -334,23 +334,25 @@ namespace SmartLens
             {
                 return false;
             }
+
             var RadioDevice = await Radio.GetRadiosAsync();
-            foreach (var Device in RadioDevice)
+
+            foreach (var Device in from Device in RadioDevice
+                                   where Device.Kind == RadioKind.WiFi
+                                   select Device)
             {
-                if (Device.Kind == RadioKind.WiFi)
+                if (IsOn)
                 {
-                    if (IsOn)
-                    {
-                        await Device.SetStateAsync(RadioState.On);
-                        return true;
-                    }
-                    else
-                    {
-                        await Device.SetStateAsync(RadioState.Off);
-                        return true;
-                    }
+                    await Device.SetStateAsync(RadioState.On);
+                    return true;
+                }
+                else
+                {
+                    await Device.SetStateAsync(RadioState.Off);
+                    return true;
                 }
             }
+
             return false;
         }
 
@@ -416,7 +418,7 @@ namespace SmartLens
 
         private async void WiFiScanTimer_Tick(object sender, object e)
         {
-            if(IsScanRunning)
+            if (IsScanRunning)
             {
                 return;
             }
@@ -491,13 +493,12 @@ namespace SmartLens
 
             if (ItemInWiFiControl.ContentTemplate == WiFiNormalState)
             {
-                foreach (var WiFiInfo in StoragedWiFiInfoCollection)
+                foreach (var WiFiInfo in from WiFiInfo in StoragedWiFiInfoCollection
+                                         where WiFiInfo.SSID == ClickedItem.Name
+                                         select WiFiInfo)
                 {
-                    if (WiFiInfo.SSID == ClickedItem.Name)
-                    {
-                        ClickedItem.AutoConnect = WiFiInfo.AutoConnect;
-                        break;
-                    }
+                    ClickedItem.AutoConnect = WiFiInfo.AutoConnect;
+                    break;
                 }
                 ItemInWiFiControl.ContentTemplate = WiFiPressState;
             }
@@ -505,14 +506,14 @@ namespace SmartLens
 
         private void WiFiControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            foreach (var RemovedItem in e.RemovedItems)
+            foreach (var ItemInWiFiControl in from RemovedItem in e.RemovedItems
+                                              let ItemInWiFiControl = WiFiControl.ContainerFromItem(RemovedItem) as ListViewItem
+                                              where ItemInWiFiControl.ContentTemplate != WiFiNormalState
+                                              select ItemInWiFiControl)
             {
-                var ItemInWiFiControl = WiFiControl.ContainerFromItem(RemovedItem) as ListViewItem;
-                if (ItemInWiFiControl.ContentTemplate != WiFiNormalState)
-                {
-                    ItemInWiFiControl.ContentTemplate = WiFiNormalState;
-                }
+                ItemInWiFiControl.ContentTemplate = WiFiNormalState;
             }
+
             foreach (var WiFi in WiFiList)
             {
                 WiFi.HideMessage();
@@ -522,14 +523,14 @@ namespace SmartLens
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             var ItemInWiFiControl = WiFiControl.ContainerFromItem(WiFiControl.SelectedItem) as ListViewItem;
-            foreach (var WiFiInfo in StoragedWiFiInfoCollection)
+            foreach (var WiFiInfo in from WiFiInfo in StoragedWiFiInfoCollection
+                                     where WiFiInfo.SSID == WiFiList[WiFiControl.SelectedIndex].Name
+                                     select WiFiInfo)
             {
-                if (WiFiInfo.SSID == WiFiList[WiFiControl.SelectedIndex].Name)
-                {
-                    WiFiList[WiFiControl.SelectedIndex].Password = WiFiInfo.Password;
-                    break;
-                }
+                WiFiList[WiFiControl.SelectedIndex].Password = WiFiInfo.Password;
+                break;
             }
+
             if (WiFiList[WiFiControl.SelectedIndex].Password != "")
             {
                 ItemInWiFiControl.ContentTemplate = WiFiConnectingState;
@@ -570,13 +571,13 @@ namespace SmartLens
                 var ConnectResult = await WiFi.ConnectAsync(Info.GetWiFiAvailableNetwork(), Info.AutoConnect ? WiFiReconnectionKind.Automatic : WiFiReconnectionKind.Manual, Credential);
                 if (ConnectResult.ConnectionStatus == WiFiConnectionStatus.Success)
                 {
-                    foreach (var WiFiInfo in WiFiList)
+                    foreach (var WiFiInfo in from WiFiInfo in WiFiList
+                                             where WiFiInfo.IsConnected == true
+                                             select WiFiInfo)
                     {
-                        if (WiFiInfo.IsConnected == true)
-                        {
-                            WiFiInfo.ChangeConnectionStateAsync(false);
-                        }
+                        WiFiInfo.ChangeConnectionStateAsync(false);
                     }
+
                     Info.HideMessage();
                     Info.ChangeConnectionStateAsync(true, true);
 
@@ -584,26 +585,27 @@ namespace SmartLens
 
                     bool IsExist = false;
 
-                    foreach (var item in StoragedWiFiInfoCollection)
+                    foreach (var WiFiInfo in from WiFiInfo in StoragedWiFiInfoCollection
+                                             where WiFiInfo.SSID == Info.Name
+                                             select WiFiInfo)
                     {
-                        if (item.SSID == Info.Name)
+                        if (WiFiInfo.Password != Info.Password)
                         {
-                            if (item.Password != Info.Password)
-                            {
-                                await SQLite.GetInstance().UpdateWiFiDataAsync(Info.Name, Info.Password);
-                            }
-                            else if (item.Password == Info.Password)
-                            {
-                                IsExist = true;
-                            }
-
-                            if (item.AutoConnect != Info.AutoConnect)
-                            {
-                                await SQLite.GetInstance().UpdateWiFiDataAsync(Info.Name, Info.AutoConnect);
-                            }
-                            break;
+                            await SQLite.GetInstance().UpdateWiFiDataAsync(Info.Name, Info.Password);
                         }
+                        else if (WiFiInfo.Password == Info.Password)
+                        {
+                            IsExist = true;
+                        }
+
+                        if (WiFiInfo.AutoConnect != Info.AutoConnect)
+                        {
+                            await SQLite.GetInstance().UpdateWiFiDataAsync(Info.Name, Info.AutoConnect);
+                        }
+
+                        break;
                     }
+
                     if (!IsExist)
                     {
                         IsExist = false;
@@ -678,14 +680,7 @@ namespace SmartLens
              * 不能立即更改主题，当且仅当应用程序启动时才能够更改
              * 启动时，将在App.cs中查询并更改完成
              */
-            if (Theme.IsOn)
-            {
-                ThemeSwitcher.IsLightEnabled = false;
-            }
-            else
-            {
-                ThemeSwitcher.IsLightEnabled = true;
-            }
+            ThemeSwitcher.IsLightEnabled = !Theme.IsOn;
         }
 
         private async void ClearCache_Click(object sender, RoutedEventArgs e)

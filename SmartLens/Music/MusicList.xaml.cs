@@ -32,21 +32,29 @@ namespace SmartLens
             OnFirstLoad();
         }
 
-        private void MusicInfo_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void MusicInfo_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.Action == NotifyCollectionChangedAction.Remove)
+            switch (e.Action)
             {
-                foreach (PlayList item in e.OldItems)
-                {
-                    MusicIdDictionary.Remove(item.SongID);
-                }
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (PlayList item in e.NewItems)
-                {
-                    MusicIdDictionary.Add(item.SongID);
-                }
+                case NotifyCollectionChangedAction.Remove:
+                    {
+                        foreach (PlayList item in e.OldItems)
+                        {
+                            MusicIdDictionary.Remove(item.SongID);
+                        }
+
+                        break;
+                    }
+
+                case NotifyCollectionChangedAction.Add:
+                    {
+                        foreach (PlayList item in e.NewItems)
+                        {
+                            MusicIdDictionary.Add(item.SongID);
+                        }
+
+                        break;
+                    }
             }
         }
 

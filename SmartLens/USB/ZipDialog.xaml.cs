@@ -6,14 +6,29 @@ namespace SmartLens
 {
     public sealed partial class ZipDialog : ContentDialog
     {
+        /// <summary>
+        /// 获取文件名
+        /// </summary>
         public string FileName { get; private set; }
 
+        /// <summary>
+        /// 获取密码
+        /// </summary>
         public string Password { get; private set; }
 
+        /// <summary>
+        /// 获取密钥长度
+        /// </summary>
         public KeySize Key { get; private set; }
 
+        /// <summary>
+        /// 获取压缩等级
+        /// </summary>
         public CompressionLevel Level { get; private set; }
 
+        /// <summary>
+        /// 获取是否启用加密
+        /// </summary>
         public bool IsCryptionEnable { get; private set; }
 
         private bool IsZip;

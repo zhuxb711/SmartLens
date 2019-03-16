@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Windows.Media.SpeechRecognition;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using Windows.Media.SpeechRecognition;
-using Windows.Storage;
-using System.Threading;
 
 namespace SmartLens
 {
@@ -41,23 +41,25 @@ namespace SmartLens
                 Cancellation = new CancellationTokenSource();
                 SpeechRec = new SpeechRecognizer();
 
+                //获取SRGS.grxml识别语法文件
                 var GrammarFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///VoiceRec/SRGS.grxml"));
+
+                //创建该文件的语法约束并添加至语音识别的约束集合
                 var SRGSConstraint = new SpeechRecognitionGrammarFileConstraint(GrammarFile, "Control");
                 SpeechRec?.Constraints.Add(SRGSConstraint);
+
+                //要播放音乐，则必须动态从数据库取出音乐名称的数据，并添加语法约束
                 var SongNames = await SQLite.GetInstance().GetAllMusicNameAsync();
-                if (SongNames == null)
+
+                if (SongNames != null)
                 {
-                    await SpeechRec.CompileConstraintsAsync();
-                    return;
+                    //若存在音乐数据，则添加语法约束
+                    var PlayConstraint = new SpeechRecognitionListConstraint(from item in SongNames select string.Format("{0}{1}", "播放", item), "ChooseMusic");
+                    SpeechRec?.Constraints.Add(PlayConstraint);
                 }
 
-                var SongsCommand = SongNames.Select((item) =>
-                {
-                    return string.Format("{0}{1}", "播放", item);
-                });
-                var PlayConstraint = new SpeechRecognitionListConstraint(SongsCommand, "ChooseMusic");
-                SpeechRec?.Constraints.Add(PlayConstraint);
-                await SpeechRec?.CompileConstraintsAsync();
+                //编译所有语法约束
+                await SpeechRec.CompileConstraintsAsync();
             });
         }
 
@@ -117,9 +119,13 @@ namespace SmartLens
             ListeningDisplay.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// 异步启动Windows本地语音识别
+        /// </summary>
+        /// <returns>识别结果</returns>
         private async Task<string> WindowsLocalRecognizeAsync()
         {
-            if(!LoadTask.IsCompleted)
+            if (!LoadTask.IsCompleted)
             {
                 return "正在初始化，请稍后再试";
             }
@@ -133,7 +139,7 @@ namespace SmartLens
             {
                 return null;
             }
-            if(Cancellation.IsCancellationRequested)
+            if (Cancellation.IsCancellationRequested)
             {
                 Cancellation.Dispose();
                 Cancellation = null;
@@ -198,37 +204,36 @@ namespace SmartLens
                 return "Failure";
             }
         }
-
-        #region 百度云识别(弃用)
-        //private AudioRecorder Recorder = new AudioRecorder();
-
-        // RecordButton.AddHandler(PointerReleasedEvent, new PointerEventHandler(Button_OnPointerReleased), true);
-        /*private async void Button_OnPointerReleased(object sender, PointerRoutedEventArgs e)
-        {
-            StatusText.Text = "     正在识别……";
-            Recorder.StopRecording();
-            string temp = await Recorder.StartRecognizeAsync();
-
-            if (temp == null)
-            {
-                StatusText.Text = "按下说话";
-                ContentDialog Dialog = new ContentDialog
-                {
-                    Content = "网络异常或录音中无有效输入",
-                    Title = "提示",
-                    CloseButtonText = "确定"
-                };
-                await Dialog.ShowAsync();
-            }
-            else
-            {
-                StatusText.Text = "     " + temp;
-            }
-            ProRing.IsActive = false;
-        }*/
-        #endregion
-
     }
+    #region 百度云识别(弃用)
+    //private AudioRecorder Recorder = new AudioRecorder();
+
+    // RecordButton.AddHandler(PointerReleasedEvent, new PointerEventHandler(Button_OnPointerReleased), true);
+    /*private async void Button_OnPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        StatusText.Text = "     正在识别……";
+        Recorder.StopRecording();
+        string temp = await Recorder.StartRecognizeAsync();
+
+        if (temp == null)
+        {
+            StatusText.Text = "按下说话";
+            ContentDialog Dialog = new ContentDialog
+            {
+                Content = "网络异常或录音中无有效输入",
+                Title = "提示",
+                CloseButtonText = "确定"
+            };
+            await Dialog.ShowAsync();
+        }
+        else
+        {
+            StatusText.Text = "     " + temp;
+        }
+        ProRing.IsActive = false;
+    }*/
+    #endregion
+
     #region 百度云识别功能实现与录制实现(弃用)
     //public class AudioRecorder
     //{

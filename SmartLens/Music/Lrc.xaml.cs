@@ -66,20 +66,20 @@ namespace SmartLens
             {
                 TlrcCollection = TranslateLrcString.Split('\n');
 
-                foreach (var item in TlrcCollection)
+                foreach (var item in TlrcCollection.Where(item => item.Length > 0 && item.IndexOf(":") != -1).Select(item => item))
                 {
-                    if (item.Length > 0 && item.IndexOf(":") != -1)
+                    TimeSpan time = GetTime(item);
+                    if (time == TimeSpan.MaxValue)
                     {
-                        TimeSpan time = GetTime(item);
-                        if (time == TimeSpan.MaxValue)
-                        {
-                            continue;
-                        }
-                        TLrcs.Add(time, item.Split(']')[1]);
+                        continue;
                     }
+
+                    TLrcs.Add(time, item.Split(']')[1]);
                 }
             }
+
             string[] StrCollection = LrcString.Split('\n');
+
             for (int i = 0; i < StrCollection.Length; i++)
             {
                 string str = StrCollection[i];

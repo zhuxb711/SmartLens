@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using System.Linq;
 
 namespace SmartLens
 {
@@ -55,24 +56,22 @@ namespace SmartLens
                     SearchSingleMusic PL = MediaPlayList.AlbumSongBackup[Convert.ToInt32(MediaPlayList.AlbumSongList.CurrentItemIndex)];
                     Title.Text = PL.MusicName;
 
-                    var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-                    foreach (var item in song.Result.Songs)
+                    var SongSearchResult = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
+
+                    foreach (var Song in SongSearchResult.Result.Songs.Where(Song => Song.Name == PL.MusicName && Song.Ar[0].Name == PL.Artist && Song.Al.Name == PL.Album).Select(Song => Song))
                     {
-                        if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
-                        {
-                            var bitmap = new BitmapImage();
-                            Image1.ImageSource = bitmap;
-                            bitmap.UriSource = new Uri(item.Al.PicUrl);
-                            break;
-                        }
+                        var bitmap = new BitmapImage();
+                        Image1.ImageSource = bitmap;
+                        bitmap.UriSource = new Uri(Song.Al.PicUrl);
+                        break;
                     }
 
-                    var back = new ImageBrush
+                    GridBack.Background = new ImageBrush
                     {
                         ImageSource = Image1.ImageSource,
                         Stretch = Stretch.UniformToFill
                     };
-                    GridBack.Background = back;
+
                     LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                     if (LrcTemp.Lrc == null)
                     {
@@ -101,13 +100,14 @@ namespace SmartLens
                     Image1.ImageSource = bitmap;
                     bitmap.UriSource = new Uri(MusicSearch.ForDetail_ImageURL);
 
-                    var back = new ImageBrush
+                    GridBack.Background = new ImageBrush
                     {
                         ImageSource = Image1.ImageSource,
                         Stretch = Stretch.UniformToFill
                     };
-                    GridBack.Background = back;
+
                     Title.Text = MusicSearch.ForDetail_Name;
+
                     LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                     if (LrcTemp.Lrc == null)
                     {
@@ -150,12 +150,12 @@ namespace SmartLens
                 Image1.ImageSource = bitmap;
                 bitmap.UriSource = new Uri(PL.ImageUrl);
 
-                var back = new ImageBrush
+                GridBack.Background = new ImageBrush
                 {
                     ImageSource = Image1.ImageSource,
                     Stretch = Stretch.UniformToFill
                 };
-                GridBack.Background = back;
+
                 LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID);
                 if (LrcTemp.Lrc == null)
                 {
@@ -189,24 +189,22 @@ namespace SmartLens
 
                 Title.Text = PL.MusicName;
 
-                var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-                foreach (var item in song.Result.Songs)
+                var SongSearchResult = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
+
+                foreach (var Song in SongSearchResult.Result.Songs.Where(Song => Song.Name == PL.MusicName && Song.Ar[0].Name == PL.Artist && Song.Al.Name == PL.Album).Select(Song => Song))
                 {
-                    if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
-                    {
-                        var bitmap = new BitmapImage();
-                        Image1.ImageSource = bitmap;
-                        bitmap.UriSource = new Uri(item.Al.PicUrl);
-                        break;
-                    }
+                    var bitmap = new BitmapImage();
+                    Image1.ImageSource = bitmap;
+                    bitmap.UriSource = new Uri(Song.Al.PicUrl);
+                    break;
                 }
 
-                var back = new ImageBrush
+                GridBack.Background = new ImageBrush
                 {
                     ImageSource = Image1.ImageSource,
                     Stretch = Stretch.UniformToFill
                 };
-                GridBack.Background = back;
+
                 LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                 if (LrcTemp.Lrc == null)
                 {
@@ -241,24 +239,22 @@ namespace SmartLens
 
                 Title.Text = PL.MusicName;
 
-                var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-                foreach (var item in song.Result.Songs)
+                var SongSearchResult = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
+
+                foreach (var Song in SongSearchResult.Result.Songs.Where(Song => Song.Name == PL.MusicName && Song.Ar[0].Name == PL.Artist && Song.Al.Name == PL.Album).Select(Song => Song))
                 {
-                    if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
-                    {
-                        var bitmap = new BitmapImage();
-                        Image1.ImageSource = bitmap;
-                        bitmap.UriSource = new Uri(item.Al.PicUrl);
-                        break;
-                    }
+                    var bitmap = new BitmapImage();
+                    Image1.ImageSource = bitmap;
+                    bitmap.UriSource = new Uri(Song.Al.PicUrl);
+                    break;
                 }
 
-                var back = new ImageBrush
+                GridBack.Background = new ImageBrush
                 {
                     ImageSource = Image1.ImageSource,
                     Stretch = Stretch.UniformToFill
                 };
-                GridBack.Background = back;
+
                 LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                 if (LrcTemp.Lrc == null)
                 {
@@ -282,12 +278,11 @@ namespace SmartLens
                 Image1.ImageSource = bitmap;
                 bitmap.UriSource = new Uri(MusicSearch.ForDetail_ImageURL);
 
-                var back = new ImageBrush
+                GridBack.Background = new ImageBrush
                 {
                     ImageSource = Image1.ImageSource,
                     Stretch = Stretch.UniformToFill
                 };
-                GridBack.Background = back;
 
                 if (MusicSearch.ForDetail_ID == LastSongID)
                 {
@@ -301,6 +296,7 @@ namespace SmartLens
                 LrcControl.c_lrc_items.Children.Clear();
 
                 Title.Text = MusicSearch.ForDetail_Name;
+
                 LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                 if (LrcTemp.Lrc == null)
                 {
@@ -344,24 +340,22 @@ namespace SmartLens
                     SearchSingleMusic PL = MediaPlayList.HotSongBackup[Convert.ToInt32(MediaPlayList.SingerHotSongList.CurrentItemIndex)];
                     Title.Text = PL.MusicName;
 
-                    var song = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
-                    foreach (var item in song.Result.Songs)
+                    var SongSearchResult = await NetEaseMusic.SearchAsync<SingleMusicSearchResult>(PL.MusicName, 5, 0, NeteaseMusicAPI.SearchType.Song);
+
+                    foreach (var Song in SongSearchResult.Result.Songs.Where(Song => Song.Name == PL.MusicName && Song.Ar[0].Name == PL.Artist && Song.Al.Name == PL.Album).Select(Song => Song))
                     {
-                        if (item.Name == PL.MusicName && item.Ar[0].Name == PL.Artist && item.Al.Name == PL.Album)
-                        {
-                            var bitmap = new BitmapImage();
-                            Image1.ImageSource = bitmap;
-                            bitmap.UriSource = new Uri(item.Al.PicUrl);
-                            break;
-                        }
+                        var bitmap = new BitmapImage();
+                        Image1.ImageSource = bitmap;
+                        bitmap.UriSource = new Uri(Song.Al.PicUrl);
+                        break;
                     }
 
-                    var back = new ImageBrush
+                    GridBack.Background = new ImageBrush
                     {
                         ImageSource = Image1.ImageSource,
                         Stretch = Stretch.UniformToFill
                     };
-                    GridBack.Background = back;
+
                     LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID[0]);
                     if (LrcTemp.Lrc == null)
                     {
@@ -390,12 +384,12 @@ namespace SmartLens
                     Image1.ImageSource = bitmap;
                     bitmap.UriSource = new Uri(MusicSearch.ForDetail_ImageURL);
 
-                    var back = new ImageBrush
+                    GridBack.Background = new ImageBrush
                     {
                         ImageSource = Image1.ImageSource,
                         Stretch = Stretch.UniformToFill
                     };
-                    GridBack.Background = back;
+
                     Title.Text = MusicSearch.ForDetail_Name;
                     LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                     if (LrcTemp.Lrc == null)
@@ -455,12 +449,12 @@ namespace SmartLens
                     Image1.ImageSource = bitmap;
                     bitmap.UriSource = new Uri(PL.ImageUrl);
 
-                    var back = new ImageBrush
+                    GridBack.Background = new ImageBrush
                     {
                         ImageSource = Image1.ImageSource,
                         Stretch = Stretch.UniformToFill
                     };
-                    GridBack.Background = back;
+
                     LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(PL.SongID);
                     if (LrcTemp.Lrc == null)
                     {
@@ -489,12 +483,12 @@ namespace SmartLens
                     Image1.ImageSource = bitmap;
                     bitmap.UriSource = new Uri(MusicSearch.ForDetail_ImageURL);
 
-                    var back = new ImageBrush
+                    GridBack.Background = new ImageBrush
                     {
                         ImageSource = Image1.ImageSource,
                         Stretch = Stretch.UniformToFill
                     };
-                    GridBack.Background = back;
+
                     Title.Text = MusicSearch.ForDetail_Name;
                     LyricResult LrcTemp = await NetEaseMusic.GetLyricAsync(MusicSearch.ForDetail_ID);
                     if (LrcTemp.Lrc == null)
@@ -506,7 +500,6 @@ namespace SmartLens
                         };
                         LrcControl.c_lrc_items.Children.Add(TB);
                         RollTicker.Stop();
-
                     }
                     else
                     {
