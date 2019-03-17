@@ -35,14 +35,20 @@ namespace SmartLens
 
         private void SetControlPosition()
         {
-            SplashProgressRing.SetValue(Canvas.LeftProperty, SplashImageRect.X + (SplashImageRect.Width * 0.5) - (SplashProgressRing.Width * 0.5));
-            SplashProgressRing.SetValue(Canvas.TopProperty, SplashImageRect.Y + SplashImageRect.Height + (SplashImageRect.Height * 0.1));
+            double HorizonLocation = SplashImageRect.X + (SplashImageRect.Width * 0.5);
+            double VerticalLocation = SplashImageRect.Y + (SplashImageRect.Height * 0.75);
 
-            Display.SetValue(Canvas.LeftProperty, SplashImageRect.X + (SplashImageRect.Width * 0.5) - (Display.Width * 0.5));
-            Display.SetValue(Canvas.TopProperty, SplashImageRect.Y + SplashImageRect.Height + (SplashImageRect.Height * 0.1) - SplashProgressRing.Height - 20);
+            SplashProgressRing.SetValue(Canvas.LeftProperty, HorizonLocation - (SplashProgressRing.Width * 0.5));
+            SplashProgressRing.SetValue(Canvas.TopProperty, VerticalLocation);
 
-            ButtonCollection.SetValue(Canvas.LeftProperty, SplashImageRect.X + (SplashImageRect.Width * 0.5) - (ButtonCollection.Width * 0.5));
-            ButtonCollection.SetValue(Canvas.TopProperty, SplashImageRect.Y + SplashImageRect.Height + (SplashImageRect.Height * 0.1) + SplashProgressRing.Height + 20);
+            Display.SetValue(Canvas.LeftProperty, HorizonLocation - (Display.Width * 0.5));
+            Display.SetValue(Canvas.TopProperty, VerticalLocation + SplashProgressRing.Height + 20);
+
+            Continue.SetValue(Canvas.LeftProperty, HorizonLocation - 75);
+            Continue.SetValue(Canvas.TopProperty, VerticalLocation + SplashProgressRing.Height + Display.Height + 20);
+
+            Cancel.SetValue(Canvas.LeftProperty, HorizonLocation + 5);
+            Cancel.SetValue(Canvas.TopProperty, VerticalLocation + SplashProgressRing.Height + Display.Height + 20);
 
             extendedSplashImage.SetValue(Canvas.LeftProperty, SplashImageRect.X);
             extendedSplashImage.SetValue(Canvas.TopProperty, SplashImageRect.Y);
@@ -77,52 +83,26 @@ namespace SmartLens
                     {
                         SplashProgressRing.Visibility = Visibility.Collapsed;
                         Display.Text = "完整性校验失败\rSmartLens存在异常";
-                        ButtonCollection.Visibility = Visibility.Visible;
+                        Continue.Visibility = Visibility.Visible;
                     });
                 }
             }
             else
             {
-                if (ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+                KeyValuePair<bool, string> Result = await MD5Util.CheckSmartLensIntegrity();
+                if (Result.Key)
                 {
-                    if (IsEnable)
-                    {
-                        KeyValuePair<bool, string> Result = await MD5Util.CheckSmartLensIntegrity();
-                        if (Result.Key)
-                        {
-                            DismissExtendedSplash();
-                        }
-                        else
-                        {
-                            //出现问题
-                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                SplashProgressRing.Visibility = Visibility.Collapsed;
-                                Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常组件:" + Result.Value;
-                                ButtonCollection.Visibility = Visibility.Visible;
-                            });
-                        }
-                    }
+                    DismissExtendedSplash();
                 }
                 else
                 {
-                    ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = true;
-
-                    KeyValuePair<bool, string> Result = await MD5Util.CheckSmartLensIntegrity();
-                    if (Result.Key)
+                    //出现问题
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        DismissExtendedSplash();
-                    }
-                    else
-                    {
-                        //出现问题
-                        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            SplashProgressRing.Visibility = Visibility.Collapsed;
-                            Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常组件:" + Result.Value;
-                            ButtonCollection.Visibility = Visibility.Visible;
-                        });
-                    }
+                        SplashProgressRing.Visibility = Visibility.Collapsed;
+                        Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常组件:" + Result.Value;
+                        Continue.Visibility = Visibility.Visible;
+                    });
                 }
             }
         }

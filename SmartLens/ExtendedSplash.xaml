@@ -11,11 +11,9 @@
         <Canvas>
             <Image Name="extendedSplashImage" Source="ms-appx:///Assets/SplashScreen.png"/>
             <ProgressRing Name="SplashProgressRing" Foreground="Orange" IsActive="True" Width="40" Height="40" HorizontalAlignment="Center"/>
-            <TextBlock Width="400" Text="正在进行校验..." FontSize="20" Name="Display" TextAlignment="Center" HorizontalAlignment="Center"/>
-            <StackPanel Visibility="Collapsed" Width="150" Name="ButtonCollection" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                <Button Name="Continue" Content="继续" HorizontalAlignment="Center" FontSize="18" Width="70" Click="Continue_Click"/>
-                <Button Name="Cancel" Content="关闭" Margin="10,0,0,0" HorizontalAlignment="Center" FontSize="18" Width="70" Click="Cancel_Click"/>
-            </StackPanel>
+            <TextBlock Width="400" Height="90" Text="正在进行校验" FontSize="20" Name="Display" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <Button Name="Continue" Visibility="Collapsed" Content="继续" HorizontalAlignment="Center" FontSize="18" Width="70" Click="Continue_Click"/>
+            <Button Name="Cancel" Visibility="{x:Bind Continue.Visibility,Mode=OneWay}" Content="关闭" Margin="10,0,0,0" HorizontalAlignment="Center" FontSize="18" Width="70" Click="Cancel_Click"/>
         </Canvas>
     </Grid>
 </Page>

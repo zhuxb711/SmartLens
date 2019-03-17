@@ -2,6 +2,7 @@
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
@@ -75,18 +76,45 @@ namespace SmartLens
 
         private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)
         {
-
-            if (IsLaunch)
+            if(ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
             {
-                var args = m as LaunchActivatedEventArgs;
-                ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
-                Window.Current.Content = extendedSplash;
+                if(IsEnable)
+                {
+                    if (IsLaunch)
+                    {
+                        var args = m as LaunchActivatedEventArgs;
+                        ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                        Window.Current.Content = extendedSplash;
+                    }
+                    else
+                    {
+                        ToastNotificationManager.History.Clear();
+                        ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
+                        Window.Current.Content = extendedSplash;
+                    }
+                }
+                else
+                {
+                    var rootFrame = new Frame();
+                    Window.Current.Content = rootFrame;
+                    rootFrame.Navigate(typeof(MainPage));
+                }
             }
             else
             {
-                ToastNotificationManager.History.Clear();
-                ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
-                Window.Current.Content = extendedSplash;
+                ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = true;
+                if (IsLaunch)
+                {
+                    var args = m as LaunchActivatedEventArgs;
+                    ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                    Window.Current.Content = extendedSplash;
+                }
+                else
+                {
+                    ToastNotificationManager.History.Clear();
+                    ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
+                    Window.Current.Content = extendedSplash;
+                }
             }
 
             Window.Current.Activate();
