@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -66,11 +67,18 @@ namespace SmartLens
             });
         }
 
+        private async Task SaveErrorToLog(string ErrorModuleName)
+        {
+            var ErrorFile = await ApplicationData.Current.RoamingFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
+            string CurrentTime = DateTime.Now.ToShortDateString() + "，" + DateTime.Now.ToShortTimeString();
+            await FileIO.AppendTextAsync(ErrorFile, CurrentTime + "\r出现校验错误，错误模块：" + ErrorModuleName + "\r\r");
+        }
+
         private async void Screen_Dismissed(SplashScreen sender, object args)
         {
-            if (ApplicationData.Current.RoamingSettings.Values["FirstStartUp"] == null)
+            if (ApplicationData.Current.LocalSettings.Values["FirstStartUp"] == null)
             {
-                ApplicationData.Current.RoamingSettings.Values["FirstStartUp"] = "FALSE";
+                ApplicationData.Current.LocalSettings.Values["FirstStartUp"] = "FALSE";
                 if (await Package.Current.VerifyContentIntegrityAsync())
                 {
                     await MD5Util.CalculateAndStorageMD5Async();
@@ -79,11 +87,12 @@ namespace SmartLens
                 else
                 {
                     //出现问题
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async() =>
                     {
                         SplashProgressRing.Visibility = Visibility.Collapsed;
                         Display.Text = "完整性校验失败\rSmartLens存在异常";
                         Continue.Visibility = Visibility.Visible;
+                        await SaveErrorToLog("初始化检验失败");
                     });
                 }
             }
@@ -97,17 +106,18 @@ namespace SmartLens
                 else
                 {
                     //出现问题
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async() =>
                     {
                         SplashProgressRing.Visibility = Visibility.Collapsed;
                         Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常组件:" + Result.Value;
                         Continue.Visibility = Visibility.Visible;
+                        await SaveErrorToLog(Result.Value);
                     });
                 }
             }
         }
 
-        private void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
+        private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
             if (Splash != null)
             {
