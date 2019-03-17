@@ -34,6 +34,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 设置并计算界面元素正确的位置
+        /// </summary>
         private void SetControlPosition()
         {
             double HorizonLocation = SplashImageRect.X + (SplashImageRect.Width * 0.5);
@@ -57,6 +60,9 @@ namespace SmartLens
             extendedSplashImage.Width = SplashImageRect.Width;
         }
 
+        /// <summary>
+        /// 终止延长的初始屏幕，引导进入正常页面
+        /// </summary>
         private async void DismissExtendedSplash()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -67,7 +73,12 @@ namespace SmartLens
             });
         }
 
-        private async Task SaveErrorToLog(string ErrorModuleName)
+        /// <summary>
+        /// 异步保存完整性校验时发现的存在问题的组件
+        /// </summary>
+        /// <param name="ErrorModuleName">问题组件名称</param>
+        /// <returns>无</returns>
+        private async Task SaveErrorToLogAsync(string ErrorModuleName)
         {
             var ErrorFile = await ApplicationData.Current.RoamingFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
             string CurrentTime = DateTime.Now.ToShortDateString() + "，" + DateTime.Now.ToShortTimeString();
@@ -92,13 +103,13 @@ namespace SmartLens
                         SplashProgressRing.Visibility = Visibility.Collapsed;
                         Display.Text = "完整性校验失败\rSmartLens存在异常";
                         Continue.Visibility = Visibility.Visible;
-                        await SaveErrorToLog("初始化检验失败");
+                        await SaveErrorToLogAsync("初始化检验失败");
                     });
                 }
             }
             else
             {
-                KeyValuePair<bool, string> Result = await MD5Util.CheckSmartLensIntegrity();
+                KeyValuePair<bool, string> Result = await MD5Util.CheckSmartLensIntegrityAsync();
                 if (Result.Key)
                 {
                     DismissExtendedSplash();
@@ -111,7 +122,7 @@ namespace SmartLens
                         SplashProgressRing.Visibility = Visibility.Collapsed;
                         Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常组件:" + Result.Value;
                         Continue.Visibility = Visibility.Visible;
-                        await SaveErrorToLog(Result.Value);
+                        await SaveErrorToLogAsync(Result.Value);
                     });
                 }
             }

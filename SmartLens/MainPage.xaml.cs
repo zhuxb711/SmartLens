@@ -1,7 +1,10 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -35,7 +38,7 @@ namespace SmartLens
             Loaded += MainPage_Loaded;
         }
 
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             foreach (var MenuItem in from NavigationViewItemBase MenuItem in NavigationView.MenuItems
                                      where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == "主页"
@@ -45,8 +48,32 @@ namespace SmartLens
                 NavFrame.Navigate(typeof(HomePage), NavFrame);
                 break;
             }
+
+            await CheckUpdate();
         }
 
+        private async Task CheckUpdate()
+        {
+            string WebURL = "https://smartlen.azurewebsites.net/";
+            HtmlWeb WebHtml = new HtmlWeb();
+            HtmlDocument HTMLDocument = await WebHtml.LoadFromWebAsync(WebURL);
+            HtmlNode VersionNode = HTMLDocument.DocumentNode.SelectSingleNode("//div[@class='app-version lg mb-24']");
+            Regex RegexExpression = new Regex(@"(\d+)");
+            MatchCollection NewestVersion = RegexExpression.Matches(VersionNode.InnerText);
+
+            if (ushort.Parse(NewestVersion[0].Value) > Package.Current.Id.Version.Major
+                || ushort.Parse(NewestVersion[1].Value) > Package.Current.Id.Version.Minor
+                || ushort.Parse(NewestVersion[2].Value) > Package.Current.Id.Version.Build)
+            {
+                ContentDialog dialog = new ContentDialog
+                {
+                    Title = "更新可用",
+                    Content = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\r\rSmartLens的最新更新将修补诸多的小问题，并提供有意思的小功能\r\rSmartLens具备自动更新的功能，稍后将自动更新\r⇱或⇲\r您也可以访问\rhttps://smartlen.azurewebsites.net/手动更新哦~~~~",
+                    CloseButtonText = "知道了"
+                };
+                await dialog.ShowAsync();
+            }
+        }
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
