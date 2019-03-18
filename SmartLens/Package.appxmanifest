@@ -49,10 +49,10 @@
     </Application>
   </Applications>
   <Capabilities>
-    <Capability Name="internetClientServer" />
     <iot:Capability Name="systemManagement" />
     <uap:Capability Name="removableStorage" />
     <uap3:Capability Name="backgroundMediaPlayback" />
+    <Capability Name="internetClient"/>
     <DeviceCapability Name="removableStorage" />
     <DeviceCapability Name="location" />
     <DeviceCapability Name="microphone" />

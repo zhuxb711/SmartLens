@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Search;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -82,7 +83,7 @@ namespace SmartLens
         /// </summary>
         /// <param name="file">文件</param>
         /// <returns></returns>
-        public async Task<string> GetSize(StorageFile file)
+        public async Task<string> GetSizeAsync(StorageFile file)
         {
             BasicProperties Properties = await file.GetBasicPropertiesAsync();
             return Properties.Size / 1024 < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
@@ -218,7 +219,14 @@ namespace SmartLens
         /// </summary>
         private async Task RefreshFileDisplay()
         {
-            var FileList = await USBControl.ThisPage.CurrentFolder.GetFilesAsync();
+            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
+            Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
+            Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
+
+            StorageFileQueryResult QueryResult = USBControl.ThisPage.CurrentFolder.CreateFileQueryWithOptions(Options);
+
+            var FileList = await QueryResult.GetFilesAsync();
+
             foreach (var file in FileList)
             {
                 int i = 0;
@@ -231,25 +239,41 @@ namespace SmartLens
                 }
                 if (i == FileCollection.Count)
                 {
-                    var Thumbnail = await GetThumbnail(file);
+                    IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
+                    ulong PropertiesSize = (ulong)PropertyResults["System.Size"];
+                    string Size = GetSizeDescription(PropertiesSize);
+
+                    var Thumbnail = await GetThumbnailAsync(file);
                     if (Thumbnail != null)
                     {
-                        FileCollection.Add(new RemovableDeviceFile(await GetSize(file), file, Thumbnail));
-                        if (file.FileType == ".zip")
-                        {
-                            await Task.Delay(200);
-                            GridViewItem item = (GridViewControl.ContainerFromIndex(FileCollection.Count - 1) as GridViewItem);
-                            item.AllowDrop = true;
-                            item.Drop += USBControl.ThisPage.USBControl_Drop;
-                            item.DragOver += USBControl.ThisPage.Item_DragOver;
-                        }
+                        FileCollection.Add(new RemovableDeviceFile(Size, file, Thumbnail));
                     }
                     else
                     {
-                        FileCollection.Add(new RemovableDeviceFile(await GetSize(file), file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
+                        FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
                     }
+
+                    if (file.FileType == ".zip")
+                    {
+                        await Task.Delay(300);
+                        GridViewItem item = (GridViewControl.ContainerFromIndex(FileCollection.Count - 1) as GridViewItem);
+                        item.AllowDrop = true;
+                        item.Drop += USBControl.ThisPage.USBControl_Drop;
+                        item.DragOver += USBControl.ThisPage.Item_DragOver;
+                    }
+
                 }
             }
+        }
+
+        /// <summary>
+        /// 从文件大小获取标准描述
+        /// </summary>
+        /// <param name="PropertiesSize">文件大小</param>
+        /// <returns></returns>
+        private string GetSizeDescription(ulong PropertiesSize)
+        {
+            return PropertiesSize / 1024 < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576 >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
         }
 
         private void Cut_Click(object sender, RoutedEventArgs e)
@@ -743,7 +767,7 @@ namespace SmartLens
         /// </summary>
         /// <param name="file">文件</param>
         /// <returns>缩略图图像</returns>
-        public async Task<BitmapImage> GetThumbnail(StorageFile file)
+        public async Task<BitmapImage> GetThumbnailAsync(StorageFile file)
         {
             var Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView);
             if (Thumbnail == null)
@@ -752,10 +776,10 @@ namespace SmartLens
             }
             BitmapImage bitmapImage = new BitmapImage
             {
-                DecodePixelHeight = 70,
-                DecodePixelWidth = 70
+                DecodePixelHeight = 60,
+                DecodePixelWidth = 60
             };
-            bitmapImage.SetSource(Thumbnail);
+            await bitmapImage.SetSourceAsync(Thumbnail);
             return bitmapImage;
         }
 
@@ -1169,7 +1193,7 @@ namespace SmartLens
                 }
             }
 
-            file.SizeUpdateRequested(await GetSize(file.File));
+            file.SizeUpdateRequested(await GetSizeAsync(file.File));
 
             await Task.Delay(500);
             LoadingActivation(false);

@@ -1892,7 +1892,7 @@ namespace SmartLens
         /// <summary>
         /// 获取文件类型描述
         /// </summary>
-        public string Type
+        public string DisplayType
         {
             get
             {
@@ -1900,6 +1900,13 @@ namespace SmartLens
             }
         }
 
+        public string Type
+        {
+            get
+            {
+                return File.FileType;
+            }
+        }
     }
     #endregion
 

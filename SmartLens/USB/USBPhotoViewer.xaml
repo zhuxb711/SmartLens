@@ -21,7 +21,7 @@
     </Page.Resources>
 
     <Grid>
-        <Image Stretch="UniformToFill" Name="BackImage" Source="{x:Bind DisplayImage.Source,Mode=OneWay}"/>
+        <Image Stretch="UniformToFill" Name="BackImage"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"/>

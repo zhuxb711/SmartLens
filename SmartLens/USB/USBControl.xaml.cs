@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.Storage.Search;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using System.Linq;
 
 namespace SmartLens
 {
@@ -175,6 +177,27 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获得指定文件的缩略图图像
+        /// </summary>
+        /// <param name="file">文件</param>
+        /// <returns>缩略图图像</returns>
+        public async Task<BitmapImage> GetThumbnailAsync(StorageFile file)
+        {
+            var Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView);
+            if (Thumbnail == null)
+            {
+                return null;
+            }
+            BitmapImage bitmapImage = new BitmapImage
+            {
+                DecodePixelHeight = 60,
+                DecodePixelWidth = 60
+            };
+            await bitmapImage.SetSourceAsync(Thumbnail);
+            return bitmapImage;
+        }
+
         private async void FileTree_ItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
             /*
@@ -216,13 +239,20 @@ namespace SmartLens
                                          let GridItem = USBFilePresenter.ThisPage.GridViewControl.ContainerFromItem(DeviceFile) as GridViewItem
                                          select GridItem)
                 {
+                    GridItem.AllowDrop = false;
                     GridItem.Drop -= USBControl_Drop;
                     GridItem.DragOver -= Item_DragOver;
                 }
 
                 USBFilePresenter.ThisPage.FileCollection.Clear();
 
-                var FileList = await folder.GetFilesAsync();
+                QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
+                Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
+                Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
+
+                StorageFileQueryResult QueryResult = folder.CreateFileQueryWithOptions(Options);
+
+                var FileList = await QueryResult.GetFilesAsync();
 
                 if (FileList.Count == 0)
                 {
@@ -232,6 +262,7 @@ namespace SmartLens
                 {
                     USBFilePresenter.ThisPage.HasFile.Visibility = Visibility.Collapsed;
                 }
+
                 foreach (var file in FileList)
                 {
                     if (CancelToken.IsCancellationRequested)
@@ -242,26 +273,44 @@ namespace SmartLens
                         break;
                     }
 
-                    var Thumbnail = await USBFilePresenter.ThisPage.GetThumbnail(file);
+                    IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
+                    ulong PropertiesSize = (ulong)PropertyResults["System.Size"];
+                    string Size = GetSizeDescription(PropertiesSize);
+
+                    BitmapImage Thumbnail = await GetThumbnailAsync(file);
                     if (Thumbnail != null)
                     {
-                        USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(await USBFilePresenter.ThisPage.GetSize(file), file, Thumbnail));
-                        if (file.FileType == ".zip")
-                        {
-                            await Task.Delay(200);
-                            GridViewItem item = (USBFilePresenter.ThisPage.GridViewControl.ContainerFromIndex(USBFilePresenter.ThisPage.FileCollection.Count - 1) as GridViewItem);
-                            item.AllowDrop = true;
-                            item.Drop += USBControl_Drop;
-                            item.DragOver += Item_DragOver;
-                        }
+                        USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, file, Thumbnail));
                     }
                     else
                     {
-                        USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(await USBFilePresenter.ThisPage.GetSize(file), file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
+                        USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
                     }
+                }
+
+                await Task.Delay(500);
+
+                foreach (var file in from file in USBFilePresenter.ThisPage.FileCollection
+                                     where file.Type == ".zip"
+                                     select file)
+                {
+                    GridViewItem item = USBFilePresenter.ThisPage.GridViewControl.ContainerFromItem(file) as GridViewItem;
+                    item.AllowDrop = true;
+                    item.Drop += USBControl_Drop;
+                    item.DragOver += Item_DragOver;
                 }
             }
             IsAdding = false;
+        }
+
+        /// <summary>
+        /// 从文件大小获取标准描述
+        /// </summary>
+        /// <param name="PropertiesSize">文件大小</param>
+        /// <returns></returns>
+        private string GetSizeDescription(ulong PropertiesSize)
+        {
+            return PropertiesSize / 1024 < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576 >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
         }
 
         public void Item_DragOver(object sender, DragEventArgs e)
