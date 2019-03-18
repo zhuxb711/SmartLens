@@ -11,7 +11,7 @@
     Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
 
     <Page.Resources>
-        <Storyboard x:Name="FadeOut">
+        <Storyboard x:Name="FadeOut" Completed="FadeOut_Completed">
             <DoubleAnimation From="1" To="0" Duration="0:0:0.4" Storyboard.TargetName="BackImage" Storyboard.TargetProperty="Opacity"/>
         </Storyboard>
 
@@ -21,7 +21,7 @@
     </Page.Resources>
 
     <Grid>
-        <Image Stretch="UniformToFill" Name="BackImage"/>
+        <Image Stretch="UniformToFill" Name="BackImage" Source="{x:Bind DisplayImage.Source,Mode=OneWay}"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"/>

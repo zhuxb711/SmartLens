@@ -17,6 +17,7 @@ namespace SmartLens
     {
         ObservableCollection<PhotoDisplaySupport> PhotoCollection;
         string SelectedPhotoID;
+        StorageFile DisplayFile;
 
         public USBPhotoViewer()
         {
@@ -30,7 +31,7 @@ namespace SmartLens
             ImageList.ItemsSource = PhotoCollection;
 
             QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
-            Options.SetThumbnailPrefetch(ThumbnailMode.PicturesView, 250, ThumbnailOptions.ReturnOnlyIfCached);
+            Options.SetThumbnailPrefetch(ThumbnailMode.PicturesView, 250, ThumbnailOptions.ResizeThumbnail);
 
             StorageFileQueryResult QueryResult = USBControl.ThisPage.CurrentFolder.CreateFileQueryWithOptions(Options);
 
@@ -56,7 +57,7 @@ namespace SmartLens
             ImageList.SelectedItem = SelectedPhoto;
 
             await Task.Delay(500);
-            await ChangeDisplayImage(ImageList.SelectedItem as PhotoDisplaySupport);
+            ChangeDisplayImage(ImageList.SelectedItem as PhotoDisplaySupport);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -74,14 +75,15 @@ namespace SmartLens
             SelectedPhotoID = string.Empty;
             DisplayImage.Source = null;
             FileName.Text = "";
+            DisplayFile = null;
         }
 
-        private async void ImageList_ItemClick(object sender, ItemClickEventArgs e)
+        private void ImageList_ItemClick(object sender, ItemClickEventArgs e)
         {
             var SelectedPhoto = e.ClickedItem as PhotoDisplaySupport;
             if (SelectedPhoto.PhotoFile.FolderRelativeId != SelectedPhotoID)
             {
-                await ChangeDisplayImage(SelectedPhoto);
+                ChangeDisplayImage(SelectedPhoto);
             }
         }
 
@@ -89,29 +91,29 @@ namespace SmartLens
         /// 使用动画效果更改当前显示的图片
         /// </summary>
         /// <param name="e">需要显示的图片</param>
-        private async Task ChangeDisplayImage(PhotoDisplaySupport e)
+        private void ChangeDisplayImage(PhotoDisplaySupport e)
         {
             FileName.Text = e.FileName;
-            DisplayImage.Source = null;
+            DisplayFile = e.PhotoFile;
+            DisplayImage.Opacity = 0;
 
             Image image = ((ImageList.ContainerFromItem(e) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("Photo") as Image;
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("PhotoAnimation", image).Configuration = new BasicConnectedAnimationConfiguration();
 
-            ConnectedAnimationService.GetForCurrentView().DefaultDuration = TimeSpan.FromMilliseconds(700);
+            ConnectedAnimationService.GetForCurrentView().DefaultDuration = TimeSpan.FromMilliseconds(600);
 
             FadeOut.Begin();
-            await Task.Delay(200);
-            using (var stream = await e.PhotoFile.OpenAsync(FileAccessMode.Read))
+            SelectedPhotoID = e.PhotoFile.FolderRelativeId;
+        }
+
+        private async void FadeOut_Completed(object sender, object e)
+        {
+            using (var stream = await DisplayFile.OpenAsync(FileAccessMode.Read))
             {
                 var bitmap = new BitmapImage();
-                var bitmap1 = new BitmapImage();
                 DisplayImage.Source = bitmap;
-                BackImage.Source = bitmap1;
-                var st = stream.CloneStream();
                 await bitmap.SetSourceAsync(stream);
-                await bitmap1.SetSourceAsync(st);
             }
-            FadeIn.Begin();
 
             try
             {
@@ -119,8 +121,11 @@ namespace SmartLens
                 animation?.TryStart(DisplayImage);
             }
             catch (Exception) { }
-
-            SelectedPhotoID = e.PhotoFile.FolderRelativeId;
+            finally
+            {
+                FadeIn.Begin();
+                DisplayImage.Opacity = 1;
+            }
         }
     }
 }

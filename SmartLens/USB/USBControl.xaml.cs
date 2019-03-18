@@ -144,18 +144,11 @@ namespace SmartLens
                     FolderDictionary.Add(SubFolder.FolderRelativeId, new List<StorageFolder>(SubSubStorageFolderList));
                 }
 
-                var NewNode = new TreeViewNode
+                TreeViewNode NewNode = new TreeViewNode
                 {
-                    Content = SubFolder
+                    Content = SubFolder,
+                    HasUnrealizedChildren = SubSubStorageFolderList.Count != 0
                 };
-                if (SubSubStorageFolderList.Count == 0)
-                {
-                    NewNode.HasUnrealizedChildren = false;
-                }
-                else
-                {
-                    NewNode.HasUnrealizedChildren = true;
-                }
 
                 Node.Children.Add(NewNode);
             }
