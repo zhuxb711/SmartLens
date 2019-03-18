@@ -734,7 +734,7 @@ namespace SmartLens
 
         private void Integrity_Toggled(object sender, RoutedEventArgs e)
         {
-            if(Integrity.IsOn)
+            if (Integrity.IsOn)
             {
                 ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = true;
             }

@@ -3479,21 +3479,33 @@ namespace SmartLens
 
     #endregion
 
+    #region MD5哈希值计算和检验工具类
+    /// <summary>
+    /// 计算或验证哈希值
+    /// </summary>
     public sealed class MD5Util
     {
+        /// <summary>
+        /// 异步计算SmartLens所有文件哈希值并保存至数据库中
+        /// </summary>
+        /// <returns>无</returns>
         public static async Task CalculateAndStorageMD5Async()
         {
             var InstallFolder = Package.Current.InstalledLocation;
             List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
-            await CalculateMD5(InstallFolder, CalculateResult);
+            await CalculateMD5Async(InstallFolder, CalculateResult);
             await SQLite.GetInstance().SetMD5ValueAsync(CalculateResult);
         }
 
-        public static async Task<KeyValuePair<bool, string>> CheckSmartLensIntegrity()
+        /// <summary>
+        /// 异步检查SmartLens文件完整性
+        /// </summary>
+        /// <returns>键值对</returns>
+        public static async Task<KeyValuePair<bool, string>> CheckSmartLensIntegrityAsync()
         {
             var InstallFolder = Package.Current.InstalledLocation;
             List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
-            await CalculateMD5(InstallFolder, CalculateResult);
+            await CalculateMD5Async(InstallFolder, CalculateResult);
             var DataBaseResult = await SQLite.GetInstance().GetMD5ValueAsync();
 
             foreach (var ErrorPart in from item in DataBaseResult
@@ -3508,7 +3520,13 @@ namespace SmartLens
             return new KeyValuePair<bool, string>(true, null);
         }
 
-        private static async Task CalculateMD5(StorageFolder Folder, List<KeyValuePair<string, string>> MD5List)
+        /// <summary>
+        /// 异步递归计算指定文件夹的所有文件的MD5值
+        /// </summary>
+        /// <param name="Folder">要计算的文件夹</param>
+        /// <param name="MD5List">计算结果</param>
+        /// <returns>无</returns>
+        private static async Task CalculateMD5Async(StorageFolder Folder, List<KeyValuePair<string, string>> MD5List)
         {
             var FileList = await Folder.GetFilesAsync();
             using (MD5 md5 = new MD5CryptoServiceProvider())
@@ -3537,9 +3555,10 @@ namespace SmartLens
             {
                 foreach (var folder in FolderList)
                 {
-                    await CalculateMD5(folder, MD5List);
+                    await CalculateMD5Async(folder, MD5List);
                 }
             }
         }
     }
+    #endregion
 }
