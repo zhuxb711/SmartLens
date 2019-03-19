@@ -1,11 +1,13 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Media.MediaProperties;
 using Windows.Media.Transcoding;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.UI.Notifications;
 
 namespace MediaProcessingBackgroundTask
 {
@@ -14,6 +16,8 @@ namespace MediaProcessingBackgroundTask
         IBackgroundTaskInstance BackTaskInstance;
         BackgroundTaskDeferral Deferral;
         CancellationTokenSource Cancellation;
+        StorageFile InputFile;
+        StorageFile OutputFile;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
@@ -24,52 +28,344 @@ namespace MediaProcessingBackgroundTask
             Deferral = BackTaskInstance.GetDeferral();
 
             await TranscodeMediaAsync();
+            await Task.Delay(1000);
+            ToastNotificationManager.History.Remove("SmartLens-TranscodeNotification");
+
+            if (Cancellation.IsCancellationRequested)
+            {
+                ShowUserCancelNotification();
+                await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            }
+            else
+            {
+                ShowCompleteNotification();
+            }
 
             Deferral.Complete();
         }
 
+        private void ShowCompleteNotification()
+        {
+            var Content = new ToastContent()
+            {
+                Scenario = ToastScenario.Default,
+
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "转换已完成！"
+                            },
+
+                            new AdaptiveText()
+                            {
+                               Text = InputFile.Name+" 已成功转换为 "+OutputFile.Name
+                            }
+                        }
+                    }
+                },
+                Actions = new ToastActionsCustom
+                {
+                    Buttons =
+                    {
+                        new ToastButtonDismiss("确定")
+                    }
+                }
+            };
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
+
+        }
+
+        private void ShowUserCancelNotification()
+        {
+            var Content = new ToastContent()
+            {
+                Scenario = ToastScenario.Default,
+
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "格式转换已被取消"
+                            },
+
+                            new AdaptiveText()
+                            {
+                               Text = "您可以尝试重新启动转换"
+                            }
+                        }
+                    }
+                },
+                Actions = new ToastActionsCustom
+                {
+                    Buttons =
+                    {
+                        new ToastButtonDismiss("确定")
+                    }
+                }
+            };
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
+        }
+
+        private void ShowUnexceptCancelNotification(BackgroundTaskCancellationReason Reason)
+        {
+            var Content = new ToastContent()
+            {
+                Scenario = ToastScenario.Default,
+
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "转换因Windows策略而意外终止"
+                            },
+
+                            new AdaptiveText()
+                            {
+                               Text = "终止原因："+ Enum.GetName(typeof(BackgroundTaskCancellationReason),Reason)
+                            }
+                        }
+                    }
+                },
+                Actions = new ToastActionsCustom
+                {
+                    Buttons =
+                    {
+                        new ToastButtonDismiss("确定")
+                    }
+                }
+            };
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
+        }
+
         private async Task TranscodeMediaAsync()
         {
-            MediaTranscoder Transcoder = new MediaTranscoder
+            MediaVideoProcessingAlgorithm Algorithm = default;
+            if (ApplicationData.Current.LocalSettings.Values["MediaTranscodeAlgorithm"] is string TranscodeAlgorithm)
             {
-                HardwareAccelerationEnabled = true
-            };
-
-            if (ApplicationData.Current.LocalSettings.Values["MediaTranscodeInputFilePath"] is string InputFilePath
-                && ApplicationData.Current.LocalSettings.Values["MediaTranscodeOutputFilePath"] is string OutputFilePath)
-            {
-                try
+                if (TranscodeAlgorithm == "MrfCrf444")
                 {
-                    StorageFile InputFile = await StorageFile.GetFileFromPathAsync(InputFilePath);
-                    StorageFile OutputFile = await StorageFile.GetFileFromPathAsync(OutputFilePath);
-                    MediaEncodingProfile Profile = MediaEncodingProfile.CreateHevc(VideoEncodingQuality.HD1080p);
-                    PrepareTranscodeResult Result = await Transcoder.PrepareFileTranscodeAsync(InputFile, OutputFile, Profile);
-                    if (Result.CanTranscode)
+                    Algorithm = MediaVideoProcessingAlgorithm.MrfCrf444;
+                }
+                else if (TranscodeAlgorithm == "Default")
+                {
+                    Algorithm = MediaVideoProcessingAlgorithm.Default;
+                }
+
+                MediaTranscoder Transcoder = new MediaTranscoder
+                {
+                    HardwareAccelerationEnabled = true,
+                    VideoProcessingAlgorithm = Algorithm
+                };
+
+                if (ApplicationData.Current.LocalSettings.Values["MediaTranscodeInputFileToken"] is string InputFileToken
+                    && ApplicationData.Current.LocalSettings.Values["MediaTranscodeOutputFileToken"] is string OutputFileToken)
+                {
+                    try
                     {
-                        Progress<double> TranscodeProgress = new Progress<double>(ProgressHandler);
-                        await Result.TranscodeAsync().AsTask(Cancellation.Token, TranscodeProgress);
+                        var FutureItemAccessList = StorageApplicationPermissions.FutureAccessList;
+
+                        InputFile = await FutureItemAccessList.GetFileAsync(InputFileToken);
+                        OutputFile = await FutureItemAccessList.GetFileAsync(OutputFileToken);
+
+                        if (ApplicationData.Current.LocalSettings.Values["MediaTranscodeEncodingProfile"] is string EncodingKind
+                            && ApplicationData.Current.LocalSettings.Values["MediaTranscodeQuality"] is string Quality)
+                        {
+                            MediaEncodingProfile Profile = null;
+                            VideoEncodingQuality VideoQuality = default;
+                            AudioEncodingQuality AudioQuality = default;
+
+                            switch (Quality)
+                            {
+                                case "UHD2160p":
+                                    VideoQuality = VideoEncodingQuality.Uhd2160p;
+                                    break;
+                                case "QVGA":
+                                    VideoQuality = VideoEncodingQuality.Qvga;
+                                    break;
+                                case "HD1080p":
+                                    VideoQuality = VideoEncodingQuality.HD1080p;
+                                    break;
+                                case "HD720p":
+                                    VideoQuality = VideoEncodingQuality.HD720p;
+                                    break;
+                                case "WVGA":
+                                    VideoQuality = VideoEncodingQuality.Wvga;
+                                    break;
+                                case "VGA":
+                                    VideoQuality = VideoEncodingQuality.Vga;
+                                    break;
+                                case "High":
+                                    AudioQuality = AudioEncodingQuality.High;
+                                    break;
+                                case "Medium":
+                                    AudioQuality = AudioEncodingQuality.Medium;
+                                    break;
+                                case "Low":
+                                    AudioQuality = AudioEncodingQuality.Low;
+                                    break;
+                            }
+
+                            switch (EncodingKind)
+                            {
+                                case "MKV":
+                                    Profile = MediaEncodingProfile.CreateHevc(VideoQuality);
+                                    break;
+                                case "MP4":
+                                    Profile = MediaEncodingProfile.CreateMp4(VideoQuality);
+                                    break;
+                                case "WMV":
+                                    Profile = MediaEncodingProfile.CreateWmv(VideoQuality);
+                                    break;
+                                case "AVI":
+                                    Profile = MediaEncodingProfile.CreateAvi(VideoQuality);
+                                    break;
+                                case "MP3":
+                                    Profile = MediaEncodingProfile.CreateMp3(AudioQuality);
+                                    break;
+                                case "ALAC":
+                                    Profile = MediaEncodingProfile.CreateAlac(AudioQuality);
+                                    break;
+                                case "WMA":
+                                    Profile = MediaEncodingProfile.CreateWma(AudioQuality);
+                                    break;
+                                case "M4A":
+                                    Profile = MediaEncodingProfile.CreateM4a(AudioQuality);
+                                    break;
+                            }
+
+                            PrepareTranscodeResult Result = await Transcoder.PrepareFileTranscodeAsync(InputFile, OutputFile, Profile);
+                            if (Result.CanTranscode)
+                            {
+                                SendUpdatableToastWithProgress();
+                                Progress<double> TranscodeProgress = new Progress<double>(ProgressHandler);
+                                await Result.TranscodeAsync().AsTask(Cancellation.Token, TranscodeProgress);
+                                ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "Success";
+                            }
+                            else
+                            {
+                                ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "转码格式不支持";
+                            }
+                        }
+                        else
+                        {
+                            ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "SettingError: Miss MediaTranscodeEncodingProfile Or MediaTranscodeQuality";
+                        }
                     }
-                    else
+                    catch (TaskCanceledException)
                     {
-                        Debug.WriteLine("无法转换原因" + Result.FailureReason.ToString());
+                        ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "转码任务被取消";
+                    }
+                    catch (Exception e)
+                    {
+                        ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "NormalError:" + e.Message;
                     }
                 }
-                catch(Exception e)
+                else
                 {
-                    Debug.WriteLine("出现错误：" + e.Message);
+                    ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "SettingError: Miss Input Or Output File Token";
                 }
             }
-
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "SettingError: Miss MediaTranscodeAlgorithm";
+            }
         }
 
         private void ProgressHandler(double CurrentValue)
         {
             BackTaskInstance.Progress = (uint)CurrentValue;
+            UpdateToastNotification(BackTaskInstance.Progress);
         }
 
-        private void BackTaskInstance_Canceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
+        private async void BackTaskInstance_Canceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            throw new NotImplementedException();
+            var Deferral = sender.GetDeferral();
+            await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            ToastNotificationManager.History.Remove("SmartLens-TranscodeNotification");
+            ShowUnexceptCancelNotification(reason);
+            Deferral.Complete();
+        }
+
+        private void UpdateToastNotification(uint CurrentValue)
+        {
+            string Tag = "SmartLens-TranscodeNotification";
+
+            var data = new NotificationData
+            {
+                SequenceNumber = 0
+            };
+            data.Values["ProgressValue"] = Math.Round((float)CurrentValue / 100, 2, MidpointRounding.AwayFromZero).ToString();
+            data.Values["ProgressValueString"] = CurrentValue + "%";
+
+            ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
+        }
+
+        public void SendUpdatableToastWithProgress()
+        {
+            string Tag = "SmartLens-TranscodeNotification";
+
+            var content = new ToastContent()
+            {
+                Scenario=ToastScenario.Reminder,
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "正在转换"+InputFile.DisplayName
+                            },
+
+                            new AdaptiveProgressBar()
+                            {
+                                Title = InputFile.FileType.Substring(1).ToUpper()+" ⋙⋙⋙⋙ "+OutputFile.FileType.Substring(1).ToUpper(),
+                                Value = new BindableProgressBarValue("ProgressValue"),
+                                ValueStringOverride = new BindableString("ProgressValueString"),
+                                Status = new BindableString("ProgressStatus")
+                            }
+                        }
+                    }
+                },
+                Actions = new ToastActionsCustom
+                {
+                    Buttons =
+                    {
+                        new ToastButtonDismiss("取消")
+                    }
+                }
+
+            };
+
+            var Toast = new ToastNotification(content.GetXml())
+            {
+                Tag = Tag,
+                Data = new NotificationData()
+            };
+            Toast.Data.Values["ProgressValue"] = "0";
+            Toast.Data.Values["ProgressValueString"] = "0%";
+            Toast.Data.Values["ProgressStatus"] = "转码中...";
+            Toast.Data.SequenceNumber = 0;
+
+            Toast.Activated += (s, e) =>
+            {
+                Cancellation.Cancel();
+            };
+            ToastNotificationManager.CreateToastNotifier().Show(Toast);
         }
     }
 }

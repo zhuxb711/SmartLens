@@ -57,6 +57,7 @@
                         <AppBarButton Icon="Share" Label="蓝牙分享" IsEnabled="{x:Bind Rename.IsEnabled,Mode=OneWay}" Click="BluetoothShare_Click"/>
                         <AppBarButton Icon="Bookmarks" Label="Zip压缩/解压" IsEnabled="{x:Bind Rename.IsEnabled,Mode=OneWay}" Click="Zip_Click"/>
                         <AppBarButton Icon="Share" Name="Attribute" Label="属性" IsEnabled="{x:Bind Rename.IsEnabled,Mode=OneWay}" Click="Attribute_Click"/>
+                        <AppBarButton Icon="Switch" Name="Transcode" Label="转码" IsEnabled="{x:Bind Rename.IsEnabled,Mode=OneWay}" Click="Transcode_Click"/>
                     </CommandBarFlyout.SecondaryCommands>
                 </CommandBarFlyout>
             </GridView.ContextFlyout>

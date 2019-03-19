@@ -146,7 +146,7 @@ namespace SmartLens
                 }
             }
 
-            if (ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+            if (ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
             {
                 Integrity.IsOn = IsEnable;
             }
@@ -736,11 +736,11 @@ namespace SmartLens
         {
             if (Integrity.IsOn)
             {
-                ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = true;
+                ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
             }
             else
             {
-                ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = false;
+                ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = false;
             }
         }
     }

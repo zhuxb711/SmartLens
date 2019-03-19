@@ -76,7 +76,7 @@ namespace SmartLens
 
         private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)
         {
-            if(ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+            if(ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
             {
                 if(IsEnable)
                 {
@@ -102,7 +102,7 @@ namespace SmartLens
             }
             else
             {
-                ApplicationData.Current.RoamingSettings.Values["EnableIntegrityCheck"] = true;
+                ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
                 if (IsLaunch)
                 {
                     var args = m as LaunchActivatedEventArgs;

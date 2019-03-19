@@ -42,9 +42,20 @@
               <uap:FileType>.pptx</uap:FileType>
               <uap:FileType>.bmp</uap:FileType>
               <uap:FileType>.pdf</uap:FileType>
+              <uap:FileType>.mov</uap:FileType>
+              <uap:FileType>.m4a</uap:FileType>
+              <uap:FileType>.avi</uap:FileType>
+              <uap:FileType>.wma</uap:FileType>
+              <uap:FileType>.wmv</uap:FileType>
+              <uap:FileType>.alac</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
+        <Extension Category="windows.backgroundTasks" EntryPoint="MediaProcessingBackgroundTask.MediaProcessingTask">
+          <BackgroundTasks>
+            <uap:Task Type="mediaProcessing"/>
+          </BackgroundTasks>
+        </Extension>
       </Extensions>
     </Application>
   </Applications>

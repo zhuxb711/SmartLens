@@ -1198,5 +1198,19 @@ namespace SmartLens
             await Task.Delay(500);
             LoadingActivation(false);
         }
+
+        private async void Transcode_Click(object sender, RoutedEventArgs e)
+        {
+            var SelectedItems = GridViewControl.SelectedItems;
+            if (SelectedItems.Count == 1)
+            {
+                StorageFile file = (SelectedItems[0] as RemovableDeviceFile).File;
+                TranscodeDialog dialog = new TranscodeDialog
+                {
+                    SourceFile = file
+                };
+                await dialog.ShowAsync();
+            }
+        }
     }
 }
