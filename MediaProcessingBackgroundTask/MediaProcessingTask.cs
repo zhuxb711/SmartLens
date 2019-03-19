@@ -49,7 +49,7 @@ namespace MediaProcessingBackgroundTask
             var Content = new ToastContent()
             {
                 Scenario = ToastScenario.Default,
-
+                Launch = "Transcode",
                 Visual = new ToastVisual()
                 {
                     BindingGeneric = new ToastBindingGeneric()
@@ -64,17 +64,15 @@ namespace MediaProcessingBackgroundTask
                             new AdaptiveText()
                             {
                                Text = InputFile.Name+" 已成功转换为 "+OutputFile.Name
+                            },
+
+                            new AdaptiveText()
+                            {
+                                Text="点击以消除提示"
                             }
                         }
                     }
                 },
-                Actions = new ToastActionsCustom
-                {
-                    Buttons =
-                    {
-                        new ToastButtonDismiss("确定")
-                    }
-                }
             };
             ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
 
@@ -85,7 +83,7 @@ namespace MediaProcessingBackgroundTask
             var Content = new ToastContent()
             {
                 Scenario = ToastScenario.Default,
-
+                Launch = "Transcode",
                 Visual = new ToastVisual()
                 {
                     BindingGeneric = new ToastBindingGeneric()
@@ -100,15 +98,13 @@ namespace MediaProcessingBackgroundTask
                             new AdaptiveText()
                             {
                                Text = "您可以尝试重新启动转换"
+                            },
+
+                            new AdaptiveText()
+                            {
+                                Text="点击以消除提示"
                             }
                         }
-                    }
-                },
-                Actions = new ToastActionsCustom
-                {
-                    Buttons =
-                    {
-                        new ToastButtonDismiss("确定")
                     }
                 }
             };
@@ -120,7 +116,7 @@ namespace MediaProcessingBackgroundTask
             var Content = new ToastContent()
             {
                 Scenario = ToastScenario.Default,
-
+                Launch = "Transcode",
                 Visual = new ToastVisual()
                 {
                     BindingGeneric = new ToastBindingGeneric()
@@ -135,15 +131,13 @@ namespace MediaProcessingBackgroundTask
                             new AdaptiveText()
                             {
                                Text = "终止原因："+ Enum.GetName(typeof(BackgroundTaskCancellationReason),Reason)
+                            },
+
+                            new AdaptiveText()
+                            {
+                                Text="点击以消除提示"
                             }
                         }
-                    }
-                },
-                Actions = new ToastActionsCustom
-                {
-                    Buttons =
-                    {
-                        new ToastButtonDismiss("确定")
                     }
                 }
             };
@@ -319,7 +313,8 @@ namespace MediaProcessingBackgroundTask
 
             var content = new ToastContent()
             {
-                Scenario=ToastScenario.Reminder,
+                Launch = "Transcode",
+                Scenario = ToastScenario.Reminder,
                 Visual = new ToastVisual()
                 {
                     BindingGeneric = new ToastBindingGeneric()
@@ -328,7 +323,7 @@ namespace MediaProcessingBackgroundTask
                         {
                             new AdaptiveText()
                             {
-                                Text = "正在转换"+InputFile.DisplayName
+                                Text = "正在转换:"+InputFile.DisplayName
                             },
 
                             new AdaptiveProgressBar()
@@ -340,15 +335,7 @@ namespace MediaProcessingBackgroundTask
                             }
                         }
                     }
-                },
-                Actions = new ToastActionsCustom
-                {
-                    Buttons =
-                    {
-                        new ToastButtonDismiss("取消")
-                    }
                 }
-
             };
 
             var Toast = new ToastNotification(content.GetXml())
@@ -358,13 +345,17 @@ namespace MediaProcessingBackgroundTask
             };
             Toast.Data.Values["ProgressValue"] = "0";
             Toast.Data.Values["ProgressValueString"] = "0%";
-            Toast.Data.Values["ProgressStatus"] = "转码中...";
+            Toast.Data.Values["ProgressStatus"] = "点击该提示以取消转码";
             Toast.Data.SequenceNumber = 0;
 
             Toast.Activated += (s, e) =>
             {
-                Cancellation.Cancel();
+                if (s.Tag == "SmartLens-TranscodeNotification")
+                {
+                    Cancellation.Cancel();
+                }
             };
+
             ToastNotificationManager.CreateToastNotifier().Show(Toast);
         }
     }

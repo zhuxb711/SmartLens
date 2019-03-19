@@ -217,7 +217,7 @@ namespace SmartLens
         /// <summary>
         /// 异步刷新并检查是否有新文件出现
         /// </summary>
-        private async Task RefreshFileDisplay()
+        public async Task RefreshFileDisplay()
         {
             QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
             Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);

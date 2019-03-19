@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -109,7 +108,6 @@ namespace SmartLens
                     Quality.Items.Add("Low");
                     break;
                 case ".mp3":
-                    Format.Items.Add("FLAC(.flac)格式");
                     Format.Items.Add("ALAC(.alac)格式");
                     Format.Items.Add("AAC(.m4a)格式");
                     Format.Items.Add("WMA(.wma)格式");
@@ -283,7 +281,8 @@ namespace SmartLens
                 {
                     ContentDialog dialog = new ContentDialog
                     {
-                        Title = "提示"
+                        Title = "提示",
+                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                     };
 
                     if (ExcuteStatus == "Success")
@@ -298,29 +297,9 @@ namespace SmartLens
                         dialog.CloseButtonText = "确定";
                         await dialog.ShowAsync();
                     }
+                    await USBFilePresenter.ThisPage.RefreshFileDisplay();
                 });
             }
-        }
-
-        public T FindChildOfType<T>(DependencyObject root) where T : class
-        {
-            var MyQueue = new Queue<DependencyObject>();
-            MyQueue.Enqueue(root);
-            while (MyQueue.Count > 0)
-            {
-                DependencyObject current = MyQueue.Dequeue();
-                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(current); i++)
-                {
-                    var child = VisualTreeHelper.GetChild(current, i);
-                    var typedChild = child as T;
-                    if (typedChild != null)
-                    {
-                        return typedChild;
-                    }
-                    MyQueue.Enqueue(child);
-                }
-            }
-            return null;
         }
     }
 }

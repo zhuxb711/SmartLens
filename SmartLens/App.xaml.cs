@@ -1,5 +1,4 @@
-﻿using System;
-using Windows.ApplicationModel;
+﻿using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
@@ -71,14 +70,21 @@ namespace SmartLens
 
         protected override void OnActivated(IActivatedEventArgs args)
         {
+            if (args is ToastNotificationActivatedEventArgs e)
+            {
+                if (e.Argument == "Transcode")
+                {
+                    return;
+                }
+            }
             OnLaunchOrOnActivate(args);
         }
 
         private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)
         {
-            if(ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+            if (ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
             {
-                if(IsEnable)
+                if (IsEnable)
                 {
                     if (IsLaunch)
                     {

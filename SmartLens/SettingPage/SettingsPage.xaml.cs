@@ -431,54 +431,57 @@ namespace SmartLens
 
             Progressing.Visibility = Visibility.Visible;
             await WiFi.ScanAsync();
-            if (WiFiList.Count != 0)
+            if (WiFiList != null)
             {
-                foreach (var WiFiNetwork in WiFi.NetworkReport.AvailableNetworks)
+                if (WiFiList.Count != 0)
                 {
-                    bool IsExist = false;
+                    foreach (var WiFiNetwork in WiFi.NetworkReport.AvailableNetworks)
+                    {
+                        bool IsExist = false;
+                        for (int i = 0; i < WiFiList.Count; i++)
+                        {
+                            if (WiFiNetwork.Bssid == WiFiList[i].MAC)
+                            {
+                                WiFiList[i].Update(WiFiNetwork);
+                                IsExist = true;
+                                break;
+                            }
+                        }
+                        if (!IsExist)
+                        {
+                            WiFiList.Add(new WiFiInfo(WiFiNetwork));
+                            WiFiList[WiFiList.Count - 1].IsUpdated = true;
+                            IsExist = false;
+                        }
+                    }
                     for (int i = 0; i < WiFiList.Count; i++)
                     {
-                        if (WiFiNetwork.Bssid == WiFiList[i].MAC)
+                        if (WiFiList[i].IsUpdated)
                         {
-                            WiFiList[i].Update(WiFiNetwork);
-                            IsExist = true;
-                            break;
+                            WiFiList[i].IsUpdated = false;
+                        }
+                        else
+                        {
+                            if (!WiFiList[i].IsConnected)
+                            {
+                                WiFiList.RemoveAt(i);
+                            }
+                            i--;
                         }
                     }
-                    if (!IsExist)
-                    {
-                        WiFiList.Add(new WiFiInfo(WiFiNetwork));
-                        WiFiList[WiFiList.Count - 1].IsUpdated = true;
-                        IsExist = false;
-                    }
                 }
-                for (int i = 0; i < WiFiList.Count; i++)
+                else
                 {
-                    if (WiFiList[i].IsUpdated)
+                    foreach (var WiFiNetwork in WiFi.NetworkReport.AvailableNetworks)
                     {
-                        WiFiList[i].IsUpdated = false;
-                    }
-                    else
-                    {
-                        if (!WiFiList[i].IsConnected)
+                        if (NetworkHelper.Instance.ConnectionInformation.NetworkNames.Count > 0 && NetworkHelper.Instance.ConnectionInformation.NetworkNames[0] == WiFiNetwork.Ssid)
                         {
-                            WiFiList.RemoveAt(i);
+                            WiFiList.Insert(0, new WiFiInfo(WiFiNetwork, true));
                         }
-                        i--;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var WiFiNetwork in WiFi.NetworkReport.AvailableNetworks)
-                {
-                    if (NetworkHelper.Instance.ConnectionInformation.NetworkNames.Count > 0 && NetworkHelper.Instance.ConnectionInformation.NetworkNames[0] == WiFiNetwork.Ssid)
-                    {
-                        WiFiList.Insert(0, new WiFiInfo(WiFiNetwork, true));
-                    }
-                    else
-                    {
-                        WiFiList.Add(new WiFiInfo(WiFiNetwork));
+                        else
+                        {
+                            WiFiList.Add(new WiFiInfo(WiFiNetwork));
+                        }
                     }
                 }
             }
