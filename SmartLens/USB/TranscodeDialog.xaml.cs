@@ -243,7 +243,8 @@ namespace SmartLens
 
                 if (!success)
                 {
-                    TaskRegistration.Unregister(true);
+                    TaskRegistration.Unregister(false);
+                    USBControl.ThisPage.Notification.Show("转码无法启动:" + Enum.GetName(typeof(MediaProcessingTriggerResult), ActivationResult));
                 }
             }
 
@@ -274,28 +275,18 @@ namespace SmartLens
         private async void TaskRegistration_Completed(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
             TaskRegistration.Completed -= TaskRegistration_Completed;
-            sender.Unregister(true);
+            sender.Unregister(false);
             if (ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] is string ExcuteStatus)
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
-                    ContentDialog dialog = new ContentDialog
-                    {
-                        Title = "提示",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
-                    };
-
                     if (ExcuteStatus == "Success")
                     {
-                        dialog.Content = "转码成功完成";
-                        dialog.CloseButtonText = "知道了";
-                        await dialog.ShowAsync();
+                        USBControl.ThisPage.Notification.Show("转码已成功完成");
                     }
                     else
                     {
-                        dialog.Content = "转码失败，原因如下\r\r" + ExcuteStatus;
-                        dialog.CloseButtonText = "确定";
-                        await dialog.ShowAsync();
+                        USBControl.ThisPage.Notification.Show("转码失败:" + ExcuteStatus);
                     }
                     await USBFilePresenter.ThisPage.RefreshFileDisplay();
                 });

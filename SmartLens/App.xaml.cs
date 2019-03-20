@@ -72,7 +72,7 @@ namespace SmartLens
         {
             if (args is ToastNotificationActivatedEventArgs e)
             {
-                if (e.Argument == "Transcode")
+                if (e.Argument == "Transcode"||e.Argument=="Update")
                 {
                     return;
                 }
@@ -82,10 +82,90 @@ namespace SmartLens
 
         private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)
         {
-            if (ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+            if (ApplicationData.Current.LocalSettings.Values["CurrentVersion"] is string Version)
             {
-                if (IsEnable)
+                if (Version != Package.Current.Id.Version.Major.ToString() + Package.Current.Id.Version.Minor.ToString() + Package.Current.Id.Version.Build.ToString())
                 {
+                    ApplicationData.Current.LocalSettings.Values["CurrentVersion"] = Package.Current.Id.Version.Major.ToString() + Package.Current.Id.Version.Minor.ToString() + Package.Current.Id.Version.Build.ToString();
+                    var rootFrame = new Frame();
+                    Window.Current.Content = rootFrame;
+                    rootFrame.Navigate(typeof(MainPage), "UpdateIntegrityDataRequest");
+                }
+                else
+                {
+                    if (ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+                    {
+                        if (IsEnable)
+                        {
+                            if (IsLaunch)
+                            {
+                                var args = m as LaunchActivatedEventArgs;
+                                ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                                Window.Current.Content = extendedSplash;
+                            }
+                            else
+                            {
+                                ToastNotificationManager.History.Clear();
+                                ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
+                                Window.Current.Content = extendedSplash;
+                            }
+                        }
+                        else
+                        {
+                            var rootFrame = new Frame();
+                            Window.Current.Content = rootFrame;
+                            rootFrame.Navigate(typeof(MainPage));
+                        }
+                    }
+                    else
+                    {
+                        ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
+                        if (IsLaunch)
+                        {
+                            var args = m as LaunchActivatedEventArgs;
+                            ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                            Window.Current.Content = extendedSplash;
+                        }
+                        else
+                        {
+                            ToastNotificationManager.History.Clear();
+                            ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
+                            Window.Current.Content = extendedSplash;
+                        }
+                    }
+
+                }
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["CurrentVersion"] = Package.Current.Id.Version.Major.ToString() + Package.Current.Id.Version.Minor.ToString() + Package.Current.Id.Version.Build.ToString();
+                if (ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
+                {
+                    if (IsEnable)
+                    {
+                        if (IsLaunch)
+                        {
+                            var args = m as LaunchActivatedEventArgs;
+                            ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                            Window.Current.Content = extendedSplash;
+                        }
+                        else
+                        {
+                            ToastNotificationManager.History.Clear();
+                            ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
+                            Window.Current.Content = extendedSplash;
+                        }
+                    }
+                    else
+                    {
+                        var rootFrame = new Frame();
+                        Window.Current.Content = rootFrame;
+                        rootFrame.Navigate(typeof(MainPage));
+                    }
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
                     if (IsLaunch)
                     {
                         var args = m as LaunchActivatedEventArgs;
@@ -99,28 +179,7 @@ namespace SmartLens
                         Window.Current.Content = extendedSplash;
                     }
                 }
-                else
-                {
-                    var rootFrame = new Frame();
-                    Window.Current.Content = rootFrame;
-                    rootFrame.Navigate(typeof(MainPage));
-                }
-            }
-            else
-            {
-                ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
-                if (IsLaunch)
-                {
-                    var args = m as LaunchActivatedEventArgs;
-                    ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
-                    Window.Current.Content = extendedSplash;
-                }
-                else
-                {
-                    ToastNotificationManager.History.Clear();
-                    ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
-                    Window.Current.Content = extendedSplash;
-                }
+
             }
 
             Window.Current.Activate();

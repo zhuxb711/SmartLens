@@ -65,6 +65,7 @@
                 </CommandBarFlyout>
             </TreeView.ContextFlyout>
         </TreeView>
+        <controls:InAppNotification Grid.Column="2" StackMode="Replace" Name="Notification" x:FieldModifier="public" ShowDismissButton="True" HorizontalAlignment="Center"/>
         <controls:GridSplitter ResizeBehavior="BasedOnAlignment" Width="13" ResizeDirection="Auto" Grid.Column="1" Background="Gray" Foreground="White" FontSize="13" HorizontalAlignment="Stretch"  Grid.RowSpan="2" VerticalAlignment="Stretch"/>
     </Grid>
 </Page>
