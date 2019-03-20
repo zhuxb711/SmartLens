@@ -96,8 +96,12 @@ namespace SmartLens
         /// 激活或关闭"正在同步"的提示
         /// </summary>
         /// <param name="IsActivate">激活或关闭</param>
-        private async void ActivateSyncNotification(bool IsActivate)
+        private async Task ActivateSyncNotification(bool IsActivate)
         {
+            if(ConnectionCancellation.IsCancellationRequested)
+            {
+                return;
+            }
             if (IsActivate)
             {
                 bool isTemplatePresent = Resources.TryGetValue("InAppNotificationTemplate", out object NotificationTemplate);
@@ -131,7 +135,7 @@ namespace SmartLens
             DisplayMode.SelectionChanged += DisplayMode_SelectionChanged;
             ConnectionCancellation = new CancellationTokenSource();
             ExitLocker = new AutoResetEvent(false);
-            ActivateSyncNotification(true);
+            await ActivateSyncNotification(true);
 
             try
             {
@@ -139,7 +143,7 @@ namespace SmartLens
             }
             catch (TaskCanceledException)
             {
-                ActivateSyncNotification(false);
+                await ActivateSyncNotification(false);
                 ExitLocker.Set();
             }
             catch (SocketException)
@@ -162,7 +166,7 @@ namespace SmartLens
             if (!ConnectionCancellation.IsCancellationRequested)
             {
                 await LoadEmailData();
-                ActivateSyncNotification(false);
+                await ActivateSyncNotification(false);
                 ExitLocker.Set();
             }
 
@@ -176,21 +180,24 @@ namespace SmartLens
         private async Task LoadEmailData()
         {
             var Inbox = EmailService.GetMailFolder();
-            await Inbox.OpenAsync(FolderAccess.ReadWrite);
+            await Inbox?.OpenAsync(FolderAccess.ReadWrite);
 
             //编写查询语句，查找邮箱中标记为“未读”且来源不等于UserName的邮件
-            var NotSeenSearchResult = await Inbox.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
+            var NotSeenSearchResult = await Inbox?.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailNotSeenItemCollection.Clear();
             NotSeenDictionary.Clear();
-            foreach (var uid in NotSeenSearchResult)
+            if (NotSeenSearchResult != null)
             {
-                if (ConnectionCancellation.IsCancellationRequested)
+                foreach (var uid in NotSeenSearchResult)
                 {
-                    goto FF;
+                    if (ConnectionCancellation.IsCancellationRequested)
+                    {
+                        goto FF;
+                    }
+                    var message = await Inbox.GetMessageAsync(uid);
+                    NotSeenDictionary.Add(uid);
+                    EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
                 }
-                var message = await Inbox.GetMessageAsync(uid);
-                NotSeenDictionary.Add(uid);
-                EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
             }
 
             if (ConnectionCancellation.IsCancellationRequested)
@@ -199,16 +206,20 @@ namespace SmartLens
             }
 
             //编写查询语句，查找邮箱中的所有，且来源不等于UserName的邮件
-            var SearchResult = await Inbox.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
+            var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailAllItemCollection.Clear();
-            foreach (var uid in SearchResult)
+
+            if (EmailAllItemCollection != null)
             {
-                if (ConnectionCancellation.IsCancellationRequested)
+                foreach (var uid in SearchResult)
                 {
-                    goto FF;
+                    if (ConnectionCancellation.IsCancellationRequested)
+                    {
+                        goto FF;
+                    }
+                    var message = await Inbox.GetMessageAsync(uid);
+                    EmailAllItemCollection.Add(new EmailItem(message, uid));
                 }
-                var message = await Inbox.GetMessageAsync(uid);
-                EmailAllItemCollection.Add(new EmailItem(message, uid));
             }
 
             /*
@@ -324,34 +335,42 @@ namespace SmartLens
                     }
                     return;
                 }
-                ActivateSyncNotification(true);
+                await ActivateSyncNotification(true);
 
                 await LoadEmailData();
 
-                ActivateSyncNotification(false);
+                await ActivateSyncNotification(false);
                 return;
             }
 
-            ActivateSyncNotification(true);
+            await ActivateSyncNotification(true);
 
             var Inbox = EmailService.GetMailFolder();
 
-            var NotSeenSearchResult = await Inbox.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
+            var NotSeenSearchResult = await Inbox?.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailNotSeenItemCollection.Clear();
             NotSeenDictionary.Clear();
-            foreach (var uid in NotSeenSearchResult)
+
+            if (EmailNotSeenItemCollection != null)
             {
-                var message = await Inbox.GetMessageAsync(uid);
-                NotSeenDictionary.Add(uid);
-                EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
+                foreach (var uid in NotSeenSearchResult)
+                {
+                    var message = await Inbox.GetMessageAsync(uid);
+                    NotSeenDictionary.Add(uid);
+                    EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
+                }
             }
 
-            var SearchResult = await Inbox.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
+            var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
             EmailAllItemCollection.Clear();
-            foreach (var uid in SearchResult)
+
+            if (EmailAllItemCollection != null)
             {
-                var message = await Inbox.GetMessageAsync(uid);
-                EmailAllItemCollection.Add(new EmailItem(message, uid));
+                foreach (var uid in SearchResult)
+                {
+                    var message = await Inbox.GetMessageAsync(uid);
+                    EmailAllItemCollection.Add(new EmailItem(message, uid));
+                }
             }
 
             /*
@@ -398,7 +417,7 @@ namespace SmartLens
                     }
             }
 
-            ActivateSyncNotification(false);
+            await ActivateSyncNotification(false);
         }
 
         public async void Delete_Click(object sender, RoutedEventArgs e)
@@ -447,7 +466,7 @@ namespace SmartLens
             }
 
             //IMAP是双向协议，因此向服务器对应邮件设置Deleted标志
-            await EmailService.GetMailFolder().SetFlagsAsync(item.Id, MessageFlags.Deleted, true);
+            await EmailService.GetMailFolder()?.SetFlagsAsync(item.Id, MessageFlags.Deleted, true);
 
             if (EmailDisplayCollection.Count == 0)
             {
@@ -554,6 +573,10 @@ namespace SmartLens
             {
                 return;
             }
+
+            LoadingText.Text = "正在注销...";
+            LoadingControl.IsLoading = true;
+
             ConnectionCancellation?.Cancel();
             await Task.Run(() =>
             {
@@ -582,6 +605,8 @@ namespace SmartLens
             ApplicationData.Current.RoamingSettings.Values["EmailEnableSSL"] = null;
             ApplicationData.Current.RoamingSettings.Values["EmailCallName"] = null;
 
+            LoadingControl.IsLoading = false;
+            await Task.Delay(700);
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailStartupOne), EmailPage.ThisPage.Nav, new DrillInNavigationTransitionInfo());
         }
     }

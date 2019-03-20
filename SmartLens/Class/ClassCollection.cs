@@ -1907,6 +1907,14 @@ namespace SmartLens
                 return File.FileType;
             }
         }
+
+        public string RelativeId
+        {
+            get
+            {
+                return File.FolderRelativeId;
+            }
+        }
     }
     #endregion
 
@@ -2514,7 +2522,7 @@ namespace SmartLens
         /// <returns>IMailFolder</returns>
         public IMailFolder GetMailFolder()
         {
-            return IMAPClient.Inbox;
+            return IMAPClient?.Inbox;
         }
 
         /// <summary>
@@ -2891,12 +2899,12 @@ namespace SmartLens
             if (visibility == Visibility.Visible)
             {
                 IsNotSeenIndicator = 1;
-                await EmailProtocolServiceProvider.GetInstance().GetMailFolder().RemoveFlagsAsync(Id, MessageFlags.Seen, true);
+                await EmailProtocolServiceProvider.GetInstance().GetMailFolder()?.RemoveFlagsAsync(Id, MessageFlags.Seen, true);
             }
             else
             {
                 IsNotSeenIndicator = 0;
-                await EmailProtocolServiceProvider.GetInstance().GetMailFolder().SetFlagsAsync(Id, MessageFlags.Seen, true);
+                await EmailProtocolServiceProvider.GetInstance().GetMailFolder()?.SetFlagsAsync(Id, MessageFlags.Seen, true);
             }
         }
 

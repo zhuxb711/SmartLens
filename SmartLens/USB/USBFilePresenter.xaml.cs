@@ -319,7 +319,7 @@ namespace SmartLens
                     await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
                     for (int i = 0; i < FileCollection.Count; i++)
                     {
-                        if (FileCollection[i].Name == file.Name)
+                        if (FileCollection[i].RelativeId == file.FolderRelativeId)
                         {
                             if (file.FileType == ".zip")
                             {
@@ -676,9 +676,9 @@ namespace SmartLens
                     await SelectedFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                     for (int i = 0; i < FileCollection.Count; i++)
                     {
-                        if (FileCollection[i].DisplayName == SelectedFile.DisplayName)
+                        if (FileCollection[i].RelativeId == SelectedFile.FolderRelativeId)
                         {
-                            FileCollection.Remove(FileCollection[i]);
+                            FileCollection.RemoveAt(i);
                             break;
                         }
                     }
