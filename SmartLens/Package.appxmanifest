@@ -81,5 +81,6 @@
         <Function Type="name:serialPort" />
       </Device>
     </DeviceCapability>
+    <DeviceCapability Name="pointOfService"/>
   </Capabilities>
 </Package>

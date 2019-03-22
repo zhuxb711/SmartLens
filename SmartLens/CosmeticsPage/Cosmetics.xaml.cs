@@ -195,13 +195,12 @@ namespace SmartLens
             {
                 string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 var MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
-                for (int i = 0; i < MediaFraSourceGroup.Count; i++)
+                foreach (var FrameSource in from MediaFrameSourceGroup FrameSource in MediaFraSourceGroup
+                                            where FrameSource.DisplayName == LastSelectedCameraSource
+                                            select FrameSource)
                 {
-                    if (MediaFraSourceGroup[i].DisplayName == LastSelectedCameraSource)
-                    {
-                        CameraProvider.SetCameraFrameSource(MediaFraSourceGroup[i]);
-                        break;
-                    }
+                    CameraProvider.SetCameraFrameSource(FrameSource);
+                    break;
                 }
             }
 

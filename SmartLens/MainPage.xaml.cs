@@ -33,7 +33,8 @@ namespace SmartLens
             {typeof(About),"关于" },
             {typeof(ChangeLog),"关于" },
             {typeof(USBControl),"USB管理" },
-            {typeof(EmailPage),"邮件" }
+            {typeof(EmailPage),"邮件" },
+            {typeof(CodeScanner),"QR识别" }
         };
 
         public MainPage()
@@ -118,6 +119,7 @@ namespace SmartLens
                     case "关于": NavFrame.Navigate(typeof(About)); break;
                     case "USB管理": NavFrame.Navigate(typeof(USBControl)); break;
                     case "邮件": NavFrame.Navigate(typeof(EmailPage)); break;
+                    case "QR识别": NavFrame.Navigate(typeof(CodeScanner)); break;
                 }
             }
         }
