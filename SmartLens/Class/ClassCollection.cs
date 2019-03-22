@@ -20,6 +20,7 @@ using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -3565,6 +3566,33 @@ namespace SmartLens
                 {
                     await CalculateMD5Async(folder, MD5List);
                 }
+            }
+        }
+    }
+    #endregion
+
+    #region 条码识别历史记录显示类
+    public sealed class BarcodeItem
+    {
+        public string DataType { get; private set; }
+        public string DataLabel { get; private set; }
+        public Visibility TextVisibility { get; private set; }
+        public Visibility HyperLinkVisibility { get; private set; }
+        public BarcodeItem(string DataType, string DataLabel)
+        {
+            this.DataType = DataType + "码";
+            this.DataLabel = DataLabel;
+
+            Regex RegexUrl = new Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
+            if (RegexUrl.IsMatch(DataLabel))
+            {
+                TextVisibility = Visibility.Collapsed;
+                HyperLinkVisibility = Visibility.Visible;
+            }
+            else
+            {
+                TextVisibility = Visibility.Visible;
+                HyperLinkVisibility = Visibility.Collapsed;
             }
         }
     }

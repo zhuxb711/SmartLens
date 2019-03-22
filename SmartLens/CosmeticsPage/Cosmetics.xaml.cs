@@ -80,9 +80,8 @@ namespace SmartLens
             IsTaskRunning = false;
 
             //读取设置模块中指定的摄像头，并设置为当前使用的摄像头
-            if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] != null)
+            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] is string LastSelectedCameraSource)
             {
-                string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 var MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
                 for (int i = 0; i < MediaFraSourceGroup.Count; i++)
                 {
@@ -191,9 +190,8 @@ namespace SmartLens
             CosmeticsControl.SelectedIndex = 0;
 
             //读取设置模块中指定的摄像头，并设置为当前使用的摄像头
-            if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] != null)
+            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] is string LastSelectedCameraSource)
             {
-                string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 var MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
                 foreach (var FrameSource in from MediaFrameSourceGroup FrameSource in MediaFraSourceGroup
                                             where FrameSource.DisplayName == LastSelectedCameraSource

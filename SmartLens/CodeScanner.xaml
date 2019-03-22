@@ -19,10 +19,10 @@
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:BarcodeItem">
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{x:Bind DataType}" FontSize="24" Foreground="DeepSkyBlue"/>
+                        <TextBlock Text="{x:Bind DataType}" FontSize="23" Foreground="DeepSkyBlue"/>
                         <TextBlock Text="{x:Bind DataLabel}" Visibility="{x:Bind TextVisibility}" FontSize="20" TextWrapping="Wrap" Width="230" TextTrimming="CharacterEllipsis"/>
                         <TextBlock Width="230" TextTrimming="CharacterEllipsis" Visibility="{x:Bind HyperLinkVisibility}" TextWrapping="Wrap">
-                            <Hyperlink Click="Hyperlink_Click"><Run Text="{x:Bind DataLabel}"/></Hyperlink>
+                            <Hyperlink Click="Hyperlink_Click"><Run Foreground="Orange" FontSize="19" Text="{x:Bind DataLabel}"/></Hyperlink>
                         </TextBlock>
                     </StackPanel>
                 </DataTemplate>
@@ -35,9 +35,9 @@
             </controls:Loading.Background>
             <StackPanel Orientation="Horizontal" Padding="12">
                 <Grid Margin="0,0,8,0">
-                    <ProgressRing IsActive="True" Foreground="White" Height="30" Width="30"/>
+                    <ProgressRing Name="Pro" IsActive="True" Foreground="White" Height="30" Width="30"/>
                 </Grid>
-                <TextBlock Text="正在初始化..." FontSize="25" Foreground="White" VerticalAlignment="Center" />
+                <TextBlock Name="ProText" Text="正在初始化..." FontSize="25" Foreground="White" VerticalAlignment="Center" />
             </StackPanel>
         </controls:Loading>
     </Grid>

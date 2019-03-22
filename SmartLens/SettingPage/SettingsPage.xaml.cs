@@ -165,14 +165,8 @@ namespace SmartLens
 
             CameraSelection.ItemsSource = MediaFraSourceGroup;
 
-            if (ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] == null)
+            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] is string LastSelectedCameraSource)
             {
-                CameraSelection.SelectedIndex = 0;
-                ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
-            }
-            else
-            {
-                string LastSelectedCameraSource = ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString();
                 for (int i = 0; i < MediaFraSourceGroup.Count; i++)
                 {
                     if (MediaFraSourceGroup[i].DisplayName == LastSelectedCameraSource)
@@ -184,8 +178,13 @@ namespace SmartLens
                 if (CameraSelection.SelectedIndex == -1)
                 {
                     CameraSelection.SelectedIndex = 0;
-                    ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
+                    ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
                 }
+            }
+            else
+            {
+                CameraSelection.SelectedIndex = 0;
+                ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[0].DisplayName;
             }
 
             if (MediaFraSourceGroup.Count != 1)
@@ -195,7 +194,7 @@ namespace SmartLens
                     if (CameraSelection.SelectedIndex >= 0)
                     {
                         CameraProvider.SetCameraFrameSource(MediaFraSourceGroup[CameraSelection.SelectedIndex]);
-                        ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[CameraSelection.SelectedIndex].DisplayName;
+                        ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[CameraSelection.SelectedIndex].DisplayName;
                     }
                 };
             }

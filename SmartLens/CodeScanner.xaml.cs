@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
@@ -12,6 +11,7 @@ using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
@@ -80,11 +80,54 @@ namespace SmartLens
             string Selector = BarcodeScanner.GetDeviceSelector(PosConnectionTypes.Local);
             DeviceInformationCollection DeviceCollection = await DeviceInformation.FindAllAsync(Selector);
 
-            foreach (var DeviceID in from Device in DeviceCollection
-                                     where Device.Name.Contains(ApplicationData.Current.RoamingSettings.Values["LastSelectedCameraSource"].ToString())
-                                     select Device.Id)
+            if (DeviceCollection == null || DeviceCollection.Count == 0)
             {
-                using (BarcodeScanner Scanner = await BarcodeScanner.FromIdAsync(DeviceID))
+                Pro.Visibility = Visibility.Collapsed;
+                ProText.Text = "无摄像头可用";
+                return;
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] is string StorageCameraSource)
+            {
+                foreach (var DeviceID in from Device in DeviceCollection
+                                         where Device.Name.Contains(StorageCameraSource)
+                                         select Device.Id)
+                {
+                    using (BarcodeScanner Scanner = await BarcodeScanner.FromIdAsync(DeviceID))
+                    {
+                        Capture = new MediaCapture();
+                        var InitializeSettings = new MediaCaptureInitializationSettings
+                        {
+                            VideoDeviceId = Scanner.VideoDeviceId,
+                            StreamingCaptureMode = StreamingCaptureMode.Video,
+                            PhotoCaptureSource = PhotoCaptureSource.VideoPreview
+                        };
+                        await Capture.InitializeAsync(InitializeSettings);
+
+                        var CameraFocusControl = Capture.VideoDeviceController.FocusControl;
+                        if (CameraFocusControl.Supported)
+                        {
+                            await CameraFocusControl.UnlockAsync();
+                            CameraFocusControl.Configure(new FocusSettings { Mode = FocusMode.Continuous, AutoFocusRange = AutoFocusRange.FullRange });
+                            await CameraFocusControl.FocusAsync();
+                        }
+                        PreviewControl.Source = Capture;
+
+                        ClaimedScanner = await Scanner.ClaimScannerAsync();
+                        ClaimedScanner.IsDisabledOnDataReceived = false;
+                        ClaimedScanner.IsDecodeDataEnabled = true;
+                        ClaimedScanner.DataReceived += ClaimedScanner_DataReceived;
+                        await ClaimedScanner.EnableAsync();
+                        await ClaimedScanner.StartSoftwareTriggerAsync();
+
+                        await Capture.StartPreviewAsync();
+                    }
+                    break;
+                }
+            }
+            else
+            {
+                using (BarcodeScanner Scanner = await BarcodeScanner.FromIdAsync(DeviceCollection.FirstOrDefault().Id))
                 {
                     Capture = new MediaCapture();
                     var InitializeSettings = new MediaCaptureInitializationSettings
@@ -112,9 +155,10 @@ namespace SmartLens
                     await ClaimedScanner.StartSoftwareTriggerAsync();
 
                     await Capture.StartPreviewAsync();
-                    LoadingControl.IsLoading = false;
                 }
             }
+            LoadingControl.IsLoading = false;
+
             ExitLocker.Set();
         }
 
@@ -155,34 +199,12 @@ namespace SmartLens
                 : CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, args.Report.ScanDataLabel);
         }
 
-        private void Hyperlink_Click(Windows.UI.Xaml.Documents.Hyperlink sender, Windows.UI.Xaml.Documents.HyperlinkClickEventArgs args)
+        private async void Hyperlink_Click(Hyperlink sender, HyperlinkClickEventArgs args)
         {
-            string Url = ((args.OriginalSource as FrameworkElement)?.DataContext as BarcodeItem).DataLabel;
-        }
-    }
-
-    public sealed class BarcodeItem
-    {
-        public string DataType { get; private set; }
-        public string DataLabel { get; private set; }
-        public Visibility TextVisibility { get; private set; }
-        public Visibility HyperLinkVisibility { get; private set; }
-        public BarcodeItem(string DataType, string DataLabel)
-        {
-            this.DataType = DataType;
-            this.DataLabel = DataLabel;
-
-            Regex RegexUrl = new Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
-            if (RegexUrl.IsMatch(DataLabel))
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                TextVisibility = Visibility.Collapsed;
-                HyperLinkVisibility = Visibility.Visible;
-            }
-            else
-            {
-                TextVisibility = Visibility.Visible;
-                HyperLinkVisibility = Visibility.Collapsed;
-            }
+                MainPage.ThisPage.NavFrame.Navigate(typeof(WebTab), new Uri((sender.Inlines.FirstOrDefault() as Run).Text));
+            });
         }
     }
 }
