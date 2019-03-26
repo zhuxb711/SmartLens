@@ -17,7 +17,7 @@ namespace SmartLens
 
         private async void ChangeLog_Loaded(object sender, RoutedEventArgs e)
         {
-            MarkdownControl.Text = await File.ReadAllTextAsync("AboutPage/ChangeLog.txt");
+            MarkdownControl.Text = await File.ReadAllTextAsync("About/ChangeLog.txt");
         }
 
         private void MarkdownControl_LinkClicked(object sender, Microsoft.Toolkit.Uwp.UI.Controls.LinkClickedEventArgs e)

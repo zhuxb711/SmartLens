@@ -61,7 +61,7 @@ namespace SmartLens
             //初始化人脸检测器
             FaceDetector = Dlib.GetFrontalFaceDetector();
             //加载人脸识别训练集模型
-            FaceModel = ShapePredictor.Deserialize("CosmeticsPage/shape_predictor_68_face_landmarks.dat");
+            FaceModel = ShapePredictor.Deserialize("Cosmetics/shape_predictor_68_face_landmarks.dat");
         }
 
         private void CoreApplication_Suspending(object sender, SuspendingEventArgs e)
@@ -185,7 +185,7 @@ namespace SmartLens
                     case "M.A.C": LipColor = Color.FromArgb(1, 50, 0, 50); Describe = "美国著名化妆品品牌"; break;
                     case "LANCOME": LipColor = Color.FromArgb(1, 100, 0, 0); Describe = "法国著名化妆品品牌"; break;
                 }
-                CosmeticsList.Add(new CosmeticsItem(new Uri("ms-appx:///CosmeticsPage/LipLogo/" + LipLogo[i].Name), LipLogo[i].DisplayName, Describe, LipColor));
+                CosmeticsList.Add(new CosmeticsItem(new Uri("ms-appx:///Cosmetics/LipLogo/" + LipLogo[i].Name), LipLogo[i].DisplayName, Describe, LipColor));
             }
             CosmeticsControl.SelectedIndex = 0;
 
@@ -209,7 +209,7 @@ namespace SmartLens
             await Task.Run(() =>
             {
                 FaceDetector = Dlib.GetFrontalFaceDetector();
-                FaceModel = ShapePredictor.Deserialize("CosmeticsPage/shape_predictor_68_face_landmarks.dat");
+                FaceModel = ShapePredictor.Deserialize("Cosmetics/shape_predictor_68_face_landmarks.dat");
             });
 
             //初始化摄像头并开始捕获

@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Radios;
 using Windows.Devices.WiFi;
@@ -20,6 +19,7 @@ using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
@@ -31,7 +31,8 @@ namespace SmartLens
         private DispatcherTimer WiFiScanTimer = null;
         bool IsScanRunning = false;
         public static SettingsPage ThisPage { get; private set; }
-        private bool IsInitializeBT = false;
+        private bool IsResetBluetooth = true;
+        private bool IsResetWiFi = false;
         private List<WiFiInDataBase> StoragedWiFiInfoCollection;
         IReadOnlyList<MediaFrameSourceGroup> MediaFraSourceGroup;
 
@@ -73,6 +74,7 @@ namespace SmartLens
 
         private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
         {
+            await Radio.RequestAccessAsync();
             StoragedWiFiInfoCollection = await SQLite.GetInstance().GetAllWiFiDataAsync();
             var Size = await GetFolderSize(ApplicationData.Current.TemporaryFolder.Path);
 
@@ -137,7 +139,6 @@ namespace SmartLens
             {
                 if (Device.Kind == RadioKind.Bluetooth && Device.State == RadioState.On)
                 {
-                    IsInitializeBT = true;
                     BluetoothSwitch.IsOn = true;
                 }
                 else if (Device.Kind == RadioKind.WiFi && Device.State == RadioState.On)
@@ -246,29 +247,20 @@ namespace SmartLens
         {
             try
             {
-                var Access = await Radio.RequestAccessAsync();
-                if (Access != RadioAccessStatus.Allowed)
+                var RadioDevice = await Radio.GetRadiosAsync();
+
+                foreach (var Device in from Device in RadioDevice
+                                       where Device.Kind == RadioKind.Bluetooth
+                                       select Device)
                 {
-                    return false;
-                }
-                BluetoothAdapter BTAdapter = await BluetoothAdapter.GetDefaultAsync();
-                if (BTAdapter != null)
-                {
-                    var BTRadio = await BTAdapter.GetRadioAsync();
                     if (OnOrOff)
                     {
-                        await BTRadio.SetStateAsync(RadioState.On);
+                        await Device.SetStateAsync(RadioState.On);
                     }
                     else
                     {
-                        await BTRadio.SetStateAsync(RadioState.Off);
-                        BTAdapter = null;
+                        await Device.SetStateAsync(RadioState.Off);
                     }
-                    return true;
-                }
-                else
-                {
-                    return false;
                 }
 
             }
@@ -276,26 +268,49 @@ namespace SmartLens
             {
                 return false;
             }
+
+            return false;
         }
 
         private async void BluetoothSwitch_Toggled(object sender, RoutedEventArgs e)
         {
-            if (IsInitializeBT)
+            if (IsResetBluetooth)
             {
-                IsInitializeBT = false;
+                IsResetBluetooth = false;
                 return;
             }
-            ToggleSwitch button = sender as ToggleSwitch;
-            var Result = await ToggleBluetoothStatusAsync(button.IsOn);
-            if (!Result)
+
+            if (BluetoothSwitch.IsOn)
             {
-                ContentDialog dialog = new ContentDialog
+                if (!await ToggleBluetoothStatusAsync(true))
                 {
-                    Title = "错误",
-                    Content = "打开蓝牙时出现问题",
-                    CloseButtonText = "确定"
-                };
-                await dialog.ShowAsync();
+                    IsResetBluetooth = true;
+                    BluetoothSwitch.IsOn = false;
+                    ContentDialog dialog = new ContentDialog
+                    {
+                        Title = "错误",
+                        Content = "打开蓝牙时出现问题",
+                        CloseButtonText = "确定",
+                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    };
+                    await dialog.ShowAsync();
+                }
+            }
+            else
+            {
+                if (!await ToggleBluetoothStatusAsync(false))
+                {
+                    IsResetBluetooth = true;
+                    BluetoothSwitch.IsOn = true;
+                    ContentDialog dialog = new ContentDialog
+                    {
+                        Title = "错误",
+                        Content = "关闭蓝牙时出现问题",
+                        CloseButtonText = "确定",
+                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    };
+                    await dialog.ShowAsync();
+                }
             }
         }
 
@@ -308,7 +323,7 @@ namespace SmartLens
             var WiFiAdapterResults = await DeviceInformation.FindAllAsync(WiFiAdapter.GetDeviceSelector());
             if (WiFiAdapterResults.Count >= 1)
             {
-                WiFi = await WiFiAdapter.FromIdAsync(WiFiAdapterResults[0].Id);
+                WiFi = await WiFiAdapter.FromIdAsync(WiFiAdapterResults.FirstOrDefault().Id);
                 WiFi.AvailableNetworksChanged += WiFi_AvailableNetworksChanged;
             }
             else
@@ -333,12 +348,6 @@ namespace SmartLens
         /// <returns>成功与否</returns>
         private async Task<bool> ToggleWiFiStatusAsync(bool IsOn)
         {
-            var access = await WiFiAdapter.RequestAccessAsync();
-            if (access != WiFiAccessStatus.Allowed)
-            {
-                return false;
-            }
-
             var RadioDevice = await Radio.GetRadiosAsync();
 
             foreach (var Device in from Device in RadioDevice
@@ -362,6 +371,12 @@ namespace SmartLens
 
         private async void WiFiSwitch_Toggled(object sender, RoutedEventArgs e)
         {
+            if (IsResetWiFi)
+            {
+                IsResetWiFi = false;
+                return;
+            }
+
             if (WiFiSwitch.IsOn)
             {
                 if (!(await ToggleWiFiStatusAsync(true) && await InitializeWiFiAdapterAsync()))
@@ -370,8 +385,11 @@ namespace SmartLens
                     {
                         Title = "错误",
                         Content = "打开WiFi时出现问题",
-                        CloseButtonText = "确定"
+                        CloseButtonText = "确定",
+                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                     };
+                    IsResetWiFi = true;
+                    WiFiSwitch.IsOn = false;
                     await dialog.ShowAsync();
                 }
                 else
@@ -413,8 +431,11 @@ namespace SmartLens
                     {
                         Title = "错误",
                         Content = "关闭WiFi时出现问题",
-                        CloseButtonText = "确定"
+                        CloseButtonText = "确定",
+                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                     };
+                    IsResetWiFi = true;
+                    WiFiSwitch.IsOn = true;
                     await dialog.ShowAsync();
                 }
             }
@@ -662,6 +683,7 @@ namespace SmartLens
                 Content = " 操作将完全初始化SmartLens，包括：\r\r     • 清除全部数据存储\r\r     • SmartLens将自动关闭\r\r 您需要按提示重新启动SmartLens",
                 PrimaryButtonText = "继续",
                 CloseButtonText = "取消",
+                Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
             };
             if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
@@ -697,7 +719,8 @@ namespace SmartLens
             {
                 Title = "提示",
                 Content = "清除缓存成功",
-                CloseButtonText = "确定"
+                CloseButtonText = "确定",
+                Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
             };
             await contentDialog.ShowAsync();
             ClearCache.Content = "清除缓存(0KB)";
@@ -728,7 +751,8 @@ namespace SmartLens
                 {
                     Title = "提示",
                     Content = "无可用的错误日志导出",
-                    CloseButtonText = "确定"
+                    CloseButtonText = "确定",
+                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                 };
                 await dialog.ShowAsync();
             }

@@ -29,9 +29,10 @@
             </ListView.ItemTemplate>
         </ListView>
         <CaptureElement FlowDirection="RightToLeft" Name="PreviewControl" Stretch="Uniform"/>
+        <local:QRFrame VerticalAlignment="Center" HorizontalAlignment="Center" Width="300" Height="300"/>
         <controls:Loading x:Name="LoadingControl" IsLoading="True"  Grid.ColumnSpan="2" >
             <controls:Loading.Background>
-                <SolidColorBrush Color="Black" Opacity="0.5"/>
+                <SolidColorBrush Color="Black" Opacity="0.8"/>
             </controls:Loading.Background>
             <StackPanel Orientation="Horizontal" Padding="12">
                 <Grid Margin="0,0,8,0">

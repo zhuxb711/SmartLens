@@ -30,7 +30,7 @@
     <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <AppInstallerUri>https://smartlen.azurewebsites.net/</AppInstallerUri>
-    <PackageCertificateThumbprint>496E9607EAE97A7C9B05A101270A5EAF02BE85FE</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>8C7452D1CCE1FDA5C0B9D4B5FAE0E9A36DF21272</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -111,14 +111,14 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AboutPage\About.xaml.cs">
+    <Compile Include="About\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="Class\ClassCollection.cs" />
-    <Compile Include="CodeScanner.xaml.cs">
+    <Compile Include="CodeScanner\CodeScanner.xaml.cs">
       <DependentUpon>CodeScanner.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ExtendedSplash.xaml.cs">
+    <Compile Include="Boot\ExtendedSplash.xaml.cs">
       <DependentUpon>ExtendedSplash.xaml</DependentUpon>
     </Compile>
     <Compile Include="USB\TranscodeDialog.xaml.cs">
@@ -136,25 +136,25 @@
     <Compile Include="USB\AttributeDialog.xaml.cs">
       <DependentUpon>AttributeDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="BlueScreen.xaml.cs">
+    <Compile Include="Boot\BlueScreen.xaml.cs">
       <DependentUpon>BlueScreen.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmailPage\EmailPage.xaml.cs">
+    <Compile Include="Email\EmailPage.xaml.cs">
       <DependentUpon>EmailPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmailPage\EmailPresenter.xaml.cs">
+    <Compile Include="Email\EmailPresenter.xaml.cs">
       <DependentUpon>EmailPresenter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmailPage\EmailDetail.xaml.cs">
+    <Compile Include="Email\EmailDetail.xaml.cs">
       <DependentUpon>EmailDetail.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmailPage\EmailSender.xaml.cs">
+    <Compile Include="Email\EmailSender.xaml.cs">
       <DependentUpon>EmailSender.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmailPage\EmailStartupOne.xaml.cs">
+    <Compile Include="Email\EmailStartupOne.xaml.cs">
       <DependentUpon>EmailStartupOne.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmailPage\EmailStartupTwo.xaml.cs">
+    <Compile Include="Email\EmailStartupTwo.xaml.cs">
       <DependentUpon>EmailStartupTwo.xaml</DependentUpon>
     </Compile>
     <Compile Include="Music\MusicAlbum.xaml.cs">
@@ -176,10 +176,10 @@
     <Compile Include="Bluetooth\BluetoothFileTransfer.xaml.cs">
       <DependentUpon>BluetoothFileTransfer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="AboutPage\ChangeLog.xaml.cs">
+    <Compile Include="About\ChangeLog.xaml.cs">
       <DependentUpon>ChangeLog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CosmeticsPage\Cosmetics.xaml.cs">
+    <Compile Include="Cosmetics\Cosmetics.xaml.cs">
       <DependentUpon>Cosmetics.xaml</DependentUpon>
     </Compile>
     <Compile Include="Music\Lrc.xaml.cs">
@@ -188,7 +188,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="HomePage.xaml.cs">
+    <Compile Include="Boot\HomePage.xaml.cs">
       <DependentUpon>HomePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Music\MusicDetail.xaml.cs">
@@ -210,7 +210,7 @@
     <Compile Include="USB\RenameDialog.xaml.cs">
       <DependentUpon>RenameDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SettingPage\SettingsPage.xaml.cs">
+    <Compile Include="Setting\SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="USB\USBControl.xaml.cs">
@@ -224,6 +224,9 @@
     </Compile>
     <Compile Include="USB\USBPhotoViewer.xaml.cs">
       <DependentUpon>USBPhotoViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CodeScanner\QRFrame.xaml.cs">
+      <DependentUpon>QRFrame.xaml</DependentUpon>
     </Compile>
     <Compile Include="Weather\WeatherControl.xaml.cs">
       <DependentUpon>WeatherControl.xaml</DependentUpon>
@@ -298,13 +301,13 @@
     <Content Include="Assets\SplashScreen.scale-150.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-400.png" />
-    <Content Include="AboutPage\ChangeLog.txt" />
-    <Content Include="CosmeticsPage\LipLogo\CHANEL.png" />
-    <Content Include="CosmeticsPage\LipLogo\Dior.jpg" />
-    <Content Include="CosmeticsPage\LipLogo\GIVENCHY.jpeg" />
-    <Content Include="CosmeticsPage\LipLogo\LANCOME.jpg" />
-    <Content Include="CosmeticsPage\LipLogo\M.A.C.png" />
-    <Content Include="CosmeticsPage\shape_predictor_68_face_landmarks.dat">
+    <Content Include="About\ChangeLog.txt" />
+    <Content Include="Cosmetics\LipLogo\CHANEL.png" />
+    <Content Include="Cosmetics\LipLogo\Dior.jpg" />
+    <Content Include="Cosmetics\LipLogo\GIVENCHY.jpeg" />
+    <Content Include="Cosmetics\LipLogo\LANCOME.jpg" />
+    <Content Include="Cosmetics\LipLogo\M.A.C.png" />
+    <Content Include="Cosmetics\shape_predictor_68_face_landmarks.dat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="SmartLens_TemporaryKey.pfx" />
@@ -364,15 +367,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="AboutPage\About.xaml">
+    <Page Include="About\About.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CodeScanner.xaml">
+    <Page Include="CodeScanner\CodeScanner.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ExtendedSplash.xaml">
+    <Page Include="Boot\ExtendedSplash.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -396,7 +399,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="BlueScreen.xaml">
+    <Page Include="Boot\BlueScreen.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -408,11 +411,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="AboutPage\ChangeLog.xaml">
+    <Page Include="About\ChangeLog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CosmeticsPage\Cosmetics.xaml">
+    <Page Include="Cosmetics\Cosmetics.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -420,27 +423,27 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmailPage\EmailPage.xaml">
+    <Page Include="Email\EmailPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmailPage\EmailPresenter.xaml">
+    <Page Include="Email\EmailPresenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmailPage\EmailDetail.xaml">
+    <Page Include="Email\EmailDetail.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmailPage\EmailSender.xaml">
+    <Page Include="Email\EmailSender.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmailPage\EmailStartupOne.xaml">
+    <Page Include="Email\EmailStartupOne.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmailPage\EmailStartupTwo.xaml">
+    <Page Include="Email\EmailStartupTwo.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -452,7 +455,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="HomePage.xaml">
+    <Page Include="Boot\HomePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -492,7 +495,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SettingPage\SettingsPage.xaml">
+    <Page Include="Setting\SettingsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -511,6 +514,10 @@
     <Page Include="USB\USBPhotoViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CodeScanner\QRFrame.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Weather\WeatherControl.xaml">
       <SubType>Designer</SubType>
@@ -545,7 +552,7 @@
       <Version>19.16.0.20190313</Version>
     </PackageReference>
     <PackageReference Include="HtmlAgilityPack">
-      <Version>1.11.0</Version>
+      <Version>1.11.1</Version>
     </PackageReference>
     <PackageReference Include="MailKit">
       <Version>2.1.3</Version>
