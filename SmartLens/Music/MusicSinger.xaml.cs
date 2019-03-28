@@ -1,6 +1,7 @@
 ﻿using SmartLens.NetEase;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
@@ -12,7 +13,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using System.Linq;
 
 namespace SmartLens
 {
@@ -96,6 +96,10 @@ namespace SmartLens
                 if (item.MVExists)
                 {
                     var MVResult = await NeteaseMusicAPI.GetInstance().GetMVAsync((int)item.MVid);
+                    if (MVResult.Data == null)
+                    {
+                        continue;
+                    }
                     MVCollection.Add(new SingerMV(MVResult.Data.Name, MVResult.Data.BriefDesc, (int)item.MVid, new Uri(MVResult.Data.Cover)));
                 }
             }

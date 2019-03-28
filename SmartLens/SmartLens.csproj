@@ -251,6 +251,13 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="GitHubIntroImage\step1.png" />
+    <Content Include="GitHubIntroImage\step2.png" />
+    <Content Include="GitHubIntroImage\step3.png" />
+    <Content Include="GitHubIntroImage\step4.png" />
+    <Content Include="GitHubIntroImage\step5.png" />
+    <Content Include="GitHubIntroImage\step6.png" />
+    <Content Include="GitHubIntroImage\step7.png" />
     <Content Include="Weather\WeatherIcon\中雨.png" />
     <Content Include="Weather\WeatherIcon\中雪.png" />
     <Content Include="Weather\WeatherIcon\冻雨.png" />
