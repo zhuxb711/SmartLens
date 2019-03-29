@@ -46,6 +46,7 @@ namespace SmartLens
             if (e.Parameter is RemovableDeviceFile SFile)
             {
                 this.SFile = SFile;
+                Title.Text = SFile.Name;
             }
         }
 

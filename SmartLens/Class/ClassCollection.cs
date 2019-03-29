@@ -1901,6 +1901,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取文件的类型
+        /// </summary>
         public string Type
         {
             get
@@ -1909,6 +1912,9 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 获取文件唯一标识符
+        /// </summary>
         public string RelativeId
         {
             get

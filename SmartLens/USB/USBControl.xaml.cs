@@ -21,10 +21,11 @@ namespace SmartLens
         public StorageFolder CurrentFolder { get; private set; }
         public static USBControl ThisPage { get; private set; }
         public Dictionary<string, List<StorageFolder>> FolderDictionary;
-        bool IsAdding = false;
-        string RootFolderId;
-        CancellationTokenSource CancelToken;
-        AutoResetEvent ResetEvent;
+        private bool IsAdding = false;
+        private string RootFolderId;
+        private CancellationTokenSource CancelToken;
+        private AutoResetEvent Locker;
+        private readonly object SyncRoot = new object();
 
         public USBControl()
         {
@@ -38,13 +39,13 @@ namespace SmartLens
         private void USBControl_Loaded(object sender, RoutedEventArgs e)
         {
             CancelToken = new CancellationTokenSource();
-            ResetEvent = new AutoResetEvent(false);
+            Locker = new AutoResetEvent(false);
             Nav.Navigate(typeof(USBFilePresenter), Nav, new DrillInNavigationTransitionInfo());
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            ResetEvent.Dispose();
+            Locker.Dispose();
             CancelToken.Dispose();
         }
 
@@ -199,24 +200,28 @@ namespace SmartLens
              * 此处激活取消指令，等待当前遍历结束，再开始下一次文件遍历
              * 确保不会出现异常
              */
-            if (IsAdding)
-            {
-                CancelToken.Cancel();
-                await Task.Run(() =>
-                {
-                    ResetEvent.WaitOne();
-                });
-            }
-            IsAdding = true;
+            //防止多次点击同一文件夹导致的多重查找
 
             if ((args.InvokedItem as TreeViewNode).Content is StorageFolder folder)
             {
-                //防止多次点击同一文件夹导致的多重查找
                 if (folder.FolderRelativeId == CurrentFolder?.FolderRelativeId)
                 {
                     IsAdding = false;
                     return;
                 }
+
+                if (IsAdding)
+                {
+                    await Task.Run(() =>
+                    {
+                        lock (SyncRoot)
+                        {
+                            CancelToken.Cancel();
+                            Locker.WaitOne();
+                        }
+                    });
+                }
+                IsAdding = true;
 
                 CurrentFolder = folder;
                 CurrentNode = args.InvokedItem as TreeViewNode;
@@ -225,16 +230,6 @@ namespace SmartLens
                 if (Nav.CurrentSourcePageType.Name != "USBFilePresenter")
                 {
                     Nav.GoBack();
-                }
-
-                foreach (var GridItem in from RemovableDeviceFile DeviceFile in USBFilePresenter.ThisPage.FileCollection
-                                         where DeviceFile.File.FileType == ".zip"
-                                         let GridItem = USBFilePresenter.ThisPage.GridViewControl.ContainerFromItem(DeviceFile) as GridViewItem
-                                         select GridItem)
-                {
-                    GridItem.AllowDrop = false;
-                    GridItem.Drop -= USBControl_Drop;
-                    GridItem.DragOver -= Item_DragOver;
                 }
 
                 USBFilePresenter.ThisPage.FileCollection.Clear();
@@ -247,53 +242,44 @@ namespace SmartLens
 
                 var FileList = await QueryResult.GetFilesAsync();
 
-                if (FileList.Count == 0)
-                {
-                    USBFilePresenter.ThisPage.HasFile.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    USBFilePresenter.ThisPage.HasFile.Visibility = Visibility.Collapsed;
-                }
+                USBFilePresenter.ThisPage.HasFile.Visibility = FileList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
                 foreach (var file in FileList)
                 {
                     if (CancelToken.IsCancellationRequested)
                     {
-                        CancelToken.Dispose();
-                        CancelToken = new CancellationTokenSource();
-                        ResetEvent.Set();
-                        break;
+                        goto FLAG;
                     }
 
                     IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
-                    ulong PropertiesSize = (ulong)PropertyResults["System.Size"];
+                    ulong PropertiesSize = Convert.ToUInt64(PropertyResults["System.Size"]);
                     string Size = GetSizeDescription(PropertiesSize);
 
                     BitmapImage Thumbnail = await GetThumbnailAsync(file);
                     if (Thumbnail != null)
                     {
-                        USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, file, Thumbnail));
+                        RemovableDeviceFile File = new RemovableDeviceFile(Size, file, Thumbnail);
+                        USBFilePresenter.ThisPage.FileCollection.Add(File);
                     }
                     else
                     {
-                        USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
+                        RemovableDeviceFile File = new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 });
+                        USBFilePresenter.ThisPage.FileCollection.Add(File);
                     }
                 }
-
-                await Task.Delay(500);
-
-                foreach (var file in from file in USBFilePresenter.ThisPage.FileCollection
-                                     where file.Type == ".zip"
-                                     select file)
-                {
-                    GridViewItem item = USBFilePresenter.ThisPage.GridViewControl.ContainerFromItem(file) as GridViewItem;
-                    item.AllowDrop = true;
-                    item.Drop += USBControl_Drop;
-                    item.DragOver += Item_DragOver;
-                }
             }
-            IsAdding = false;
+
+        FLAG:
+            if (CancelToken.IsCancellationRequested)
+            {
+                CancelToken.Dispose();
+                CancelToken = new CancellationTokenSource();
+                Locker.Set();
+            }
+            else
+            {
+                IsAdding = false;
+            }
         }
 
         /// <summary>
@@ -304,20 +290,6 @@ namespace SmartLens
         private string GetSizeDescription(ulong PropertiesSize)
         {
             return PropertiesSize / 1024 < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576 >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
-        }
-
-        public void Item_DragOver(object sender, DragEventArgs e)
-        {
-            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
-            e.DragUIOverride.Caption = "添加至Zip文件";
-            e.DragUIOverride.IsCaptionVisible = true;
-            e.DragUIOverride.IsContentVisible = true;
-        }
-
-        public async void USBControl_Drop(object sender, DragEventArgs e)
-        {
-            RemovableDeviceFile file = (e.OriginalSource as GridViewItem).Content as RemovableDeviceFile;
-            await USBFilePresenter.ThisPage.AddFileToZipAsync(file);
         }
 
         private async void FolderDelete_Click(object sender, RoutedEventArgs e)

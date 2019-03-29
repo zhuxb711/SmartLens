@@ -24,7 +24,7 @@ namespace SmartLens
 
         private async void USBMediaPlayer_Loaded(object sender, RoutedEventArgs e)
         {
-            if (MediaFile.FileType == ".mp3" || MediaFile.FileType == ".flac")
+            if (MediaFile.FileType == ".mp3" || MediaFile.FileType == ".flac" || MediaFile.FileType == ".wma" || MediaFile.FileType == ".m4a" || MediaFile.FileType == ".alac")
             {
                 MusicCover.Visibility = Visibility.Visible;
 

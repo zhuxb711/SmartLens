@@ -27,16 +27,17 @@
                   CanReorderItems="False"
                   CanDragItems="True"
                   AllowDrop="True"
+                  DragItemsCompleted="GridViewControl_DragItemsCompleted"
                   IsItemClickEnabled="True"
                   IsDoubleTapEnabled="True"
                   DoubleTapped="GridViewControl_DoubleTapped"
                   x:FieldModifier="Public"
                   DragItemsStarting="GridViewControl_DragItemsStarting">
             <GridView.ItemTemplate>
-                <DataTemplate x:DataType="local:RemovableDeviceFile" >
-                    <StackPanel Width="250" Padding="12" Orientation="Horizontal">
+                <DataTemplate x:DataType="local:RemovableDeviceFile">
+                    <StackPanel Width="250" Padding="12" Orientation="Horizontal" AllowDrop="True">
                         <Image IsHitTestVisible="False" VerticalAlignment="Center" Source="{x:Bind Thumbnail}" Margin="0,5,5,0" Height="60" Width="60"/>
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel AllowDrop="True" Orientation="Vertical">
                             <TextBlock IsHitTestVisible="False" Text="{x:Bind DisplayName,Mode=OneWay}" FontSize="17" Width="180" TextTrimming="CharacterEllipsis"/>
                             <TextBlock IsHitTestVisible="False" Text="{x:Bind DisplayType}" FontSize="15" Foreground="Gray"/>
                             <TextBlock IsHitTestVisible="False" Text="{x:Bind Size,Mode=OneWay}" FontSize="15" Foreground="Gray"/>

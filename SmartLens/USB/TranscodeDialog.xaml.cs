@@ -7,7 +7,6 @@ using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
 
 namespace SmartLens
 {
@@ -243,7 +242,7 @@ namespace SmartLens
 
                 if (!success)
                 {
-                    TaskRegistration.Unregister(false);
+                    TaskRegistration.Unregister(true);
                     USBControl.ThisPage.Notification.Show("转码无法启动:" + Enum.GetName(typeof(MediaProcessingTriggerResult), ActivationResult));
                 }
             }
@@ -261,11 +260,11 @@ namespace SmartLens
             };
             TaskBuilder.SetTrigger(ProcessingTrigger);
 
-            foreach (var RegistedTask in from RegistedTask in BackgroundTaskRegistration.AllTasks
-                                         where RegistedTask.Value.Name == "TranscodingBackgroundTask"
-                                         select RegistedTask)
+            foreach (var RegistedTaskValue in from RegistedTask in BackgroundTaskRegistration.AllTasks
+                                              where RegistedTask.Value.Name == "TranscodingBackgroundTask"
+                                              select RegistedTask.Value)
             {
-                RegistedTask.Value.Unregister(true);
+                RegistedTaskValue.Unregister(true);
             }
 
             TaskRegistration = TaskBuilder.Register();
@@ -282,11 +281,11 @@ namespace SmartLens
                 {
                     if (ExcuteStatus == "Success")
                     {
-                        USBControl.ThisPage.Notification.Show("转码已成功完成");
+                        USBControl.ThisPage.Notification.Show("转码已成功完成", 10000);
                     }
                     else
                     {
-                        USBControl.ThisPage.Notification.Show("转码失败:" + ExcuteStatus);
+                        USBControl.ThisPage.Notification.Show("转码失败:" + ExcuteStatus, 10000);
                     }
                     await USBFilePresenter.ThisPage.RefreshFileDisplay();
                 });

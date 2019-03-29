@@ -18,6 +18,8 @@ namespace MediaProcessingBackgroundTask
         CancellationTokenSource Cancellation;
         StorageFile InputFile;
         StorageFile OutputFile;
+        AutoResetEvent Locker = new AutoResetEvent(false);
+        bool IsSystemCancelRequest = false;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
@@ -28,6 +30,17 @@ namespace MediaProcessingBackgroundTask
             Deferral = BackTaskInstance.GetDeferral();
 
             await TranscodeMediaAsync();
+
+            if (IsSystemCancelRequest)
+            {
+                await Task.Run(() =>
+                {
+                    Locker.WaitOne();
+                });
+                Locker.Dispose();
+                goto FLAG;
+            }
+
             await Task.Delay(1000);
             ToastNotificationManager.History.Remove("SmartLens-TranscodeNotification");
 
@@ -41,6 +54,8 @@ namespace MediaProcessingBackgroundTask
                 ShowCompleteNotification();
             }
 
+        FLAG:
+            Cancellation.Dispose();
             Deferral.Complete();
         }
 
@@ -251,30 +266,38 @@ namespace MediaProcessingBackgroundTask
                             else
                             {
                                 ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "转码格式不支持";
+                                await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                             }
                         }
                         else
                         {
                             ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "SettingError: Miss MediaTranscodeEncodingProfile Or MediaTranscodeQuality";
+                            await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                         }
                     }
                     catch (TaskCanceledException)
                     {
-                        ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "转码任务被取消";
+                        if (!IsSystemCancelRequest)
+                        {
+                            ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "转码任务被取消";
+                        }
                     }
                     catch (Exception e)
                     {
                         ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "NormalError:" + e.Message;
+                        await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                     }
                 }
                 else
                 {
                     ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "SettingError: Miss Input Or Output File Token";
+                    await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                 }
             }
             else
             {
                 ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "SettingError: Miss MediaTranscodeAlgorithm";
+                await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
             }
         }
 
@@ -286,11 +309,13 @@ namespace MediaProcessingBackgroundTask
 
         private async void BackTaskInstance_Canceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            var Deferral = sender.GetDeferral();
-            await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            IsSystemCancelRequest = true;
+            Cancellation.Cancel();
             ToastNotificationManager.History.Remove("SmartLens-TranscodeNotification");
+            await OutputFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] = "转码任务被Windows终止";
             ShowUnexceptCancelNotification(reason);
-            Deferral.Complete();
+            Locker.Set();
         }
 
         private void UpdateToastNotification(uint CurrentValue)

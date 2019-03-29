@@ -23,8 +23,9 @@ namespace SmartLens
 {
     public sealed partial class USBFilePresenter : Page
     {
-        public ObservableCollection<RemovableDeviceFile> FileCollection;
+        public ObservableCollection<RemovableDeviceFile> FileCollection = new ObservableCollection<RemovableDeviceFile>();
         public static USBFilePresenter ThisPage { get; private set; }
+        public List<GridViewItem> ZipCollection = new List<GridViewItem>();
         Queue<StorageFile> CopyedQueue;
         Queue<StorageFile> CutQueue;
         AutoResetEvent AESControl;
@@ -36,18 +37,17 @@ namespace SmartLens
         byte[] EncryptByteBuffer;
         byte[] DecryptByteBuffer;
 
-
         public USBFilePresenter()
         {
             InitializeComponent();
             ThisPage = this;
-            FileCollection = new ObservableCollection<RemovableDeviceFile>();
             GridViewControl.ItemsSource = FileCollection;
 
             //必须注册这个东西才能使用中文解码
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             ZipStrings.CodePage = 936;
         }
+
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -252,16 +252,6 @@ namespace SmartLens
                     {
                         FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
                     }
-
-                    if (file.FileType == ".zip")
-                    {
-                        await Task.Delay(300);
-                        GridViewItem item = (GridViewControl.ContainerFromIndex(FileCollection.Count - 1) as GridViewItem);
-                        item.AllowDrop = true;
-                        item.Drop += USBControl.ThisPage.USBControl_Drop;
-                        item.DragOver += USBControl.ThisPage.Item_DragOver;
-                    }
-
                 }
             }
         }
@@ -321,13 +311,6 @@ namespace SmartLens
                     {
                         if (FileCollection[i].RelativeId == file.FolderRelativeId)
                         {
-                            if (file.FileType == ".zip")
-                            {
-                                GridViewItem GridItem = GridViewControl.ContainerFromItem(item) as GridViewItem;
-                                GridItem.Drop -= USBControl.ThisPage.USBControl_Drop;
-                                GridItem.DragOver -= USBControl.ThisPage.Item_DragOver;
-                            }
-
                             FileCollection.RemoveAt(i);
                             i--;
                         }
@@ -1134,6 +1117,11 @@ namespace SmartLens
                     case ".mp4":
                     case ".mp3":
                     case ".flac":
+                    case ".wma":
+                    case ".wmv":
+                    case ".alac":
+                    case ".m4a":
+                    case ".mov":
                         Nav.Navigate(typeof(USBMediaPlayer), ReFile.File, new DrillInNavigationTransitionInfo());
                         break;
                     case ".txt":
@@ -1148,10 +1136,37 @@ namespace SmartLens
 
         private void GridViewControl_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
         {
+            foreach (var GridItem in from File in FileCollection
+                                     where File.Type == ".zip"
+                                     let GridItem = GridViewControl.ContainerFromItem(File) as GridViewItem
+                                     select GridItem)
+            {
+                GridItem.AllowDrop = true;
+                GridItem.DragEnter += GridItem_DragEnter;
+                GridItem.Drop += GridItem_Drop;
+
+                ZipCollection.Add(GridItem);
+            }
             AddToZipQueue?.Clear();
             foreach (RemovableDeviceFile item in e.Items)
             {
                 AddToZipQueue?.Enqueue(item.File);
+            }
+        }
+
+        private void GridItem_DragEnter(object sender, DragEventArgs e)
+        {
+            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "添加至Zip文件";
+            e.DragUIOverride.IsCaptionVisible = true;
+            e.DragUIOverride.IsContentVisible = true;
+        }
+
+        private async void GridItem_Drop(object sender, DragEventArgs e)
+        {
+            if ((e.OriginalSource as GridViewItem).Content is RemovableDeviceFile file)
+            {
+                await AddFileToZipAsync(file);
             }
         }
 
@@ -1211,6 +1226,17 @@ namespace SmartLens
                 };
                 await dialog.ShowAsync();
             }
+        }
+
+        private void GridViewControl_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+        {
+            foreach (var GridItem in ZipCollection)
+            {
+                GridItem.AllowDrop = false;
+                GridItem.DragEnter -= GridItem_DragEnter;
+                GridItem.Drop -= GridItem_Drop;
+            }
+            ZipCollection.Clear();
         }
     }
 }
