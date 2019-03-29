@@ -35,7 +35,15 @@ namespace SmartLens
                 //若为音乐此处必须设定为Music
                 Props.Type = Windows.Media.MediaPlaybackType.Music;
                 Props.MusicProperties.Title = MediaFile.DisplayName;
-                Props.MusicProperties.AlbumArtist = await Artist;
+
+                try
+                {
+                    Props.MusicProperties.AlbumArtist = await Artist;
+                }
+                catch(Exception)
+                {
+                    Cover.Visibility = Visibility.Collapsed;
+                }
                 Item.ApplyDisplayProperties(Props);
 
                 MVControl.Source = Item;

@@ -714,6 +714,8 @@ namespace SmartLens
                     Rename.IsEnabled = false;
                     AES.IsEnabled = false;
                     Delete.IsEnabled = false;
+                    Transcode.IsEnabled = false;
+                    return;
                 }
                 else
                 {
@@ -731,6 +733,23 @@ namespace SmartLens
                     }
 
                     Delete.IsEnabled = true;
+                }
+                switch((e.AddedItems.FirstOrDefault() as RemovableDeviceFile).Type)
+                {
+                    case ".mkv":
+                    case ".mp4":
+                    case ".mp3":
+                    case ".flac":
+                    case ".wma":
+                    case ".wmv":
+                    case ".m4a":
+                    case ".mov":
+                    case ".alac":
+                        Transcode.IsEnabled = true;
+                        break;
+                    default:
+                        Transcode.IsEnabled = false;
+                        break;
                 }
             }
         }
@@ -1119,9 +1138,9 @@ namespace SmartLens
                     case ".flac":
                     case ".wma":
                     case ".wmv":
-                    case ".alac":
                     case ".m4a":
                     case ".mov":
+                    case ".alac":
                         Nav.Navigate(typeof(USBMediaPlayer), ReFile.File, new DrillInNavigationTransitionInfo());
                         break;
                     case ".txt":
