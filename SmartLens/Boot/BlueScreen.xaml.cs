@@ -15,7 +15,7 @@ namespace SmartLens
 
         private async void BlueScreen_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            var ErrorFile = await ApplicationData.Current.RoamingFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
+            var ErrorFile = await ApplicationData.Current.LocalFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
             string CurrentTime = DateTime.Now.ToShortDateString() + "，" + DateTime.Now.ToShortTimeString();
             await FileIO.AppendTextAsync(ErrorFile, CurrentTime + Message.Text + "\r\r");
         }

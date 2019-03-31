@@ -61,7 +61,7 @@ namespace SmartLens
             //初始化人脸检测器
             FaceDetector = Dlib.GetFrontalFaceDetector();
             //加载人脸识别训练集模型
-            FaceModel = ShapePredictor.Deserialize("Cosmetics/shape_predictor_68_face_landmarks.dat");
+            FaceModel = ShapePredictor.Deserialize(Package.Current.InstalledLocation.Path + "/Cosmetics/shape_predictor_68_face_landmarks.dat");
         }
 
         private void CoreApplication_Suspending(object sender, SuspendingEventArgs e)
@@ -171,7 +171,7 @@ namespace SmartLens
             DlibImageArray = new byte[1228800];
 
             //以下为加载美妆图片和信息的过程
-            StorageFolder LipFolder = await (await Package.Current.InstalledLocation.GetFolderAsync("CosmeticsPage")).GetFolderAsync("LipLogo");
+            StorageFolder LipFolder = await (await Package.Current.InstalledLocation.GetFolderAsync("Cosmetics")).GetFolderAsync("LipLogo");
             var LipLogo = await LipFolder.GetFilesAsync();
             for (int i = 0; i < LipLogo.Count; i++)
             {
@@ -209,7 +209,7 @@ namespace SmartLens
             await Task.Run(() =>
             {
                 FaceDetector = Dlib.GetFrontalFaceDetector();
-                FaceModel = ShapePredictor.Deserialize("Cosmetics/shape_predictor_68_face_landmarks.dat");
+                FaceModel = ShapePredictor.Deserialize(Package.Current.InstalledLocation.Path + "/Cosmetics/shape_predictor_68_face_landmarks.dat");
             });
 
             //初始化摄像头并开始捕获

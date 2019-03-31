@@ -36,15 +36,6 @@ namespace SmartLens
             {
                 Address.BorderBrush = new SolidColorBrush(Colors.Gray);
             }
-            if (string.IsNullOrWhiteSpace(CallName))
-            {
-                Call.BorderBrush = new SolidColorBrush(Colors.Red);
-                return;
-            }
-            else
-            {
-                Call.BorderBrush = new SolidColorBrush(Colors.Gray);
-            }
             if (string.IsNullOrEmpty(Password))
             {
                 Pass.BorderBrush = new SolidColorBrush(Colors.Red);
@@ -53,6 +44,15 @@ namespace SmartLens
             else
             {
                 Pass.BorderBrush = new SolidColorBrush(Colors.Gray);
+            }
+            if (string.IsNullOrWhiteSpace(CallName))
+            {
+                Call.BorderBrush = new SolidColorBrush(Colors.Red);
+                return;
+            }
+            else
+            {
+                Call.BorderBrush = new SolidColorBrush(Colors.Gray);
             }
 
             Nav.Navigate(typeof(EmailStartupTwo), new EmailLoginData(EmailAddress, CallName, Password), new DrillInNavigationTransitionInfo());

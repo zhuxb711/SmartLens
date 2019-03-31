@@ -45,7 +45,7 @@
             <TextBox IsSpellCheckEnabled="False" Name="SMTPAdd" Text="{x:Bind SMTPAddress,Mode=TwoWay}" Grid.Row="8" PlaceholderText="smtp.example.com"/>
             <TextBlock Grid.Row="10" Text="SMTP服务器端口" FontSize="20"/>
             <TextBox IsSpellCheckEnabled="False" Name="SMTPPo" Grid.Row="11" Text="{x:Bind SMTPPort,Mode=TwoWay}"/>
-            <CheckBox Margin="0,5,0,0" Grid.Row="12" Content="使用SSL安全连接(推荐)" FontSize="16" IsChecked="{x:Bind IsEnableSSL,Mode=TwoWay}"/>
+            <CheckBox Margin="0,5,0,0" Grid.Row="12" Content="使用SSL安全连接(推荐)" FontSize="16" IsChecked="{x:Bind IsEnableSSL,Mode=TwoWay}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
             <StackPanel Height="30" HorizontalAlignment="Right" Grid.Row="13" Orientation="Horizontal">
                 <Button Margin="0,0,5,0" Content="确定" Width="100" Name="Confirm" Click="Confirm_Click"/>
                 <Button Content="取消" Width="100" Name="Cancel" Click="Cancel_Click"/>

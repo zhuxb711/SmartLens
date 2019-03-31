@@ -52,7 +52,7 @@
                 </Grid>
             </UserControl>
         </DataTemplate>
-        <DataTemplate x:Key="ErrorNotificationTemplate">
+        <DataTemplate x:Key="NetWorkErrorNotificationTemplate">
             <UserControl>
                 <Grid>
                     <Grid x:Name="RootGrid">
@@ -67,6 +67,82 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="网络异常" TextAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </UserControl>
+        </DataTemplate>
+        <DataTemplate x:Key="AuthenticationErrorNotificationTemplate">
+            <UserControl>
+                <Grid>
+                    <Grid x:Name="RootGrid">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Email账号或密码错误" TextAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </UserControl>
+        </DataTemplate>
+        <DataTemplate x:Key="PortErrorNotificationTemplate">
+            <UserControl>
+                <Grid>
+                    <Grid x:Name="RootGrid">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="服务器地址或端口设置异常" TextAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </UserControl>
+        </DataTemplate>
+        <DataTemplate x:Key="ProtocolErrorNotificationTemplate">
+            <UserControl>
+                <Grid>
+                    <Grid x:Name="RootGrid">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="EmailServer拒绝IMAP/SMTP协议" TextAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </UserControl>
+        </DataTemplate>
+        <DataTemplate x:Key="SSLErrorNotificationTemplate">
+            <UserControl>
+                <Grid>
+                    <Grid x:Name="RootGrid">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="SSL协议异常，请检查端口是否正确" TextAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
                 </Grid>
             </UserControl>

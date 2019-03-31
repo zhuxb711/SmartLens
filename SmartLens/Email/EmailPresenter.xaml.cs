@@ -1,10 +1,15 @@
 ﻿using MailKit;
+using MailKit.Net.Imap;
+using MailKit.Net.Smtp;
 using MailKit.Search;
+using MailKit.Security;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -25,9 +30,8 @@ namespace SmartLens
         public CancellationTokenSource ConnectionCancellation;
         public HashSet<UniqueId> NotSeenDictionary = new HashSet<UniqueId>();
         public EmailItem LastSelectedItem = null;
-        public AutoResetEvent ExitLocker = null;
         public static EmailPresenter ThisPage { get; private set; }
-        EmailProtocolServiceProvider EmailService;
+        public EmailProtocolServiceProvider EmailService;
         bool Updating = false;
 
         public EmailPresenter()
@@ -98,7 +102,7 @@ namespace SmartLens
         /// <param name="IsActivate">激活或关闭</param>
         private async Task ActivateSyncNotification(bool IsActivate)
         {
-            if(ConnectionCancellation.IsCancellationRequested)
+            if (ConnectionCancellation.IsCancellationRequested)
             {
                 return;
             }
@@ -134,17 +138,24 @@ namespace SmartLens
 
             DisplayMode.SelectionChanged += DisplayMode_SelectionChanged;
             ConnectionCancellation = new CancellationTokenSource();
-            ExitLocker = new AutoResetEvent(false);
+
             await ActivateSyncNotification(true);
 
             try
             {
+                if (EmailService == null)
+                {
+                    EmailService = EmailProtocolServiceProvider.GetInstance();
+                }
                 await EmailService.ConnectAllServiceAsync(ConnectionCancellation);
             }
             catch (TaskCanceledException)
             {
                 await ActivateSyncNotification(false);
-                ExitLocker.Set();
+            }
+            catch(OperationCanceledException)
+            {
+                await ActivateSyncNotification(false);
             }
             catch (SocketException)
             {
@@ -152,22 +163,84 @@ namespace SmartLens
 
                 await Task.Delay(1000);
 
-                bool isTemplatePresent = Resources.TryGetValue("ErrorNotificationTemplate", out object NotificationTemplate);
+                bool isTemplatePresent = Resources.TryGetValue("NetWorkErrorNotificationTemplate", out object NotificationTemplate);
 
                 if (isTemplatePresent && NotificationTemplate is DataTemplate template)
                 {
                     SyncNotification.Show(template, 5000);
                 }
                 Updating = false;
-                ExitLocker.Set();
+                return;
+            }
+            catch(ImapProtocolException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("ProtocolErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch (SmtpProtocolException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("ProtocolErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch(SslHandshakeException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("SSLErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch (Exception)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("AuthenticationErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
                 return;
             }
 
             if (!ConnectionCancellation.IsCancellationRequested)
             {
-                await LoadEmailData();
-                await ActivateSyncNotification(false);
-                ExitLocker.Set();
+                try
+                {
+                    await LoadEmailData();
+                    await ActivateSyncNotification(false);
+                }
+                catch (Exception) { }
             }
 
             Updating = false;
@@ -180,46 +253,45 @@ namespace SmartLens
         private async Task LoadEmailData()
         {
             var Inbox = EmailService.GetMailFolder();
-            await Inbox?.OpenAsync(FolderAccess.ReadWrite);
 
-            //编写查询语句，查找邮箱中标记为“未读”且来源不等于UserName的邮件
-            var NotSeenSearchResult = await Inbox?.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
-            EmailNotSeenItemCollection.Clear();
-            NotSeenDictionary.Clear();
-            if (NotSeenSearchResult != null)
+            try
             {
-                foreach (var uid in NotSeenSearchResult)
+                await Inbox?.OpenAsync(FolderAccess.ReadWrite, ConnectionCancellation.Token);
+
+                //编写查询语句，查找邮箱中标记为“未读”且来源不等于UserName的邮件
+                var NotSeenSearchResult = await Inbox?.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))), ConnectionCancellation.Token);
+                EmailNotSeenItemCollection.Clear();
+                NotSeenDictionary.Clear();
+                if (NotSeenSearchResult != null)
                 {
-                    if (ConnectionCancellation.IsCancellationRequested)
+                    foreach (var uid in NotSeenSearchResult)
                     {
-                        goto FF;
+                        var message = await Inbox.GetMessageAsync(uid, ConnectionCancellation.Token);
+                        NotSeenDictionary.Add(uid);
+                        EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
                     }
-                    var message = await Inbox.GetMessageAsync(uid);
-                    NotSeenDictionary.Add(uid);
-                    EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
+                }
+
+                //编写查询语句，查找邮箱中的所有，且来源不等于UserName的邮件
+                var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))), ConnectionCancellation.Token);
+                EmailAllItemCollection.Clear();
+
+                if (EmailAllItemCollection != null)
+                {
+                    foreach (var uid in SearchResult)
+                    {
+                        var message = await Inbox.GetMessageAsync(uid, ConnectionCancellation.Token);
+                        EmailAllItemCollection.Add(new EmailItem(message, uid));
+                    }
                 }
             }
-
-            if (ConnectionCancellation.IsCancellationRequested)
+            catch (TaskCanceledException)
             {
                 return;
             }
-
-            //编写查询语句，查找邮箱中的所有，且来源不等于UserName的邮件
-            var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
-            EmailAllItemCollection.Clear();
-
-            if (EmailAllItemCollection != null)
+            catch (OperationCanceledException)
             {
-                foreach (var uid in SearchResult)
-                {
-                    if (ConnectionCancellation.IsCancellationRequested)
-                    {
-                        goto FF;
-                    }
-                    var message = await Inbox.GetMessageAsync(uid);
-                    EmailAllItemCollection.Add(new EmailItem(message, uid));
-                }
+                return;
             }
 
             /*
@@ -237,7 +309,6 @@ namespace SmartLens
 
             CVS.Source = EmailDisplayCollection;
             EmailList.SelectedIndex = -1;
-        FF: return;
         }
 
         private async void EmailList_ItemClick(object sender, ItemClickEventArgs e)
@@ -315,11 +386,25 @@ namespace SmartLens
             {
                 return;
             }
+            Updating = true;
+
             if (!EmailService.IsIMAPConnected)
             {
                 try
                 {
                     await EmailService.ConnectAllServiceAsync(ConnectionCancellation);
+                }
+                catch (TaskCanceledException)
+                {
+                    await ActivateSyncNotification(false);
+                    Updating = false;
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
+                    await ActivateSyncNotification(false);
+                    Updating = false;
+                    return;
                 }
                 catch (SocketException)
                 {
@@ -327,19 +412,87 @@ namespace SmartLens
 
                     await Task.Delay(1000);
 
-                    bool isTemplatePresent = Resources.TryGetValue("ErrorNotificationTemplate", out object NotificationTemplate);
+                    bool isTemplatePresent = Resources.TryGetValue("NetWorkErrorNotificationTemplate", out object NotificationTemplate);
 
                     if (isTemplatePresent && NotificationTemplate is DataTemplate template)
                     {
                         SyncNotification.Show(template, 5000);
                     }
+                    Updating = false;
                     return;
                 }
+                catch (ImapProtocolException)
+                {
+                    SyncNotification.Dismiss();
+
+                    await Task.Delay(1000);
+
+                    bool isTemplatePresent = Resources.TryGetValue("ProtocolErrorNotificationTemplate", out object NotificationTemplate);
+
+                    if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                    {
+                        SyncNotification.Show(template, 5000);
+                    }
+                    Updating = false;
+                    return;
+                }
+                catch (SmtpProtocolException)
+                {
+                    SyncNotification.Dismiss();
+
+                    await Task.Delay(1000);
+
+                    bool isTemplatePresent = Resources.TryGetValue("ProtocolErrorNotificationTemplate", out object NotificationTemplate);
+
+                    if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                    {
+                        SyncNotification.Show(template, 5000);
+                    }
+                    Updating = false;
+                    return;
+                }
+                catch (SslHandshakeException)
+                {
+                    SyncNotification.Dismiss();
+
+                    await Task.Delay(1000);
+
+                    bool isTemplatePresent = Resources.TryGetValue("SSLErrorNotificationTemplate", out object NotificationTemplate);
+
+                    if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                    {
+                        SyncNotification.Show(template, 5000);
+                    }
+                    Updating = false;
+                    return;
+                }
+                catch (Exception)
+                {
+                    SyncNotification.Dismiss();
+
+                    await Task.Delay(1000);
+
+                    bool isTemplatePresent = Resources.TryGetValue("AuthenticationErrorNotificationTemplate", out object NotificationTemplate);
+
+                    if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                    {
+                        SyncNotification.Show(template, 5000);
+                    }
+                    Updating = false;
+                    return;
+                }
+
                 await ActivateSyncNotification(true);
 
-                await LoadEmailData();
+                try
+                {
+                    await LoadEmailData();
+                }
+                catch (Exception) { }
 
                 await ActivateSyncNotification(false);
+                Updating = false;
+
                 return;
             }
 
@@ -347,31 +500,124 @@ namespace SmartLens
 
             var Inbox = EmailService.GetMailFolder();
 
-            var NotSeenSearchResult = await Inbox?.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
-            EmailNotSeenItemCollection.Clear();
-            NotSeenDictionary.Clear();
-
-            if (EmailNotSeenItemCollection != null)
+            try
             {
-                foreach (var uid in NotSeenSearchResult)
+                var NotSeenSearchResult = await Inbox?.SearchAsync(SearchQuery.NotSeen.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))), ConnectionCancellation.Token);
+                EmailNotSeenItemCollection.Clear();
+                NotSeenDictionary.Clear();
+
+                if (EmailNotSeenItemCollection != null)
                 {
-                    var message = await Inbox.GetMessageAsync(uid);
-                    NotSeenDictionary.Add(uid);
-                    EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
+                    foreach (var uid in NotSeenSearchResult)
+                    {
+                        var message = await Inbox.GetMessageAsync(uid, ConnectionCancellation.Token);
+                        NotSeenDictionary.Add(uid);
+                        EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
+                    }
+                }
+
+                var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))), ConnectionCancellation.Token);
+                EmailAllItemCollection.Clear();
+
+                if (EmailAllItemCollection != null)
+                {
+                    foreach (var uid in SearchResult)
+                    {
+                        var message = await Inbox.GetMessageAsync(uid, ConnectionCancellation.Token);
+                        EmailAllItemCollection.Add(new EmailItem(message, uid));
+                    }
                 }
             }
-
-            var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))));
-            EmailAllItemCollection.Clear();
-
-            if (EmailAllItemCollection != null)
+            catch (TaskCanceledException)
             {
-                foreach (var uid in SearchResult)
-                {
-                    var message = await Inbox.GetMessageAsync(uid);
-                    EmailAllItemCollection.Add(new EmailItem(message, uid));
-                }
+                await ActivateSyncNotification(false);
+                Updating = false;
+                return;
             }
+            catch(OperationCanceledException)
+            {
+                await ActivateSyncNotification(false);
+                Updating = false;
+                return;
+            }
+            catch (SocketException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("NetWorkErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch (ImapProtocolException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("ProtocolErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch (SmtpProtocolException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("ProtocolErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch (SslHandshakeException)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("SSLErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+            catch (Exception)
+            {
+                SyncNotification.Dismiss();
+
+                await Task.Delay(1000);
+
+                bool isTemplatePresent = Resources.TryGetValue("AuthenticationErrorNotificationTemplate", out object NotificationTemplate);
+
+                if (isTemplatePresent && NotificationTemplate is DataTemplate template)
+                {
+                    SyncNotification.Show(template, 5000);
+                }
+                Updating = false;
+                return;
+            }
+
+
+
 
             /*
              * 更新邮件列表逻辑：
@@ -418,6 +664,7 @@ namespace SmartLens
             }
 
             await ActivateSyncNotification(false);
+            Updating = false;
         }
 
         public async void Delete_Click(object sender, RoutedEventArgs e)
@@ -578,12 +825,9 @@ namespace SmartLens
             LoadingControl.IsLoading = true;
 
             ConnectionCancellation?.Cancel();
-            await Task.Run(() =>
-            {
-                ExitLocker?.WaitOne();
-            });
-            ExitLocker?.Dispose();
-            ExitLocker = null;
+
+            await Task.Delay(1000);
+
             ConnectionCancellation?.Dispose();
             ConnectionCancellation = null;
 
@@ -594,6 +838,8 @@ namespace SmartLens
             {
                 EmailProtocolServiceProvider.GetInstance().Dispose();
             }
+
+            EmailService = null;
 
             ApplicationData.Current.RoamingSettings.Values["EmailStartup"] = null;
             ApplicationData.Current.RoamingSettings.Values["EmailCredentialName"] = null;
@@ -607,6 +853,11 @@ namespace SmartLens
 
             LoadingControl.IsLoading = false;
             await Task.Delay(700);
+
+            EmailAllItemCollection.Clear();
+            EmailNotSeenItemCollection.Clear();
+            EmailDisplayCollection?.Clear();
+
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailStartupOne), EmailPage.ThisPage.Nav, new DrillInNavigationTransitionInfo());
         }
     }

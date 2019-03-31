@@ -240,7 +240,7 @@ namespace SmartLens
             }
         }
 
-        private void NavFrame_Navigating(object sender, Windows.UI.Xaml.Navigation.NavigatingCancelEventArgs e)
+        private void NavFrame_Navigating(object sender, NavigatingCancelEventArgs e)
         {
             if (NavFrame.CurrentSourcePageType == e.SourcePageType)
             {
@@ -304,7 +304,7 @@ namespace SmartLens
         private void TaskRegistration_Completed(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
             TaskRegistration.Completed -= TaskRegistration_Completed;
-            sender.Unregister(false);
+            sender.Unregister(true);
         }
     }
 }

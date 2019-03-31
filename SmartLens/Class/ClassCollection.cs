@@ -2550,6 +2550,7 @@ namespace SmartLens
 
             var task = ConnectSendServiceAsync(ConnectionCancellation);
 
+
             if (!IMAPClient.IsConnected)
             {
                 await IMAPClient.ConnectAsync(IMAPServerAddress.Key, IMAPServerAddress.Value, IsEnableSSL, ConnectionCancellation.Token);
@@ -2661,7 +2662,7 @@ namespace SmartLens
         }
 
         /// <summary>
-        /// 检查EmailProtocolServiceProvider实例是否被释放
+        /// 在不获取实例的情况下检查EmailProtocolServiceProvider实例是否被释放
         /// </summary>
         /// <returns></returns>
         public static bool CheckWhetherInstanceExist()

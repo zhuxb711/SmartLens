@@ -39,12 +39,9 @@ namespace SmartLens
                 return;
             }
             EmailPresenter.ThisPage.ConnectionCancellation?.Cancel();
-            await Task.Run(() =>
-            {
-                EmailPresenter.ThisPage.ExitLocker?.WaitOne();
-            });
-            EmailPresenter.ThisPage.ExitLocker?.Dispose();
-            EmailPresenter.ThisPage.ExitLocker = null;
+
+            await Task.Delay(1000);
+
             EmailPresenter.ThisPage.ConnectionCancellation?.Dispose();
             EmailPresenter.ThisPage.ConnectionCancellation = null;
 
@@ -53,7 +50,8 @@ namespace SmartLens
 
             if (EmailProtocolServiceProvider.CheckWhetherInstanceExist())
             {
-                EmailProtocolServiceProvider.GetInstance().Dispose();
+                EmailPresenter.ThisPage.EmailService.Dispose();
+                EmailPresenter.ThisPage.EmailService = null;
             }
         }
     }

@@ -80,7 +80,7 @@ namespace SmartLens
         /// <returns>无</returns>
         private async Task SaveErrorToLogAsync(string ErrorModuleName)
         {
-            var ErrorFile = await ApplicationData.Current.RoamingFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
+            var ErrorFile = await ApplicationData.Current.LocalFolder.CreateFileAsync("ErrorLog.txt", CreationCollisionOption.OpenIfExists);
             string CurrentTime = DateTime.Now.ToShortDateString() + "，" + DateTime.Now.ToShortTimeString();
             await FileIO.AppendTextAsync(ErrorFile, CurrentTime + "\r出现校验错误，错误模块：" + ErrorModuleName + "\r\r");
         }

@@ -728,7 +728,7 @@ namespace SmartLens
 
         private async void ErrorExport_Click(object sender, RoutedEventArgs e)
         {
-            if (await ApplicationData.Current.RoamingFolder.FileExistsAsync("ErrorLog.txt"))
+            if (await ApplicationData.Current.LocalFolder.FileExistsAsync("ErrorLog.txt"))
             {
                 FileSavePicker Picker = new FileSavePicker
                 {
@@ -741,7 +741,7 @@ namespace SmartLens
 
                 if ((await Picker.PickSaveFileAsync()) is StorageFile file)
                 {
-                    var LogFile = await ApplicationData.Current.RoamingFolder.GetFileAsync("ErrorLog.txt");
+                    var LogFile = await ApplicationData.Current.LocalFolder.GetFileAsync("ErrorLog.txt");
                     await LogFile.CopyAndReplaceAsync(file);
                 }
             }
