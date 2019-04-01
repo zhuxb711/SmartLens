@@ -25,7 +25,7 @@ namespace SmartLens
 
         private readonly Dictionary<Type, string> PageDictionary = new Dictionary<Type, string>()
         {
-            {typeof(HomePage), "主页"},
+            {typeof(HomePage), "首页"},
             {typeof(MusicPage), "音乐"},
             {typeof(VoiceRec), "语音识别"},
             {typeof(WebTab), "网页浏览"},
@@ -60,7 +60,7 @@ namespace SmartLens
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             foreach (var MenuItem in from NavigationViewItemBase MenuItem in NavigationView.MenuItems
-                                     where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == "主页"
+                                     where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == "首页"
                                      select MenuItem)
             {
                 NavigationView.SelectedItem = MenuItem;
@@ -111,7 +111,7 @@ namespace SmartLens
             {
                 switch (args.InvokedItem.ToString())
                 {
-                    case "主页": NavFrame.Navigate(typeof(HomePage), NavFrame); break;
+                    case "首页": NavFrame.Navigate(typeof(HomePage), NavFrame); break;
                     case "音乐": NavFrame.Navigate(typeof(MusicPage)); break;
                     case "语音识别": NavFrame.Navigate(typeof(VoiceRec)); break;
                     case "网页浏览": NavFrame.Navigate(typeof(WebTab)); break;

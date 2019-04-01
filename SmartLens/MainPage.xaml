@@ -17,15 +17,14 @@
             x:FieldModifier="Public"
             ItemInvoked="NavigationView_ItemInvoked"
             FontSize="26" 
-            animations:Connected.Key="item" 
             IsBackEnabled="True" 
             Loaded="NavigationView_Loaded" 
             BackRequested="NavigationView_BackRequested"
             Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
             PaneDisplayMode="LeftCompact">
             <NavigationView.MenuItems>
-                <NavigationViewItemHeader Content="主页"/>
-                <NavigationViewItem Content="主页" IsSelected="True">
+                <NavigationViewItemHeader Content="首页"/>
+                <NavigationViewItem Content="首页" IsSelected="True">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>

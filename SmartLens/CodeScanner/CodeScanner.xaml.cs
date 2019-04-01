@@ -187,9 +187,9 @@ namespace SmartLens
                 await dialog.ShowAsync();
 
                 BarcodeHistory.Add(new BarcodeItem(BarcodeType, BarcodeLabel));
-            });
 
-            IsRunning = false;
+                IsRunning = false;
+            });
         }
 
         private string GetDataLabel(BarcodeScannerDataReceivedEventArgs args)

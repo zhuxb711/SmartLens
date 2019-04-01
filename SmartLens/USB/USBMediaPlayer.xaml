@@ -16,7 +16,7 @@
         </MediaPlayerElement>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" Name="MusicCover">
             <Image Name="Cover" Width="250" Height="250"/>
-            <TextBlock Text="纯音乐，请欣赏" TextAlignment="Center" FontSize="28" Margin="0,10,0,0"/>
+            <TextBlock Name="Display" Width="250" TextAlignment="Center" FontSize="23" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Margin="0,10,0,0"/>
         </StackPanel>
     </Grid>
 </Page>

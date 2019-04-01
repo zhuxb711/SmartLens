@@ -521,12 +521,13 @@ namespace SmartLens
             }
             catch (Exception) { }
 
+            BackBlurBrush.Amount = 0;
+            BackBlurTicker.Start();
+
             if (MusicPage.ThisPage.MediaControl.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
-                BackBlurBrush.Amount = 0;
                 EllStoryboard.Begin();
                 RollTicker.Start();
-                BackBlurTicker.Start();
             }
         }
 
@@ -547,8 +548,15 @@ namespace SmartLens
             {
                 if (sender.PlaybackState == MediaPlaybackState.Playing)
                 {
-                    EllStoryboard.Resume();
-                    RollTicker.Start();
+                    if (EllStoryboard.GetCurrentState() == ClockState.Stopped)
+                    {
+                        EllStoryboard.Begin();
+                    }
+                    else
+                    {
+                        EllStoryboard.Resume();
+                        RollTicker.Start();
+                    }
                 }
                 else if (sender.PlaybackState == MediaPlaybackState.Paused)
                 {

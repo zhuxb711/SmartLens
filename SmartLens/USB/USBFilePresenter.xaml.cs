@@ -722,6 +722,7 @@ namespace SmartLens
                     Copy.IsEnabled = true;
                     Cut.IsEnabled = true;
                     Rename.IsEnabled = true;
+                    Delete.IsEnabled = true;
                     AES.IsEnabled = true;
                     AES.Label = "AES加密";
                     foreach (var _ in from RemovableDeviceFile item in e.AddedItems
@@ -732,24 +733,26 @@ namespace SmartLens
                         break;
                     }
 
-                    Delete.IsEnabled = true;
-                }
-                switch((e.AddedItems.FirstOrDefault() as RemovableDeviceFile).Type)
-                {
-                    case ".mkv":
-                    case ".mp4":
-                    case ".mp3":
-                    case ".flac":
-                    case ".wma":
-                    case ".wmv":
-                    case ".m4a":
-                    case ".mov":
-                    case ".alac":
-                        Transcode.IsEnabled = true;
-                        break;
-                    default:
-                        Transcode.IsEnabled = false;
-                        break;
+                    if (e.AddedItems.Count == 1)
+                    {
+                        switch ((e.AddedItems.FirstOrDefault() as RemovableDeviceFile).Type)
+                        {
+                            case ".mkv":
+                            case ".mp4":
+                            case ".mp3":
+                            case ".flac":
+                            case ".wma":
+                            case ".wmv":
+                            case ".m4a":
+                            case ".mov":
+                            case ".alac":
+                                Transcode.IsEnabled = true;
+                                break;
+                            default:
+                                Transcode.IsEnabled = false;
+                                break;
+                        }
+                    }
                 }
             }
         }
@@ -1244,6 +1247,17 @@ namespace SmartLens
                     SourceFile = file
                 };
                 await dialog.ShowAsync();
+            }
+            else
+            {
+                ContentDialog dialog = new ContentDialog
+                {
+                    Title = "错误",
+                    Content = "一次仅支持转码一个媒体文件",
+                    CloseButtonText = "确定"
+                };
+                await dialog.ShowAsync();
+                Restore();
             }
         }
 

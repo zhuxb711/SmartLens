@@ -46,6 +46,7 @@ namespace SmartLens
                 }
                 Item.ApplyDisplayProperties(Props);
 
+                Display.Text = "请欣赏：" + MediaFile.DisplayName;
                 MVControl.Source = Item;
             }
             else
