@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -25,20 +26,36 @@ namespace SmartLens
             TabControl.ItemsSource = TabCollection;
             TabCollection.CollectionChanged += (s, e) =>
             {
-                if (TabCollection.Count == 1)
+                if (TabCollection.Count > 0)
                 {
-                    (TabCollection[0] as TabViewItem).IsClosable = false;
-                }
-                else if ((TabCollection[0] as TabViewItem).IsClosable == false)
-                {
-                    (TabCollection[0] as TabViewItem).IsClosable = true;
+                    TabViewItem Item = TabCollection[0] as TabViewItem;
+                    if (TabCollection.Count == 1)
+                    {
+                        Item.IsClosable = false;
+                    }
+                    else if (Item.IsClosable == false)
+                    {
+                        Item.IsClosable = true;
+                    }
                 }
             };
             FavouriteCollection.CollectionChanged += (s, e) =>
             {
                 (TabCollection[TabControl.SelectedIndex].Content as WebPage).FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             };
-            CreateNewTab();
+
+            switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"]?.ToString() ?? "空白页")
+            {
+                case "空白页":
+                    CreateNewTab();
+                    break;
+                case "主页":
+                    CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
+                    break;
+                case "特定页":
+                    CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString()));
+                    break;
+            }
         }
 
         /// <summary>
@@ -49,13 +66,14 @@ namespace SmartLens
         {
             lock (SyncRoot)
             {
-                TabCollection.Add(new TabViewItem()
+                TabViewItem CurrentItem = new TabViewItem
                 {
                     Header = "空白页",
                     Icon = new SymbolIcon(Symbol.Document),
                     Content = new WebPage(uri)
-                });
-                TabControl.SelectedIndex = TabCollection.Count - 1;
+                };
+                TabCollection.Add(CurrentItem);
+                TabControl.SelectedItem = CurrentItem;
             }
         }
 
@@ -70,7 +88,18 @@ namespace SmartLens
 
         private void AddTabButtonUpper_Click(object sender, RoutedEventArgs e)
         {
-            CreateNewTab();
+            switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"].ToString())
+            {
+                case "空白页":
+                    CreateNewTab();
+                    break;
+                case "主页":
+                    CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
+                    break;
+                case "特定页":
+                    CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString()));
+                    break;
+            }
         }
 
         private void TabControl_TabClosing(object sender, TabClosingEventArgs e)
@@ -81,6 +110,11 @@ namespace SmartLens
 
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if(TabControl.SelectedIndex==-1)
+            {
+                return;
+            }
+
             var Instance = TabCollection[TabControl.SelectedIndex].Content as WebPage;
             if (FavouriteDictionary.ContainsKey(Instance.AutoSuggest.Text))
             {

@@ -3,11 +3,13 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Radios;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -44,6 +46,74 @@ namespace SmartLens
                 WebBrowser.Visibility = Visibility.Visible;
                 WebBrowser.Navigate(uri);
             }
+            Loaded += WebPage_Loaded;
+        }
+
+        private void WebPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"] is string Method)
+            {
+                foreach (var Item in from string Item in TabOpenMethod.Items
+                                     where Method == Item
+                                     select Item)
+                {
+                    TabOpenMethod.SelectedItem = Item;
+                }
+            }
+            else
+            {
+                TabOpenMethod.SelectedIndex = 0;
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] is string MainPage)
+            {
+                MainUrl.Text = MainPage;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "https://www.baidu.com";
+                MainUrl.Text = "https://www.baidu.com";
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] is string Specified)
+            {
+                SpecificUrl.Text = Specified;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "about:blank";
+                SpecificUrl.Text = "about:blank";
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["WebShowMainButton"] is bool IsShow)
+            {
+                ShowMainButton.IsOn = IsShow;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["WebShowMainButton"] = true;
+                ShowMainButton.IsOn = true;
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["WebEnableJS"] is bool IsEnableJS)
+            {
+                AllowJS.IsOn = IsEnableJS;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["WebEnableJS"] = true;
+                AllowJS.IsOn = true;
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["WebEnableDB"] is bool IsEnableDB)
+            {
+                AllowIndexedDB.IsOn = IsEnableDB;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["WebEnableDB"] = true;
+                AllowIndexedDB.IsOn = true;
+            }
         }
 
         /// <summary>
@@ -51,12 +121,11 @@ namespace SmartLens
         /// </summary>
         private void InitializeWebView()
         {
-            Gr.Children.Add(WebBrowser);
-
             FavouriteList.ItemsSource = WebTab.ThisPage.FavouriteCollection;
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            Gr.Children.Add(WebBrowser);
             WebBrowser.SetValue(Grid.RowProperty, 1);
             WebBrowser.SetValue(Canvas.ZIndexProperty, 0);
             WebBrowser.Visibility = Visibility.Collapsed;
@@ -96,7 +165,7 @@ namespace SmartLens
             await dialog.ShowAsync();
             WebBrowser = new WebView(WebViewExecutionMode.SeparateProcess);
             InitializeWebView();
-            WebBrowser.Navigate(new Uri("https://www.baidu.com"));
+            WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
         }
 
         private void WebBrowser_ContentLoading(WebView sender, WebViewContentLoadingEventArgs args)
@@ -112,22 +181,25 @@ namespace SmartLens
             {
                 Favourite.Symbol = Symbol.SolidStar;
                 Favourite.Foreground = new SolidColorBrush(Colors.Gold);
+                IsPressedFavourite = true;
             }
             else
             {
                 Favourite.Symbol = Symbol.OutlineStar;
                 Favourite.Foreground = new SolidColorBrush(Colors.White);
+                IsPressedFavourite = false;
             }
         }
 
         private void WebBrowser_NewWindowRequested(WebView sender, WebViewNewWindowRequestedEventArgs args)
         {
-            WebTab.ThisPage.TabCollection.Add(new TabViewItem()
+            TabViewItem NewItem = new TabViewItem
             {
                 Icon = new SymbolIcon(Symbol.Document),
                 Content = new WebPage(args.Uri)
-            });
-            WebTab.ThisPage.TabControl.SelectedIndex = WebTab.ThisPage.TabCollection.Count - 1;
+            };
+            WebTab.ThisPage.TabCollection.Add(NewItem);
+            WebTab.ThisPage.TabControl.SelectedItem = NewItem;
             args.Handled = true;
         }
 
@@ -209,7 +281,7 @@ namespace SmartLens
             {
                 WebBrowser.Visibility = Visibility.Visible;
             }
-            WebBrowser.Navigate(new Uri("https://www.baidu.com"));
+            WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -222,6 +294,7 @@ namespace SmartLens
             {
                 WebBrowser.Stop();
                 RefreshState.Symbol = Symbol.Refresh;
+                ProGrid.Width = new GridLength(8);
                 Progress.IsActive = false;
                 CanCancelLoading = false;
             }
@@ -238,12 +311,14 @@ namespace SmartLens
                 (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle;
             }
             RefreshState.Symbol = Symbol.Refresh;
+            ProGrid.Width = new GridLength(8);
             Progress.IsActive = false;
             CanCancelLoading = false;
         }
 
         private void WebBrowser_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
+            ProGrid.Width = new GridLength(40);
             Progress.IsActive = true;
             CanCancelLoading = true;
             RefreshState.Symbol = Symbol.Cancel;
@@ -275,7 +350,7 @@ namespace SmartLens
             };
             dialog.PrimaryButtonClick += (s, e) =>
             {
-                WebBrowser.Navigate(new Uri("https://www.baidu.com"));
+                WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
             };
             await dialog.ShowAsync();
         }
@@ -483,6 +558,97 @@ namespace SmartLens
                     WebTab.ThisPage.FavouriteDictionary.Remove(FavItem.WebSite);
                 }
             }
+        }
+
+        private void Setting_Click(object sender, RoutedEventArgs e)
+        {
+            SettingControl.IsPaneOpen = !SettingControl.IsPaneOpen;
+        }
+
+        private void TabOpenMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"] = TabOpenMethod.SelectedItem.ToString();
+            if (TabOpenMethod.SelectedItem.ToString() == "特定页")
+            {
+                SpecificArea.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                SpecificArea.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void SaveSpecificUrl_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(SpecificUrl.Text))
+            {
+                ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "about:blank";
+            }
+            else
+            {
+                if (SpecificUrl.Text.StartsWith("http"))
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = SpecificUrl.Text;
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "http://" + SpecificUrl.Text;
+                }
+            }
+        }
+
+        private void SaveMainUrl_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(MainUrl.Text))
+            {
+                ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "about:blank";
+            }
+            else
+            {
+                if (MainUrl.Text.StartsWith("http"))
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = MainUrl.Text;
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "http://" + MainUrl.Text;
+                }
+            }
+        }
+
+        private void ShowMainButton_Toggled(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["WebShowMainButton"] = ShowMainButton.IsOn;
+            if (ShowMainButton.IsOn)
+            {
+                Home.Visibility = Visibility.Visible;
+                HomeGrid.Width = new GridLength(50);
+            }
+            else
+            {
+                Home.Visibility = Visibility.Collapsed;
+                HomeGrid.Width = new GridLength(0);
+            }
+        }
+
+        private void AllowJS_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (WebBrowser == null)
+            {
+                return;
+            }
+            ApplicationData.Current.LocalSettings.Values["WebEnableJS"] = AllowJS.IsOn;
+            WebBrowser.Settings.IsJavaScriptEnabled = AllowJS.IsOn;
+        }
+
+        private void AllowIndexedDB_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (WebBrowser == null)
+            {
+                return;
+            }
+            ApplicationData.Current.LocalSettings.Values["WebEnableDB"] = AllowIndexedDB.IsOn;
+            WebBrowser.Settings.IsIndexedDBEnabled = AllowIndexedDB.IsOn;
         }
     }
 
