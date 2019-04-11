@@ -1,11 +1,12 @@
 ﻿using Microsoft.Toolkit.Uwp.UI.Controls;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
 
 namespace SmartLens
 {
@@ -14,6 +15,9 @@ namespace SmartLens
         public static WebTab ThisPage { get; set; }
         public ObservableCollection<TabViewItem> TabCollection = new ObservableCollection<TabViewItem>();
         private readonly object SyncRoot = new object();
+        public ObservableCollection<FavouriteItem> FavouriteCollection = new ObservableCollection<FavouriteItem>();
+        public Dictionary<string, FavouriteItem> FavouriteDictionary = new Dictionary<string, FavouriteItem>();
+
         public WebTab()
         {
             InitializeComponent();
@@ -29,6 +33,10 @@ namespace SmartLens
                 {
                     (TabCollection[0] as TabViewItem).IsClosable = true;
                 }
+            };
+            FavouriteCollection.CollectionChanged += (s, e) =>
+            {
+                (TabCollection[TabControl.SelectedIndex].Content as WebPage).FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             };
             CreateNewTab();
         }
@@ -69,6 +77,23 @@ namespace SmartLens
         {
             (e.Tab.Content as WebPage).Dispose();
             e.Tab.Content = null;
+        }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var Instance = TabCollection[TabControl.SelectedIndex].Content as WebPage;
+            if (FavouriteDictionary.ContainsKey(Instance.AutoSuggest.Text))
+            {
+                Instance.Favourite.Symbol = Symbol.SolidStar;
+                Instance.Favourite.Foreground = new SolidColorBrush(Colors.Gold);
+                Instance.IsPressedFavourite = true;
+            }
+            else
+            {
+                Instance.Favourite.Symbol = Symbol.OutlineStar;
+                Instance.Favourite.Foreground = new SolidColorBrush(Colors.White);
+                Instance.IsPressedFavourite = false;
+            }
         }
     }
 }

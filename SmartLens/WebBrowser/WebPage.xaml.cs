@@ -6,30 +6,26 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Radios;
 using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-
+using Windows.UI.Xaml.Media;
 
 namespace SmartLens
 {
     public sealed partial class WebPage : Page
     {
         private bool CanCancelLoading;
-        public AutoResetEvent ResetEvent = null;
-        public static WebPage ThisPage { get; private set; } = null;
+        public bool IsPressedFavourite;
         public WebView WebBrowser = null;
 
         public WebPage(Uri uri = null)
         {
             InitializeComponent();
-            ThisPage = this;
-            ResetEvent = new AutoResetEvent(false);
         FL:
             try
             {
@@ -56,8 +52,13 @@ namespace SmartLens
         private void InitializeWebView()
         {
             Gr.Children.Add(WebBrowser);
+
+            FavouriteList.ItemsSource = WebTab.ThisPage.FavouriteCollection;
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             WebBrowser.SetValue(Grid.RowProperty, 1);
+            WebBrowser.SetValue(Canvas.ZIndexProperty, 0);
             WebBrowser.Visibility = Visibility.Collapsed;
             WebBrowser.HorizontalAlignment = HorizontalAlignment.Stretch;
             WebBrowser.VerticalAlignment = VerticalAlignment.Stretch;
@@ -105,8 +106,18 @@ namespace SmartLens
             AutoSuggest.Text = args.Uri.ToString();
 
             Back.IsEnabled = WebBrowser.CanGoBack;
-
             Forward.IsEnabled = WebBrowser.CanGoForward;
+
+            if (WebTab.ThisPage.FavouriteDictionary.ContainsKey(AutoSuggest.Text))
+            {
+                Favourite.Symbol = Symbol.SolidStar;
+                Favourite.Foreground = new SolidColorBrush(Colors.Gold);
+            }
+            else
+            {
+                Favourite.Symbol = Symbol.OutlineStar;
+                Favourite.Foreground = new SolidColorBrush(Colors.White);
+            }
         }
 
         private void WebBrowser_NewWindowRequested(WebView sender, WebViewNewWindowRequestedEventArgs args)
@@ -355,19 +366,14 @@ namespace SmartLens
             }
             else if (result == ContentDialogResult.Primary)
             {
-                await Task.Run(async () =>
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
-                    ResetEvent.WaitOne();
-
-                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                    BluetoothFileTransfer FileTransfer = new BluetoothFileTransfer
                     {
-                        BluetoothFileTransfer FileTransfer = new BluetoothFileTransfer
-                        {
-                            Filestream = stream.AsStream(),
-                            FileName = "屏幕截图.jpg"
-                        };
-                        await FileTransfer.ShowAsync();
-                    });
+                        Filestream = stream.AsStream(),
+                        FileName = "屏幕截图.jpg"
+                    };
+                    await FileTransfer.ShowAsync();
                 });
             }
         }
@@ -414,8 +420,80 @@ namespace SmartLens
                     WebBrowser = null;
                 });
             }
-            ResetEvent?.Dispose();
-            ThisPage = null;
+        }
+
+        private void FavoutiteListButton_Click(object sender, RoutedEventArgs e)
+        {
+            SplitControl.IsPaneOpen = !SplitControl.IsPaneOpen;
+        }
+
+        private void FavouriteList_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            WebBrowser.Navigate(new Uri((e.ClickedItem as FavouriteItem).WebSite));
+        }
+
+        private void Favourite_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (IsPressedFavourite)
+            {
+                return;
+            }
+            Favourite.Foreground = new SolidColorBrush(Colors.Gold);
+        }
+
+        private void Favourite_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (IsPressedFavourite)
+            {
+                return;
+            }
+            Favourite.Foreground = new SolidColorBrush(Colors.White);
+        }
+
+        private void Favourite_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (WebTab.ThisPage.TabCollection[WebTab.ThisPage.TabControl.SelectedIndex].Header.ToString() == "空白页")
+            {
+                return;
+            }
+
+            if (Favourite.Symbol == Symbol.OutlineStar)
+            {
+                IsPressedFavourite = true;
+                Favourite.Symbol = Symbol.SolidStar;
+                Favourite.Foreground = new SolidColorBrush(Colors.Gold);
+
+                if (!WebTab.ThisPage.FavouriteDictionary.ContainsKey(AutoSuggest.Text))
+                {
+                    var FavItem = new FavouriteItem(WebBrowser.DocumentTitle, AutoSuggest.Text);
+                    WebTab.ThisPage.FavouriteCollection.Add(FavItem);
+                    WebTab.ThisPage.FavouriteDictionary.Add(AutoSuggest.Text, FavItem);
+                }
+            }
+            else
+            {
+                IsPressedFavourite = false;
+                Favourite.Symbol = Symbol.OutlineStar;
+                Favourite.Foreground = new SolidColorBrush(Colors.White);
+
+                if (WebTab.ThisPage.FavouriteDictionary.ContainsKey(AutoSuggest.Text))
+                {
+                    var FavItem = WebTab.ThisPage.FavouriteDictionary[AutoSuggest.Text];
+                    WebTab.ThisPage.FavouriteCollection.Remove(FavItem);
+                    WebTab.ThisPage.FavouriteDictionary.Remove(FavItem.WebSite);
+                }
+            }
+        }
+    }
+
+    public sealed class FavouriteItem
+    {
+        public string Subject { get; private set; }
+        public string WebSite { get; private set; }
+        public FavouriteItem(string Subject, string WebSite)
+        {
+            this.Subject = Subject;
+            this.WebSite = WebSite;
         }
     }
 }

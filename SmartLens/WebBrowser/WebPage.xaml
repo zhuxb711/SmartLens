@@ -4,51 +4,60 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:SmartLens"
     mc:Ignorable="d"
     NavigationCacheMode="Disabled"
     Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
 
     <Grid Name="Gr">
         <Grid.RowDefinitions>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="40"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="5*"/>
-                <ColumnDefinition Width="183*"/>
-                <ColumnDefinition Width="5*"/>
-                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="180*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="50"/>
                 <ColumnDefinition Width="10"/>
             </Grid.ColumnDefinitions>
-            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Name="Back" Click="Back_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
+            <Button BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Name="Back" Click="Back_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
                 <SymbolIcon Symbol="Back"/>
             </Button>
-            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Name="Forward" Click="Forward_Click"  Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
+            <Button BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Name="Forward" Click="Forward_Click"  Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
                 <SymbolIcon Symbol="Forward"/>
             </Button>
-            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Name="Home" Click="Home_Click"  Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+            <Button BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Name="Home" Click="Home_Click"  Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
                 <SymbolIcon Symbol="Home"/>
             </Button>
-            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3" Name="Refresh" Click="Refresh_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+            <Button BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3" Name="Refresh" Click="Refresh_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
                 <SymbolIcon Symbol="Refresh" Name="RefreshState"/>
             </Button>
-            <ProgressRing Grid.Column="4" Name="Progress" Height="30" Width="30"/>
+            <ProgressRing Grid.Column="4" Name="Progress" Height="25" Width="25"/>
             <AutoSuggestBox 
                         Grid.Column="5"
                         VerticalAlignment="Center"
                         HorizontalAlignment="Stretch"
                         Name="AutoSuggest"
                         QueryIcon="Find" 
+                        x:FieldModifier="public"
                         PlaceholderText="搜索或输入网址" 
                         TextChanged="AutoSuggestBox_TextChanged" 
                         QuerySubmitted="AutoSuggestBox_QuerySubmitted"
                         BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
-            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="7" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+            <Viewbox Grid.Column="5" HorizontalAlignment="Right" Margin="0,0,30,2" Height="14">
+                <SymbolIcon Name="Favourite" x:FieldModifier="public" Symbol="OutlineStar" PointerExited="Favourite_PointerExited" PointerPressed="Favourite_PointerPressed" PointerEntered="Favourite_PointerEntered"/>
+            </Viewbox>
+            <Button ToolTipService.ToolTip="收藏夹" BorderThickness="1" Click="FavoutiteListButton_Click" Name="FavoutiteListButton" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="7" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE728;"/>
+            </Button>
+            <Button ToolTipService.ToolTip="设置" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="8" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="截图并蓝牙发送" Icon="Save" Name="ScreenShot" Click="ScreenShot_Click"/>
@@ -59,5 +68,22 @@
                 <SymbolIcon Symbol="Setting"/>
             </Button>
         </Grid>
+        <SplitView Canvas.ZIndex="1" Grid.Row="1" x:Name="SplitControl" PanePlacement="Right" OpenPaneLength="350" PaneBackground="{ThemeResource SystemControlAcrylicElementMediumHighBrush}" DisplayMode="Overlay">
+            <SplitView.Pane>
+                <Grid>
+                    <ListView Margin="15,10,0,0" IsItemClickEnabled="True" Header="收藏夹" FontSize="24" x:Name="FavouriteList" ItemClick="FavouriteList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:FavouriteItem">
+                                <StackPanel Orientation="Horizontal">
+                                    <SymbolIcon Symbol="OutlineStar"/>
+                                    <TextBlock Margin="5,0,0,0" Text="{x:Bind Path=Subject}" FontSize="15" ToolTipService.Placement="Top" ToolTipService.ToolTip="{x:Bind Path=WebSite}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <TextBlock Name="FavEmptyTips" x:FieldModifier="public" HorizontalAlignment="Center" VerticalAlignment="Center" Text="无内容" FontSize="24"/>
+                </Grid>
+            </SplitView.Pane>
+        </SplitView>
     </Grid>
 </Page>

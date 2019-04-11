@@ -19,6 +19,7 @@
                       Name="TabControl"
                       x:FieldModifier="Public"
                       TabClosing="TabControl_TabClosing"
+                      SelectionChanged="TabControl_SelectionChanged"
                       Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
         <controls:TabView.Resources>
             <x:Double x:Key="TabViewItemHeaderMinHeight">40</x:Double>

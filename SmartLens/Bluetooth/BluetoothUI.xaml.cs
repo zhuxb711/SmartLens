@@ -95,8 +95,6 @@ namespace SmartLens
                     break;
                 }
 
-                WebPage.ThisPage?.ResetEvent?.Set();
-
                 if (ObexServiceProvider.ObexClient == null)
                 {
                     throw new Exception("未能找到已配对的设备，请打开该设备的蓝牙开关");
