@@ -19,10 +19,11 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="50"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="183*"/>
+                <ColumnDefinition Width="5*"/>
                 <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="10"/>
             </Grid.ColumnDefinitions>
             <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Name="Back" Click="Back_Click" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" IsEnabled="False">
                 <SymbolIcon Symbol="Back"/>
@@ -47,7 +48,7 @@
                         TextChanged="AutoSuggestBox_TextChanged" 
                         QuerySubmitted="AutoSuggestBox_QuerySubmitted"
                         BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
-            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="6" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
+            <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="7" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="截图并蓝牙发送" Icon="Save" Name="ScreenShot" Click="ScreenShot_Click"/>
