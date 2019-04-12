@@ -275,7 +275,7 @@ namespace SmartLens
     }
     #endregion
 
-    #region 存储在数据库中的WiFi信息导入类
+    #region 存储在数据库中的WiFi信息类
     /// <summary>
     /// 保存从数据库中提取的WiFi信息
     /// </summary>
@@ -1174,9 +1174,10 @@ namespace SmartLens
             OLEDB.Open();
             string Command = @"Create Table If Not Exists MusicList (MusicName Text Not Null, Artist Text Not Null, Album Text Not Null, Duration Text Not Null, ImageURL Text Not Null, SongID Int Not Null ,MVid Int Not Null, Primary Key (MusicName,Artist,Album,Duration));
                                Create Table If Not Exists WiFiRecord (SSID Text Not Null, Password Text Not Null, AutoConnect Text Not Null, Primary Key (SSID,Password,AutoConnect));
-                               Create Table If Not Exists HashTable (FileName Text Not Null, HashValue Text Not Null, Primary Key (FileName,HashValue))";
+                               Create Table If Not Exists HashTable (FileName Text Not Null, HashValue Text Not Null, Primary Key (FileName,HashValue));
+                               Create Table If Not Exists WebFavourite (Subject Text Not Null, WebSite Text Not Null, Primary Key (WebSite))";
             SqliteCommand CreateTable = new SqliteCommand(Command, OLEDB);
-            CreateTable.ExecuteNonQuery();
+            _ = CreateTable.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -1195,6 +1196,36 @@ namespace SmartLens
             }
         }
 
+        public async Task<List<FavouriteItem>>GetWebFavouriteList()
+        {
+            SqliteCommand Command = new SqliteCommand("Select * From WebFavourite", OLEDB);
+            SqliteDataReader Query = await Command.ExecuteReaderAsync();
+
+            List<FavouriteItem> FavList = new List<FavouriteItem>();
+
+            while(Query.Read())
+            {
+                FavList.Add(new FavouriteItem(Query[0].ToString(), Query[1].ToString()));
+            }
+
+            return FavList;
+        }
+
+        public async Task SetWebFavouriteList(FavouriteItem Info)
+        {
+            SqliteCommand Command = new SqliteCommand("Insert Into WebFavourite Values (@Subject,@WebSite)", OLEDB);
+            Command.Parameters.AddWithValue("@Subject", Info.Subject);
+            Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        public async Task DeleteWebFavouriteList(FavouriteItem Info)
+        {
+            SqliteCommand Command = new SqliteCommand("Delete From WebFavourite Where WebSite = @WebSite", OLEDB);
+            Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
         /// <summary>
         /// 异步获取SQLite数据库中存储的所有音乐名称
         /// </summary>
@@ -1205,7 +1236,10 @@ namespace SmartLens
             SqliteCommand Command1 = new SqliteCommand("Select Count(*) From MusicList", OLEDB);
             int DataCount = Convert.ToInt32(await Command1.ExecuteScalarAsync());
             if (DataCount == 0)
+            {
                 return null;
+            }
+
             string[] Names = new string[DataCount];
             SqliteDataReader query1 = await Command.ExecuteReaderAsync();
             for (int i = 0; query1.Read(); i++)
@@ -1262,7 +1296,7 @@ namespace SmartLens
                 sb.Append(Command);
             }
             SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB);
-            await SQLCommand.ExecuteNonQueryAsync();
+            _ = await SQLCommand.ExecuteNonQueryAsync();
         }
 
         public async Task<List<KeyValuePair<string, string>>> GetMD5ValueAsync()
@@ -1299,7 +1333,7 @@ namespace SmartLens
             Command.Parameters.AddWithValue("@SongID", SongID);
             Command.Parameters.AddWithValue("@ImageURL", ImageURL);
             Command.Parameters.AddWithValue("@MVid", MVid);
-            await Command.ExecuteNonQueryAsync();
+            _ = await Command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -1314,7 +1348,7 @@ namespace SmartLens
             Command.Parameters.AddWithValue("@Artist", list.Artist);
             Command.Parameters.AddWithValue("@Album", list.Album);
             Command.Parameters.AddWithValue("@Duration", list.Duration);
-            await Command.ExecuteNonQueryAsync();
+            _ = await Command.ExecuteNonQueryAsync();
         }
 
 
@@ -1347,7 +1381,7 @@ namespace SmartLens
             Command.Parameters.AddWithValue("@SSID", SSID);
             Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
 
-            await Command.ExecuteNonQueryAsync();
+            _ = await Command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -1362,7 +1396,7 @@ namespace SmartLens
             Command.Parameters.AddWithValue("@SSID", SSID);
             Command.Parameters.AddWithValue("@Password", Password);
 
-            await Command.ExecuteNonQueryAsync();
+            _ = await Command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -1379,7 +1413,7 @@ namespace SmartLens
             Command.Parameters.AddWithValue("@Password", Password);
             Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
 
-            await Command.ExecuteNonQueryAsync();
+            _ = await Command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -3601,6 +3635,19 @@ namespace SmartLens
                 TextVisibility = Visibility.Visible;
                 HyperLinkVisibility = Visibility.Collapsed;
             }
+        }
+    }
+    #endregion
+
+    #region 网页收藏列表
+    public sealed class FavouriteItem
+    {
+        public string Subject { get; private set; }
+        public string WebSite { get; private set; }
+        public FavouriteItem(string Subject, string WebSite)
+        {
+            this.Subject = Subject;
+            this.WebSite = WebSite;
         }
     }
     #endregion

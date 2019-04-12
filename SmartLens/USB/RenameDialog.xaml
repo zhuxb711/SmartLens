@@ -14,7 +14,7 @@
 
     <Grid>
         <StackPanel Orientation="Vertical">
-            <TextBox Name="Text" TextChanging="Text_TextChanging" FontSize="18" Width="300"/>
+            <TextBox  Name="Text" TextChanging="Text_TextChanging" FontSize="18" Width="300"/>
             <TextBlock Text="预览" FontSize="22"/>
             <TextBlock Name="Preview" FontSize="18" Width="300" TextWrapping="Wrap"/>
         </StackPanel>

@@ -30,7 +30,7 @@
     <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <AppInstallerUri>https://smartlen.azurewebsites.net/</AppInstallerUri>
-    <PackageCertificateThumbprint>97EEF78F4A074B1A76CD484E8A3B815DD9E7E59C</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>2ACF6DEE95C1F99189F22A7A6A54F8B141435E85</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -317,13 +317,13 @@
     <Content Include="Cosmetics\shape_predictor_68_face_landmarks.dat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="SmartLens_TemporaryKey.pfx" />
     <Content Include="Weather\CityCode.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="VoiceRec\SRGS.grxml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="SmartLens_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\LargeTile.scale-100.png" />

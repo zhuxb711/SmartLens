@@ -51,7 +51,7 @@
                         TextChanged="AutoSuggestBox_TextChanged" 
                         QuerySubmitted="AutoSuggestBox_QuerySubmitted"
                         BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}"/>
-            <Viewbox Grid.Column="5" HorizontalAlignment="Right" Margin="0,0,30,2" Height="14">
+            <Viewbox Grid.Column="5" HorizontalAlignment="Right" Margin="0,0,30,3" Height="16">
                 <SymbolIcon Name="Favourite" x:FieldModifier="public" Symbol="OutlineStar" PointerExited="Favourite_PointerExited" PointerPressed="Favourite_PointerPressed" PointerEntered="Favourite_PointerEntered"/>
             </Viewbox>
             <Button ToolTipService.ToolTip="收藏夹" BorderThickness="1" Click="FavoutiteListButton_Click" Name="FavoutiteListButton" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="7" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
@@ -61,7 +61,7 @@
                 <SymbolIcon Symbol="Setting"/>
             </Button>
         </Grid>
-        <SplitView Canvas.ZIndex="1" Grid.Row="1" Name="SettingControl" PanePlacement="Right" OpenPaneLength="350" PaneBackground="{ThemeResource SystemControlAcrylicElementMediumHighBrush}" DisplayMode="Overlay">
+        <SplitView PaneClosed="SettingControl_PaneClosed" Canvas.ZIndex="1" Grid.Row="1" Name="SettingControl" PanePlacement="Right" OpenPaneLength="350" PaneBackground="{ThemeResource SystemControlAcrylicElementMediumHighBrush}" DisplayMode="Overlay">
             <SplitView.Pane>
                 <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible" IsVerticalScrollChainingEnabled="True">
                     <StackPanel Orientation="Vertical" Margin="20,15,0,0">
@@ -71,15 +71,9 @@
                             <x:String>主页</x:String>
                             <x:String>特定页</x:String>
                         </ComboBox>
-                        <StackPanel Name="SpecificArea" Orientation="Horizontal" Margin="0,20,0,0">
-                            <TextBox Name="SpecificUrl" PlaceholderText="输入URL" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" HorizontalAlignment="Left" Width="250" Header="设置特定页URL" FontSize="16"/>
-                            <AppBarButton Icon="Save" Name="SaveSpecificUrl" Click="SaveSpecificUrl_Click" Margin="10,0,0,0" Height="37" Width="37" VerticalAlignment="Bottom"/>
-                        </StackPanel>
+                        <TextBox Name="SpecificUrl" PlaceholderText="输入URL" Margin="0,20,0,0" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" HorizontalAlignment="Left" Width="270" Header="设置特定页URL" FontSize="16"/>
                         <ToggleSwitch Header="显示主页按钮" FontSize="16" Margin="0,20,0,0" Name="ShowMainButton" Toggled="ShowMainButton_Toggled"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                            <TextBox Name="MainUrl" PlaceholderText="输入URL" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" HorizontalAlignment="Left" Width="250" Header="设置主页URL" FontSize="16"/>
-                            <AppBarButton Icon="Save" Name="SaveMainUrl" Click="SaveMainUrl_Click" Margin="10,0,0,0" Height="37" Width="37" VerticalAlignment="Bottom"/>
-                        </StackPanel>
+                        <TextBox Name="MainUrl" Margin="0,20,0,0" PlaceholderText="输入URL" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" HorizontalAlignment="Left" Width="270" Header="设置主页URL" FontSize="16"/>
                         <TextBlock FontSize="24" Text="高级" Margin="0,40,0,0"/>
                         <ToggleSwitch Header="允许JavaScript运行" Name="AllowJS" Toggled="AllowJS_Toggled" FontSize="16" Margin="0,20,0,0"/>
                         <ToggleSwitch Header="允许使用IndexedDB" Name="AllowIndexedDB" Toggled="AllowIndexedDB_Toggled" FontSize="16" Margin="0,20,0,0"/>
@@ -94,7 +88,12 @@
         <SplitView Canvas.ZIndex="1" Grid.Row="1" Name="SplitControl" PanePlacement="Right" OpenPaneLength="350" PaneBackground="{ThemeResource SystemControlAcrylicElementMediumHighBrush}" DisplayMode="Overlay">
             <SplitView.Pane>
                 <Grid>
-                    <ListView Margin="15,10,0,0" IsItemClickEnabled="True" Name="FavouriteList" ItemClick="FavouriteList_ItemClick">
+                    <ListView Margin="15,10,0,0" 
+                              RightTapped="FavouriteList_RightTapped" 
+                              IsItemClickEnabled="True" 
+                              Name="FavouriteList" 
+                              ItemClick="FavouriteList_ItemClick"
+                              SelectionChanged="FavouriteList_SelectionChanged">
                         <ListView.HeaderTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Vertical">
@@ -111,6 +110,13 @@
                                 </StackPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
+                        <ListView.ContextFlyout>
+                            <CommandBarFlyout x:Name="CommandsFlyout" Placement="RightEdgeAlignedTop">
+                                <CommandBarFlyout.SecondaryCommands>
+                                    <AppBarButton Name="Delete" Icon="Delete" Label="删除" Click="Delete_Click"/>
+                                </CommandBarFlyout.SecondaryCommands>
+                            </CommandBarFlyout>
+                        </ListView.ContextFlyout>
                     </ListView>
                     <TextBlock Name="FavEmptyTips" x:FieldModifier="public" HorizontalAlignment="Center" VerticalAlignment="Center" Text="无内容" FontSize="24"/>
                 </Grid>

@@ -41,11 +41,11 @@
                 <ColumnDefinition Width="60*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="收件人：" Foreground="DarkGray" VerticalAlignment="Center" FontSize="25" HorizontalAlignment="Stretch"/>
-            <TextBox Name="ToWho" VerticalAlignment="Center" FontSize="25" Text="{x:Bind To,Mode=TwoWay}" BorderThickness="0" Background="{StaticResource TextBoxButtonBackgroundThemeBrush}" Grid.Column="1" HorizontalAlignment="Stretch"/>
+            <TextBox Name="ToWho" VerticalAlignment="Center" FontSize="25" Text="{x:Bind To,Mode=TwoWay}" BorderThickness="0" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" Grid.Column="1" HorizontalAlignment="Stretch"/>
         </Grid>
-        <TextBox Text="{x:Bind Title,Mode=TwoWay}" Grid.Row="4" PlaceholderText="Email主题" FontSize="25" BorderThickness="0" Background="{StaticResource TextBoxButtonBackgroundThemeBrush}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <TextBox Text="{x:Bind Title,Mode=TwoWay}" Grid.Row="4" PlaceholderText="Email主题" FontSize="25" BorderThickness="0" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <TextBox Name="EmailText" TextWrapping="Wrap" AcceptsReturn="True" IsSpellCheckEnabled="True"  Background="{StaticResource TextBoxButtonBackgroundThemeBrush}" Grid.Row="6" Grid.Column="1" FontSize="20" PlaceholderText="在此输入Email正文" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <TextBox Name="EmailText" TextWrapping="Wrap" AcceptsReturn="True" IsSpellCheckEnabled="True"  Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" Grid.Row="6" Grid.Column="1" FontSize="20" PlaceholderText="在此输入Email正文" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 
         <Button VerticalAlignment="Stretch" Width="120" Grid.Row="8" Grid.Column="1" Name="Insert" BorderThickness="0" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}" Click="Insert_Click">
             <Viewbox>

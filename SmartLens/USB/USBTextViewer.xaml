@@ -18,6 +18,6 @@
             <AppBarButton Icon="Cancel" Label="放弃" Name="Cancel" Click="Cancel_Click"/>
         </CommandBar>
         <TextBlock Margin="10,0,0,0" HorizontalAlignment="Left" FontSize="22" Name="Title"/>
-        <TextBox Name="Text" Grid.Row="1" Background="{StaticResource TextBoxButtonBackgroundThemeBrush}" AcceptsReturn="True" IsSpellCheckEnabled="False"/>
+        <TextBox Name="Text" Grid.Row="1" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" AcceptsReturn="True" IsSpellCheckEnabled="False"/>
     </Grid>
 </Page>

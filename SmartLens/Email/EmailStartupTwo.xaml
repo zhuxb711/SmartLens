@@ -38,13 +38,13 @@
             </Grid.RowDefinitions>
             <TextBlock Text="高级设置" FontSize="25"/>
             <TextBlock Text="IMAP服务器地址" Grid.Row="1" FontSize="20"/>
-            <TextBox IsSpellCheckEnabled="False" Name="IMAPAdd" Text="{x:Bind IMAPAddress,Mode=TwoWay}" PlaceholderText="imap.example.com" Grid.Row="2"/>
+            <TextBox Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" IsSpellCheckEnabled="False" Name="IMAPAdd" Text="{x:Bind IMAPAddress,Mode=TwoWay}" PlaceholderText="imap.example.com" Grid.Row="2"/>
             <TextBlock Grid.Row="4" Text="IMAP服务器端口" FontSize="20"/>
-            <TextBox IsSpellCheckEnabled="False" Name="IMAPPo" Text="{x:Bind IMAPPort,Mode=TwoWay}" Grid.Row="5"/>
+            <TextBox Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" IsSpellCheckEnabled="False" Name="IMAPPo" Text="{x:Bind IMAPPort,Mode=TwoWay}" Grid.Row="5"/>
             <TextBlock Grid.Row="7" Text="SMTP服务器地址" FontSize="20"/>
-            <TextBox IsSpellCheckEnabled="False" Name="SMTPAdd" Text="{x:Bind SMTPAddress,Mode=TwoWay}" Grid.Row="8" PlaceholderText="smtp.example.com"/>
+            <TextBox Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" IsSpellCheckEnabled="False" Name="SMTPAdd" Text="{x:Bind SMTPAddress,Mode=TwoWay}" Grid.Row="8" PlaceholderText="smtp.example.com"/>
             <TextBlock Grid.Row="10" Text="SMTP服务器端口" FontSize="20"/>
-            <TextBox IsSpellCheckEnabled="False" Name="SMTPPo" Grid.Row="11" Text="{x:Bind SMTPPort,Mode=TwoWay}"/>
+            <TextBox Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" IsSpellCheckEnabled="False" Name="SMTPPo" Grid.Row="11" Text="{x:Bind SMTPPort,Mode=TwoWay}"/>
             <CheckBox Margin="0,5,0,0" Grid.Row="12" Content="使用SSL安全连接(推荐)" FontSize="16" IsChecked="{x:Bind IsEnableSSL,Mode=TwoWay}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
             <StackPanel Height="30" HorizontalAlignment="Right" Grid.Row="13" Orientation="Horizontal">
                 <Button Margin="0,0,5,0" Content="确定" Width="100" Name="Confirm" Click="Confirm_Click"/>

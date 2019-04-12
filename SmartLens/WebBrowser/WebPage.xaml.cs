@@ -43,7 +43,6 @@ namespace SmartLens
             InitializeWebView();
             if (uri != null)
             {
-                WebBrowser.Visibility = Visibility.Visible;
                 WebBrowser.Navigate(uri);
             }
             Loaded += WebPage_Loaded;
@@ -51,6 +50,8 @@ namespace SmartLens
 
         private void WebPage_Loaded(object sender, RoutedEventArgs e)
         {
+            FavEmptyTips.Visibility = WebTab.ThisPage.FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
             if (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"] is string Method)
             {
                 foreach (var Item in from string Item in TabOpenMethod.Items
@@ -128,7 +129,6 @@ namespace SmartLens
             Gr.Children.Add(WebBrowser);
             WebBrowser.SetValue(Grid.RowProperty, 1);
             WebBrowser.SetValue(Canvas.ZIndexProperty, 0);
-            WebBrowser.Visibility = Visibility.Collapsed;
             WebBrowser.HorizontalAlignment = HorizontalAlignment.Stretch;
             WebBrowser.VerticalAlignment = VerticalAlignment.Stretch;
             WebBrowser.NewWindowRequested += WebBrowser_NewWindowRequested;
@@ -147,10 +147,11 @@ namespace SmartLens
         {
             ContentDialog dialog = new ContentDialog
             {
-                Content = "导航失败，请检查网络连接",
+                Content = "导航失败，请检查网址或网络连接",
                 Title = "提示",
                 CloseButtonText = "确定"
             };
+            WebBrowser.Navigate(new Uri("about:blank"));
             await dialog.ShowAsync();
         }
 
@@ -195,6 +196,7 @@ namespace SmartLens
         {
             TabViewItem NewItem = new TabViewItem
             {
+                Header = "空白页",
                 Icon = new SymbolIcon(Symbol.Document),
                 Content = new WebPage(args.Uri)
             };
@@ -250,10 +252,6 @@ namespace SmartLens
             }
             else
             {
-                if (WebBrowser.Visibility == Visibility.Collapsed)
-                {
-                    WebBrowser.Visibility = Visibility.Visible;
-                }
                 try
                 {
                     WebBrowser.Navigate(new Uri(args.QueryText));
@@ -277,19 +275,25 @@ namespace SmartLens
 
         private void Home_Click(object sender, RoutedEventArgs e)
         {
-            if (WebBrowser.Visibility == Visibility.Collapsed)
+            try
             {
-                WebBrowser.Visibility = Visibility.Visible;
+                WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
             }
-            WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
+            catch (Exception)
+            {
+                ContentDialog dialog = new ContentDialog
+                {
+                    Content = "导航失败，请检查网址或网络连接",
+                    Title = "提示",
+                    CloseButtonText = "确定"
+                };
+                _ = dialog.ShowAsync();
+                WebBrowser.Navigate(new Uri("about:blank"));
+            }
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
-            if (WebBrowser.Visibility == Visibility.Collapsed)
-            {
-                WebBrowser.Visibility = Visibility.Visible;
-            }
             if (CanCancelLoading)
             {
                 WebBrowser.Stop();
@@ -308,7 +312,7 @@ namespace SmartLens
         {
             if ((string)(WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header == "正在加载...")
             {
-                (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle;
+                (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle == "" ? "空白页" : WebBrowser.DocumentTitle;
             }
             RefreshState.Symbol = Symbol.Refresh;
             ProGrid.Width = new GridLength(8);
@@ -525,7 +529,7 @@ namespace SmartLens
             Favourite.Foreground = new SolidColorBrush(Colors.White);
         }
 
-        private void Favourite_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private async void Favourite_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (WebTab.ThisPage.TabCollection[WebTab.ThisPage.TabControl.SelectedIndex].Header.ToString() == "空白页")
             {
@@ -543,6 +547,8 @@ namespace SmartLens
                     var FavItem = new FavouriteItem(WebBrowser.DocumentTitle, AutoSuggest.Text);
                     WebTab.ThisPage.FavouriteCollection.Add(FavItem);
                     WebTab.ThisPage.FavouriteDictionary.Add(AutoSuggest.Text, FavItem);
+
+                    await SQLite.GetInstance().SetWebFavouriteList(FavItem);
                 }
             }
             else
@@ -556,6 +562,8 @@ namespace SmartLens
                     var FavItem = WebTab.ThisPage.FavouriteDictionary[AutoSuggest.Text];
                     WebTab.ThisPage.FavouriteCollection.Remove(FavItem);
                     WebTab.ThisPage.FavouriteDictionary.Remove(FavItem.WebSite);
+
+                    await SQLite.GetInstance().DeleteWebFavouriteList(FavItem);
                 }
             }
         }
@@ -568,52 +576,7 @@ namespace SmartLens
         private void TabOpenMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"] = TabOpenMethod.SelectedItem.ToString();
-            if (TabOpenMethod.SelectedItem.ToString() == "特定页")
-            {
-                SpecificArea.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                SpecificArea.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        private void SaveSpecificUrl_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(SpecificUrl.Text))
-            {
-                ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "about:blank";
-            }
-            else
-            {
-                if (SpecificUrl.Text.StartsWith("http"))
-                {
-                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = SpecificUrl.Text;
-                }
-                else
-                {
-                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "http://" + SpecificUrl.Text;
-                }
-            }
-        }
-
-        private void SaveMainUrl_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(MainUrl.Text))
-            {
-                ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "about:blank";
-            }
-            else
-            {
-                if (MainUrl.Text.StartsWith("http"))
-                {
-                    ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = MainUrl.Text;
-                }
-                else
-                {
-                    ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "http://" + MainUrl.Text;
-                }
-            }
+            SpecificUrl.Visibility = TabOpenMethod.SelectedItem.ToString() == "特定页" ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void ShowMainButton_Toggled(object sender, RoutedEventArgs e)
@@ -650,16 +613,74 @@ namespace SmartLens
             ApplicationData.Current.LocalSettings.Values["WebEnableDB"] = AllowIndexedDB.IsOn;
             WebBrowser.Settings.IsIndexedDBEnabled = AllowIndexedDB.IsOn;
         }
-    }
 
-    public sealed class FavouriteItem
-    {
-        public string Subject { get; private set; }
-        public string WebSite { get; private set; }
-        public FavouriteItem(string Subject, string WebSite)
+        private void SettingControl_PaneClosed(SplitView sender, object args)
         {
-            this.Subject = Subject;
-            this.WebSite = WebSite;
+            if (string.IsNullOrWhiteSpace(MainUrl.Text))
+            {
+                ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "about:blank";
+            }
+            else
+            {
+                if (MainUrl.Text.StartsWith("http"))
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = MainUrl.Text;
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "http://" + MainUrl.Text;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(SpecificUrl.Text))
+            {
+                ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "about:blank";
+            }
+            else
+            {
+                if (SpecificUrl.Text == "about:blank")
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = SpecificUrl.Text;
+                    return;
+                }
+                if (SpecificUrl.Text.StartsWith("http"))
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = SpecificUrl.Text;
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"] = "http://" + SpecificUrl.Text;
+                }
+            }
+
+        }
+
+        private void FavouriteList_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+        {
+            var Context = (e.OriginalSource as FrameworkElement)?.DataContext as FavouriteItem;
+            FavouriteList.SelectedItem = Context;
+        }
+
+        private void FavouriteList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Delete.IsEnabled = FavouriteList.SelectedIndex != -1;
+        }
+
+        private async void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            var FavItem = FavouriteList.SelectedItem as FavouriteItem;
+
+            if (AutoSuggest.Text == FavItem.WebSite)
+            {
+                Favourite.Symbol = Symbol.OutlineStar;
+                Favourite.Foreground = new SolidColorBrush(Colors.White);
+                IsPressedFavourite = false;
+            }
+
+            WebTab.ThisPage.FavouriteCollection.Remove(FavItem);
+            WebTab.ThisPage.FavouriteDictionary.Remove(FavItem.WebSite);
+
+            await SQLite.GetInstance().DeleteWebFavouriteList(FavItem);
         }
     }
 }
