@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -16,9 +17,11 @@ namespace SmartLens
         public static WebTab ThisPage { get; set; }
         public ObservableCollection<TabViewItem> TabCollection = new ObservableCollection<TabViewItem>();
         private readonly object SyncRoot = new object();
-        public ObservableCollection<FavouriteItem> FavouriteCollection;
-        public Dictionary<string, FavouriteItem> FavouriteDictionary;
-
+        public ObservableCollection<WebSiteItem> FavouriteCollection;
+        public Dictionary<string, WebSiteItem> FavouriteDictionary;
+        public ObservableCollection<KeyValuePair<DateTime, WebSiteItem>> HistoryCollection;
+        public HistoryTreeFlag HistoryFlag;
+        private WebPage CurrentWebPage;
         public WebTab()
         {
             InitializeComponent();
@@ -44,7 +47,68 @@ namespace SmartLens
 
             FavouriteCollection.CollectionChanged += (s, e) =>
             {
-                ((TabControl.SelectedItem as TabViewItem).Content as WebPage).FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                CurrentWebPage.FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            };
+
+            HistoryCollection.CollectionChanged += async(s, e) =>
+            {
+                switch (e.Action)
+                {
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                        var RemoveNode = from Item in CurrentWebPage.HistoryTree.RootNodes[0].Children
+                                         let temp = Item.Content as WebSiteItem
+                                         where temp.Subject == "正在加载..." && temp.WebSite == ((KeyValuePair<DateTime, WebSiteItem>)e.OldItems[0]).Value.WebSite
+                                         select Item;
+                        if (RemoveNode.Count() > 0)
+                        {
+                            CurrentWebPage.HistoryTree.RootNodes[0].Children.Remove(RemoveNode.First());
+                        }
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                        var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
+                                       where (Item.Content as WebSiteItem).Subject == "今天"
+                                       select Item;
+                        if (TreeNode.Count() == 0)
+                        {
+                            CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
+                            {
+                                Content = new WebSiteItem("今天", string.Empty),
+                                HasUnrealizedChildren = true,
+                                IsExpanded = true
+                            });
+                            HistoryFlag = HistoryTreeFlag.Today;
+                            foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                            {
+                                CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
+                                {
+                                    Content = New.Value,
+                                    HasUnrealizedChildren = false,
+                                    IsExpanded = false
+                                });
+                                if (New.Value.Subject != "正在加载...")
+                                {
+                                    await SQLite.GetInstance().SetWebHistoryList(New);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                            {
+                                TreeNode.First().Children.Insert(0, new TreeViewNode
+                                {
+                                    Content = New.Value,
+                                    HasUnrealizedChildren = false,
+                                    IsExpanded = false
+                                });
+                                if (New.Value.Subject != "正在加载...")
+                                {
+                                    await SQLite.GetInstance().SetWebHistoryList(New);
+                                }
+                            }
+                        }
+                        break;
+                }
             };
 
             try
@@ -82,8 +146,9 @@ namespace SmartLens
 
             if (FavList.Count > 0)
             {
-                FavouriteCollection = new ObservableCollection<FavouriteItem>(FavList);
-                FavouriteDictionary = new Dictionary<string, FavouriteItem>();
+                FavouriteCollection = new ObservableCollection<WebSiteItem>(FavList);
+                FavouriteDictionary = new Dictionary<string, WebSiteItem>();
+
                 foreach (var Item in FavList)
                 {
                     FavouriteDictionary.Add(Item.WebSite, Item);
@@ -91,8 +156,66 @@ namespace SmartLens
             }
             else
             {
-                FavouriteCollection = new ObservableCollection<FavouriteItem>();
-                FavouriteDictionary = new Dictionary<string, FavouriteItem>();
+                FavouriteCollection = new ObservableCollection<WebSiteItem>();
+                FavouriteDictionary = new Dictionary<string, WebSiteItem>();
+            }
+
+            var HistoryList = await SQLite.GetInstance().GetWebHistoryList();
+
+            if (HistoryList.Count > 0)
+            {
+                HistoryCollection = new ObservableCollection<KeyValuePair<DateTime, WebSiteItem>>(HistoryList);
+                bool ExistToday = false, ExistYesterday = false, ExistEarlier = false;
+                foreach (var HistoryItem in HistoryCollection)
+                {
+                    if (HistoryItem.Key == DateTime.Today.AddDays(-1))
+                    {
+                        ExistYesterday = true;
+                    }
+                    else if (HistoryItem.Key == DateTime.Today)
+                    {
+                        ExistToday = true;
+                    }
+                    else
+                    {
+                        ExistEarlier = true;
+                    }
+                }
+
+                if (ExistYesterday && ExistToday && ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.All;
+                }
+                else if (!ExistYesterday && ExistToday && ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.TodayEarlier;
+                }
+                else if (ExistYesterday && !ExistToday && ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.YesterdayEarlier;
+                }
+                else if (ExistYesterday && ExistToday && !ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.TodayYesterday;
+                }
+                else if (!ExistYesterday && !ExistToday && ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.Earlier;
+                }
+                else if (!ExistYesterday && ExistToday && !ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.Today;
+                }
+                else if (ExistYesterday && !ExistToday && !ExistEarlier)
+                {
+                    HistoryFlag = HistoryTreeFlag.Yesterday;
+                }
+
+            }
+            else
+            {
+                HistoryCollection = new ObservableCollection<KeyValuePair<DateTime, WebSiteItem>>();
+                HistoryFlag = HistoryTreeFlag.None;
             }
         }
 
@@ -168,18 +291,24 @@ namespace SmartLens
                 return;
             }
 
-            var Instance = TabCollection[TabControl.SelectedIndex].Content as WebPage;
-            if (FavouriteDictionary.ContainsKey(Instance.AutoSuggest.Text))
+            CurrentWebPage = (TabControl.SelectedItem as TabViewItem).Content as WebPage;
+
+            if (CurrentWebPage.PivotControl.SelectedIndex != 0)
             {
-                Instance.Favourite.Symbol = Symbol.SolidStar;
-                Instance.Favourite.Foreground = new SolidColorBrush(Colors.Gold);
-                Instance.IsPressedFavourite = true;
+                CurrentWebPage.PivotControl.SelectedIndex = 0;
+            }
+
+            if (FavouriteDictionary.ContainsKey(CurrentWebPage.AutoSuggest.Text))
+            {
+                CurrentWebPage.Favourite.Symbol = Symbol.SolidStar;
+                CurrentWebPage.Favourite.Foreground = new SolidColorBrush(Colors.Gold);
+                CurrentWebPage.IsPressedFavourite = true;
             }
             else
             {
-                Instance.Favourite.Symbol = Symbol.OutlineStar;
-                Instance.Favourite.Foreground = new SolidColorBrush(Colors.White);
-                Instance.IsPressedFavourite = false;
+                CurrentWebPage.Favourite.Symbol = Symbol.OutlineStar;
+                CurrentWebPage.Favourite.Foreground = new SolidColorBrush(Colors.White);
+                CurrentWebPage.IsPressedFavourite = false;
             }
         }
     }

@@ -1175,7 +1175,8 @@ namespace SmartLens
             string Command = @"Create Table If Not Exists MusicList (MusicName Text Not Null, Artist Text Not Null, Album Text Not Null, Duration Text Not Null, ImageURL Text Not Null, SongID Int Not Null ,MVid Int Not Null, Primary Key (MusicName,Artist,Album,Duration));
                                Create Table If Not Exists WiFiRecord (SSID Text Not Null, Password Text Not Null, AutoConnect Text Not Null, Primary Key (SSID,Password,AutoConnect));
                                Create Table If Not Exists HashTable (FileName Text Not Null, HashValue Text Not Null, Primary Key (FileName,HashValue));
-                               Create Table If Not Exists WebFavourite (Subject Text Not Null, WebSite Text Not Null, Primary Key (WebSite))";
+                               Create Table If Not Exists WebFavourite (Subject Text Not Null, WebSite Text Not Null, Primary Key (WebSite));
+                               Create Table If Not Exists WebHistory (Subject Text Not Null, WebSite Text Not Null, DateTime Text Not Null, Primary Key (Subject, WebSite, DateTime))";
             SqliteCommand CreateTable = new SqliteCommand(Command, OLEDB);
             _ = CreateTable.ExecuteNonQuery();
         }
@@ -1196,22 +1197,64 @@ namespace SmartLens
             }
         }
 
-        public async Task<List<FavouriteItem>>GetWebFavouriteList()
+        public async Task ClearTable(string TableName)
+        {
+            SqliteCommand Command = new SqliteCommand("Delete From " + TableName, OLEDB);
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<WebSiteItem>> GetWebFavouriteList()
         {
             SqliteCommand Command = new SqliteCommand("Select * From WebFavourite", OLEDB);
             SqliteDataReader Query = await Command.ExecuteReaderAsync();
 
-            List<FavouriteItem> FavList = new List<FavouriteItem>();
+            List<WebSiteItem> FavList = new List<WebSiteItem>();
 
-            while(Query.Read())
+            while (Query.Read())
             {
-                FavList.Add(new FavouriteItem(Query[0].ToString(), Query[1].ToString()));
+                FavList.Add(new WebSiteItem(Query[0].ToString(), Query[1].ToString()));
             }
 
             return FavList;
         }
 
-        public async Task SetWebFavouriteList(FavouriteItem Info)
+        public async Task<List<KeyValuePair<DateTime, WebSiteItem>>> GetWebHistoryList()
+        {
+            SqliteCommand Command = new SqliteCommand("Select * From WebHistory", OLEDB);
+            SqliteDataReader Query = await Command.ExecuteReaderAsync();
+
+            List<KeyValuePair<DateTime, WebSiteItem>> HistoryList = new List<KeyValuePair<DateTime, WebSiteItem>>();
+
+            while (Query.Read())
+            {
+                HistoryList.Add(new KeyValuePair<DateTime, WebSiteItem>(DateTime.FromBinary(Convert.ToInt64(Query[2])), new WebSiteItem(Query[0].ToString(), Query[1].ToString())));
+            }
+
+            HistoryList.Reverse();
+            return HistoryList;
+        }
+
+        public async Task DeleteWebHistory(KeyValuePair<DateTime, WebSiteItem> Info)
+        {
+            SqliteCommand Command = new SqliteCommand("Delete From WebHistory Where Subject=@Subject And WebSite=@WebSite And DateTime=@DateTime", OLEDB);
+            Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
+            Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
+            Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
+
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        public async Task SetWebHistoryList(KeyValuePair<DateTime, WebSiteItem> Info)
+        {
+            SqliteCommand Command = new SqliteCommand("Insert Into WebHistory Values (@Subject,@WebSite,@DateTime)", OLEDB);
+            Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
+            Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
+            Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
+
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        public async Task SetWebFavouriteList(WebSiteItem Info)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WebFavourite Values (@Subject,@WebSite)", OLEDB);
             Command.Parameters.AddWithValue("@Subject", Info.Subject);
@@ -1219,7 +1262,7 @@ namespace SmartLens
             _ = await Command.ExecuteNonQueryAsync();
         }
 
-        public async Task DeleteWebFavouriteList(FavouriteItem Info)
+        public async Task DeleteWebFavouriteList(WebSiteItem Info)
         {
             SqliteCommand Command = new SqliteCommand("Delete From WebFavourite Where WebSite = @WebSite", OLEDB);
             Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
@@ -3639,16 +3682,58 @@ namespace SmartLens
     }
     #endregion
 
-    #region 网页收藏列表
-    public sealed class FavouriteItem
+    #region 网页信息项目
+    public sealed class WebSiteItem
     {
         public string Subject { get; private set; }
         public string WebSite { get; private set; }
-        public FavouriteItem(string Subject, string WebSite)
+        public Visibility StarVisibility
+        {
+            get
+            {
+                if ((Subject == "今天" || Subject == "昨天" || Subject == "更早") && WebSite == string.Empty)
+                {
+                    return Visibility.Collapsed;
+                }
+                else
+                {
+                    return Visibility.Visible;
+                }
+            }
+        }
+        public double FontSize
+        {
+            get
+            {
+                if ((Subject == "今天" || Subject == "昨天" || Subject == "更早") && WebSite == string.Empty)
+                {
+                    return 18;
+                }
+                else
+                {
+                    return 15;
+                }
+            }
+        }
+        public WebSiteItem(string Subject, string WebSite)
         {
             this.Subject = Subject;
             this.WebSite = WebSite;
         }
+    }
+    #endregion
+
+    #region 网页历史记录标志枚举
+    public enum HistoryTreeFlag
+    {
+        All = 0,
+        TodayYesterday = 1,
+        TodayEarlier = 2,
+        YesterdayEarlier = 3,
+        Today = 4,
+        Yesterday = 5,
+        Earlier = 6,
+        None = 7
     }
     #endregion
 }

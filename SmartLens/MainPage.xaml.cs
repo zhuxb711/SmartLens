@@ -59,14 +59,9 @@ namespace SmartLens
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            foreach (var MenuItem in from NavigationViewItemBase MenuItem in NavigationView.MenuItems
-                                     where MenuItem is NavigationViewItem && MenuItem.Content.ToString() == "首页"
-                                     select MenuItem)
-            {
-                NavigationView.SelectedItem = MenuItem;
-                NavFrame.Navigate(typeof(HomePage), NavFrame);
-                break;
-            }
+            NavigationViewItemBase MenuItem = NavigationView.MenuItems.FirstOrDefault() as NavigationViewItemBase;
+            NavigationView.SelectedItem = MenuItem;
+            NavFrame.Navigate(typeof(HomePage), NavFrame);
 
             await CheckUpdate();
         }
