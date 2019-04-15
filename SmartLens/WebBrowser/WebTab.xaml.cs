@@ -16,7 +16,6 @@ namespace SmartLens
     {
         public static WebTab ThisPage { get; set; }
         public ObservableCollection<TabViewItem> TabCollection = new ObservableCollection<TabViewItem>();
-        private readonly object SyncRoot = new object();
         public ObservableCollection<WebSiteItem> FavouriteCollection;
         public Dictionary<string, WebSiteItem> FavouriteDictionary;
         public ObservableCollection<KeyValuePair<DateTime, WebSiteItem>> HistoryCollection;
@@ -27,127 +26,6 @@ namespace SmartLens
             InitializeComponent();
             ThisPage = this;
             OnFirstLoad();
-
-            TabControl.ItemsSource = TabCollection;
-            TabCollection.CollectionChanged += (s, e) =>
-            {
-                if (TabCollection.Count > 0)
-                {
-                    TabViewItem Item = TabCollection[0] as TabViewItem;
-                    if (TabCollection.Count == 1)
-                    {
-                        Item.IsClosable = false;
-                    }
-                    else if (Item.IsClosable == false)
-                    {
-                        Item.IsClosable = true;
-                    }
-                }
-            };
-
-            FavouriteCollection.CollectionChanged += (s, e) =>
-            {
-                CurrentWebPage.FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            };
-
-            HistoryCollection.CollectionChanged += (s, e) =>
-            {
-                CurrentWebPage.HistoryEmptyTips.Visibility = HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-
-                lock (SyncRootProvider.SyncRoot)
-                {
-                    switch (e.Action)
-                    {
-                        case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-
-                            var RemoveNode = from Item in CurrentWebPage.HistoryTree.RootNodes[0].Children
-                                             let temp = Item.Content as WebSiteItem
-                                             where temp.Subject == "正在加载..." && temp.WebSite == ((KeyValuePair<DateTime, WebSiteItem>)e.OldItems[0]).Value.WebSite
-                                             select Item;
-                            if (RemoveNode.Count() > 0)
-                            {
-                                CurrentWebPage.HistoryTree.RootNodes[0].Children.Remove(RemoveNode.First());
-                            }
-
-                            break;
-                        case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                            var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
-                                           where (Item.Content as WebSiteItem).Subject == "今天"
-                                           select Item;
-                            if (TreeNode.Count() == 0)
-                            {
-                                CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
-                                {
-                                    Content = new WebSiteItem("今天", string.Empty),
-                                    HasUnrealizedChildren = true,
-                                    IsExpanded = true
-                                });
-                                HistoryFlag = HistoryTreeFlag.Today;
-                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
-                                {
-                                    CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
-                                    {
-                                        Content = New.Value,
-                                        HasUnrealizedChildren = false,
-                                        IsExpanded = false
-                                    });
-                                    if (New.Value.Subject != "正在加载...")
-                                    {
-                                        SQLite.GetInstance().SetWebHistoryList(New);
-                                    }
-                                }
-
-                            }
-                            else
-                            {
-
-                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
-                                {
-                                    TreeNode.First().Children.Insert(0, new TreeViewNode
-                                    {
-                                        Content = New.Value,
-                                        HasUnrealizedChildren = false,
-                                        IsExpanded = false
-                                    });
-                                    if (New.Value.Subject != "正在加载...")
-                                    {
-                                        SQLite.GetInstance().SetWebHistoryList(New);
-                                    }
-                                }
-
-                            }
-                            break;
-                    }
-                }
-            };
-
-            try
-            {
-                switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"]?.ToString() ?? "空白页")
-                {
-                    case "空白页":
-                        CreateNewTab(new Uri("about:blank"));
-                        break;
-                    case "主页":
-                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
-                        break;
-                    case "特定页":
-                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString()));
-                        break;
-                }
-            }
-            catch (Exception)
-            {
-                ContentDialog dialog = new ContentDialog
-                {
-                    Content = "导航失败，请检查网址或网络连接",
-                    Title = "提示",
-                    CloseButtonText = "确定"
-                };
-                _ = dialog.ShowAsync();
-                CreateNewTab(new Uri("about:blank"));
-            }
-
         }
 
         private async void OnFirstLoad()
@@ -227,6 +105,111 @@ namespace SmartLens
                 HistoryCollection = new ObservableCollection<KeyValuePair<DateTime, WebSiteItem>>();
                 HistoryFlag = HistoryTreeFlag.None;
             }
+
+            TabControl.ItemsSource = TabCollection;
+            TabCollection.CollectionChanged += (s, e) =>
+            {
+                if (TabCollection.Count > 0)
+                {
+                    TabViewItem Item = TabCollection[0] as TabViewItem;
+                    if (TabCollection.Count == 1)
+                    {
+                        Item.IsClosable = false;
+                    }
+                    else if (Item.IsClosable == false)
+                    {
+                        Item.IsClosable = true;
+                    }
+                }
+            };
+
+            FavouriteCollection.CollectionChanged += (s, e) =>
+            {
+                CurrentWebPage.FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            };
+
+            HistoryCollection.CollectionChanged += (s, e) =>
+            {
+                CurrentWebPage.HistoryEmptyTips.Visibility = HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+                lock (SyncRootProvider.SyncRoot)
+                {
+                    switch (e.Action)
+                    {
+                        case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                            var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
+                                           where (Item.Content as WebSiteItem).Subject == "今天"
+                                           select Item;
+                            if (TreeNode.Count() == 0)
+                            {
+                                CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
+                                {
+                                    Content = new WebSiteItem("今天", string.Empty),
+                                    HasUnrealizedChildren = true,
+                                    IsExpanded = true
+                                });
+                                HistoryFlag = HistoryTreeFlag.Today;
+                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                                {
+                                    CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
+                                    {
+                                        Content = New.Value,
+                                        HasUnrealizedChildren = false,
+                                        IsExpanded = false
+                                    });
+
+                                    SQLite.GetInstance().SetWebHistoryList(New);
+                                }
+
+                            }
+                            else
+                            {
+
+                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                                {
+                                    TreeNode.First().Children.Insert(0, new TreeViewNode
+                                    {
+                                        Content = New.Value,
+                                        HasUnrealizedChildren = false,
+                                        IsExpanded = false
+                                    });
+                                    SQLite.GetInstance().SetWebHistoryList(New);
+                                }
+
+                            }
+                            break;
+                    }
+                }
+            };
+
+            try
+            {
+                switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"]?.ToString() ?? "空白页")
+                {
+                    case "空白页":
+                        CreateNewTab(new Uri("about:blank"));
+                        break;
+                    case "主页":
+                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
+                        break;
+                    case "特定页":
+                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString()));
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                ContentDialog dialog = new ContentDialog
+                {
+                    Content = "导航失败，请检查网址或网络连接",
+                    Title = "提示",
+                    CloseButtonText = "确定"
+                };
+                _ = dialog.ShowAsync();
+                CreateNewTab(new Uri("about:blank"));
+            }
+
+
         }
 
         /// <summary>
@@ -235,7 +218,7 @@ namespace SmartLens
         /// <param name="uri">导航网址</param>
         private void CreateNewTab(Uri uri = null)
         {
-            lock (SyncRoot)
+            lock (SyncRootProvider.SyncRoot)
             {
                 WebPage Web = new WebPage(uri);
                 TabViewItem CurrentItem = new TabViewItem

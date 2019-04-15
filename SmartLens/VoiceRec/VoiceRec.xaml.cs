@@ -18,7 +18,6 @@ namespace SmartLens
         bool IsRecognizing = false;
         Task LoadTask;
         CancellationTokenSource Cancellation;
-        readonly object SyncRoot = new object();
         public static event EventHandler PlayCommanded;
         public static event EventHandler PauseCommanded;
         public static event EventHandler<string> MusicChoiceCommanded;
@@ -65,7 +64,7 @@ namespace SmartLens
 
         private async void Ellipse_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            lock (SyncRoot)
+            lock (SyncRootProvider.SyncRoot)
             {
                 if (IsRecognizing)
                 {

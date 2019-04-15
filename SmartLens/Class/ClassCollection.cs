@@ -1168,7 +1168,6 @@ namespace SmartLens
         private SqliteConnection OLEDB = new SqliteConnection("Filename=SmartLens_SQLite.db");
         private bool IsDisposed = false;
         private static SQLite SQL = null;
-        private static object Lock;
         private SQLite()
         {
             OLEDB.Open();
@@ -1187,11 +1186,7 @@ namespace SmartLens
         /// <returns>SQLite</returns>
         public static SQLite GetInstance()
         {
-            if (Lock == null)
-            {
-                Lock = new object();
-            }
-            lock (Lock)
+            lock (SyncRootProvider.SyncRoot)
             {
                 return SQL ?? (SQL = new SQLite());
             }
@@ -1470,7 +1465,6 @@ namespace SmartLens
                 OLEDB = null;
             }
             SQL = null;
-            Lock = null;
             IsDisposed = true;
         }
 
@@ -1531,8 +1525,6 @@ namespace SmartLens
     public sealed class CameraProvider
     {
         private static CameraHelper CamHelper = null;
-        private static readonly object DisposeLocker = new object();
-        private static readonly object CreateLocker = new object();
         private CameraProvider() { }
 
         /// <summary>
@@ -1540,7 +1532,7 @@ namespace SmartLens
         /// </summary>
         public static void Dispose()
         {
-            lock (DisposeLocker)
+            lock (SyncRootProvider.SyncRoot)
             {
                 if (CamHelper != null)
                 {
@@ -1556,7 +1548,7 @@ namespace SmartLens
         /// <returns>CameraHelper实例</returns>
         public static CameraHelper GetCameraHelperInstance()
         {
-            lock (CreateLocker)
+            lock (SyncRootProvider.SyncRoot)
             {
                 return CamHelper = CamHelper ?? new CameraHelper();
             }
@@ -2550,7 +2542,6 @@ namespace SmartLens
         public string CallName { get; private set; }
 
         private bool IsEnableSSL;
-        private static readonly object SyncRoot = new object();
         private ImapClient IMAPClient;
         private SmtpClient SMTPClient;
         private AutoResetEvent SMTPOprationLock;
@@ -2565,7 +2556,7 @@ namespace SmartLens
         /// <returns>实例</returns>
         public static EmailProtocolServiceProvider GetInstance()
         {
-            lock (SyncRoot)
+            lock (SyncRootProvider.SyncRoot)
             {
                 return Instance ?? (Instance = new EmailProtocolServiceProvider());
             }
@@ -3737,8 +3728,10 @@ namespace SmartLens
     }
     #endregion
 
+    #region lock关键字同步锁全局对象提供器
     public class SyncRootProvider
     {
-        public static object SyncRoot = new object();
+        public static object SyncRoot { get; } = new object();
     }
+    #endregion
 }

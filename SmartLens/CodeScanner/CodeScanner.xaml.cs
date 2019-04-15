@@ -23,7 +23,6 @@ namespace SmartLens
         AutoResetEvent ExitLocker;
         ObservableCollection<BarcodeItem> BarcodeHistory;
         bool IsRunning;
-        object SyncRoot;
         public CodeScanner()
         {
             InitializeComponent();
@@ -32,7 +31,6 @@ namespace SmartLens
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            SyncRoot = new object();
             IsRunning = false;
         }
 
@@ -66,7 +64,6 @@ namespace SmartLens
             }
             BarcodeHistory.Clear();
             BarcodeHistory = null;
-            SyncRoot = null;
             ExitLocker = null;
             Capture = null;
             ClaimedScanner = null;
@@ -164,7 +161,7 @@ namespace SmartLens
 
         private async void ClaimedScanner_DataReceived(ClaimedBarcodeScanner sender, BarcodeScannerDataReceivedEventArgs args)
         {
-            lock (SyncRoot)
+            lock (SyncRootProvider.SyncRoot)
             {
                 if (IsRunning)
                 {

@@ -33,7 +33,6 @@ namespace SmartLens
         Frame Nav;
         Queue<StorageFile> AddToZipQueue;
         const int AESCacheSize = 1048576;
-        object Locker;
         byte[] EncryptByteBuffer;
         byte[] DecryptByteBuffer;
 
@@ -56,7 +55,6 @@ namespace SmartLens
             CutQueue = new Queue<StorageFile>();
             AddToZipQueue = new Queue<StorageFile>();
             AESControl = new AutoResetEvent(false);
-            Locker = new object();
             Ticker = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(10)
@@ -705,7 +703,7 @@ namespace SmartLens
 
         private void GridViewControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            lock (Locker)
+            lock (SyncRootProvider.SyncRoot)
             {
                 if (GridViewControl.SelectedIndex == -1)
                 {
@@ -895,7 +893,6 @@ namespace SmartLens
                         }
                         await Task.Run(async () =>
                         {
-                            object Lock = new object();
                             int HCounter = 0, TCounter = 0, RepeatFilter = -1;
                             foreach (ZipEntry Entry in zipFile)
                             {
@@ -914,7 +911,7 @@ namespace SmartLens
                                         {
                                             await LoadingControl.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                                             {
-                                                lock (Lock)
+                                                lock (SyncRootProvider.SyncRoot)
                                                 {
                                                     string temp = ProgressInfo.Text.Remove(ProgressInfo.Text.LastIndexOf('.') + 1);
                                                     TCounter = Convert.ToInt32((e.Processed / FileSize) * 100);
@@ -1001,7 +998,6 @@ namespace SmartLens
                 {
                     ZipStream.SetLevel(ZipLevel);
                     ZipStream.UseZip64 = UseZip64.Off;
-                    object Lock = new object();
                     int HCounter = 0, TCounter = 0, RepeatFilter = -1;
                     if (EnableCryption)
                     {
@@ -1025,7 +1021,7 @@ namespace SmartLens
                                     {
                                         await LoadingControl.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                                         {
-                                            lock (Lock)
+                                            lock (SyncRootProvider.SyncRoot)
                                             {
                                                 string temp = ProgressInfo.Text.Remove(ProgressInfo.Text.LastIndexOf('.') + 1);
                                                 TCounter = (int)e.PercentComplete;
@@ -1071,7 +1067,7 @@ namespace SmartLens
                                     {
                                         await LoadingControl.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                                         {
-                                            lock (Lock)
+                                            lock (SyncRootProvider.SyncRoot)
                                             {
                                                 string temp = ProgressInfo.Text.Remove(ProgressInfo.Text.LastIndexOf('.') + 1);
                                                 TCounter = (int)e.PercentComplete;

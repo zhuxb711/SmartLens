@@ -285,13 +285,12 @@ namespace SmartLens
                                     using (Stream stream = await NewFile.OpenStreamForWriteAsync())
                                     {
                                         double FileSize = Entry.Size;
-                                        object Lock = new object();
                                         int RepeatFilter = -1;
                                         StreamUtils.Copy(ZipTempStream, stream, new byte[4096], async (s, m) =>
                                         {
                                             await LoadingControl.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                                             {
-                                                lock (Lock)
+                                                lock (SyncRootProvider.SyncRoot)
                                                 {
                                                     string temp = ProgressInfo.Text.Remove(ProgressInfo.Text.LastIndexOf('.') + 1);
                                                     int TCounter = Convert.ToInt32((m.Processed / FileSize) * 100);

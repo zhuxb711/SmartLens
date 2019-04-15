@@ -24,7 +24,6 @@ namespace SmartLens
         private AutoResetEvent ExitLocker;
         private CancellationTokenSource Cancellation;
         private uint MaxLoad = 0;
-        private readonly object SyncRoot = new object();
         public USBPdfReader()
         {
             InitializeComponent();
@@ -114,7 +113,7 @@ namespace SmartLens
              */
             LoadQueue.Enqueue(Flip.SelectedIndex);
 
-            lock (SyncRoot)
+            lock (SyncRootProvider.SyncRoot)
             {
                 if (IsRunning)
                 {
