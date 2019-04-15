@@ -27,6 +27,7 @@ namespace SmartLens
         public bool IsPressedFavourite;
         public WebView WebBrowser = null;
         private KeyValuePair<DateTime, WebSiteItem> CurrentHistory;
+        public TabViewItem ThisTab;
 
         public WebPage(Uri uri = null)
         {
@@ -181,22 +182,31 @@ namespace SmartLens
         private void WebPage_Loaded(object sender, RoutedEventArgs e)
         {
             FavEmptyTips.Visibility = WebTab.ThisPage.FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            var TreeNodes = from Item in HistoryTree.RootNodes where (Item.Content as WebSiteItem).Subject == "今天" select Item;
-            if (TreeNodes.Count() > 0)
-            {
-                var Node = TreeNodes.First();
-                if (Node.Children.Count != WebTab.ThisPage.HistoryCollection.Count)
-                {
-                    Node.Children.Clear();
+            HistoryEmptyTips.Visibility = WebTab.ThisPage.HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-                    foreach (var HistoryItem in WebTab.ThisPage.HistoryCollection)
+            if (WebTab.ThisPage.HistoryCollection.Count == 0)
+            {
+                HistoryTree.RootNodes.Clear();
+            }
+            else
+            {
+                var TreeNodes = from Item in HistoryTree.RootNodes where (Item.Content as WebSiteItem).Subject == "今天" select Item;
+                if (TreeNodes.Count() > 0)
+                {
+                    var Node = TreeNodes.First();
+                    if (Node.Children.Count != WebTab.ThisPage.HistoryCollection.Count)
                     {
-                        Node.Children.Add(new TreeViewNode
+                        Node.Children.Clear();
+
+                        foreach (var HistoryItem in WebTab.ThisPage.HistoryCollection)
                         {
-                            Content = HistoryItem.Value,
-                            HasUnrealizedChildren = false,
-                            IsExpanded = false
-                        });
+                            Node.Children.Add(new TreeViewNode
+                            {
+                                Content = HistoryItem.Value,
+                                HasUnrealizedChildren = false,
+                                IsExpanded = false
+                            });
+                        }
                     }
                 }
             }
@@ -264,6 +274,47 @@ namespace SmartLens
                 ApplicationData.Current.LocalSettings.Values["WebEnableDB"] = true;
                 AllowIndexedDB.IsOn = true;
             }
+
+            InPrivate.Toggled -= InPrivate_Toggled;
+            if (ApplicationData.Current.LocalSettings.Values["WebActivateInPrivate"] is bool EnableInPrivate)
+            {
+                InPrivate.IsOn = EnableInPrivate;
+                if (EnableInPrivate)
+                {
+                    Favourite.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    Favourite.Visibility = Visibility.Visible;
+                }
+                InPrivate.Toggled += InPrivate_Toggled;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["WebActivateInPrivate"] = false;
+                InPrivate.IsOn = false;
+                InPrivate.Toggled += InPrivate_Toggled;
+            }
+        }
+
+        private async void InPrivate_Toggled(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["WebActivateInPrivate"] = InPrivate.IsOn;
+            if (InPrivate.IsOn)
+            {
+                Favourite.Visibility = Visibility.Collapsed;
+
+                if (Resources.TryGetValue("InAppNotificationWithButtonsTemplate", out object NotificationTemplate) && NotificationTemplate is DataTemplate template)
+                {
+                    InPrivateNotification.Show(template, 10000);
+                }
+            }
+            else
+            {
+                InPrivateNotification.Dismiss();
+                Favourite.Visibility = Visibility.Visible;
+                await WebView.ClearTemporaryWebDataAsync();
+            }
         }
 
         /// <summary>
@@ -288,6 +339,18 @@ namespace SmartLens
             WebBrowser.PermissionRequested += WebBrowser_PermissionRequested;
             WebBrowser.SeparateProcessLost += WebBrowser_SeparateProcessLost;
             WebBrowser.NavigationFailed += WebBrowser_NavigationFailed;
+            WebBrowser.FrameNavigationCompleted += WebBrowser_FrameNavigationCompleted;
+            WebBrowser.LoadCompleted += WebBrowser_LoadCompleted;
+        }
+
+        private void WebBrowser_LoadCompleted(object sender, Windows.UI.Xaml.Navigation.NavigationEventArgs e)
+        {
+            
+        }
+
+        private void WebBrowser_FrameNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        {
+            
         }
 
         private async void WebBrowser_NavigationFailed(object sender, WebViewNavigationFailedEventArgs e)
@@ -316,9 +379,9 @@ namespace SmartLens
             WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
         }
 
-        private async void WebBrowser_ContentLoading(WebView sender, WebViewContentLoadingEventArgs args)
+        private void WebBrowser_ContentLoading(WebView sender, WebViewContentLoadingEventArgs args)
         {
-            (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle != "" ? WebBrowser.DocumentTitle : "正在加载...";
+            ThisTab.Header = WebBrowser.DocumentTitle != "" ? WebBrowser.DocumentTitle : "正在加载...";
 
             AutoSuggest.Text = args.Uri.ToString();
 
@@ -338,42 +401,52 @@ namespace SmartLens
                 IsPressedFavourite = false;
             }
 
-
-            var HistoryItems = from Item in WebTab.ThisPage.HistoryCollection
-                               where Item.Value.WebSite == AutoSuggest.Text
-                               select Item;
-            var HistoryItem = HistoryItems.FirstOrDefault();
-            var RecordTime = HistoryItem.Key;
-            if (RecordTime == DateTime.Today)
+            if (InPrivate.IsOn)
             {
-                foreach (var (RootNode, InnerNode) in from RootNode in HistoryTree.RootNodes
-                                                      where (RootNode.Content as WebSiteItem).Subject == "今天"
-                                                      from InnerNode in RootNode.Children
-                                                      where (InnerNode.Content as WebSiteItem) == HistoryItem.Value
-                                                      select (RootNode, InnerNode))
-                {
-                    RootNode.Children.Remove(InnerNode);
-                    await SQLite.GetInstance().DeleteWebHistory(HistoryItem);
-                    break;
-                }
-                WebTab.ThisPage.HistoryCollection.Remove(HistoryItem);
+                return;
             }
 
-            if (AutoSuggest.Text != "about:blank")
+            lock (SyncRootProvider.SyncRoot)
             {
-                CurrentHistory = new KeyValuePair<DateTime, WebSiteItem>(DateTime.Today, new WebSiteItem(WebBrowser.DocumentTitle != "" ? WebBrowser.DocumentTitle : "正在加载...", AutoSuggest.Text));
-                WebTab.ThisPage.HistoryCollection.Insert(0, CurrentHistory);
+                var HistoryItems = from Item in WebTab.ThisPage.HistoryCollection
+                                   where Item.Value.WebSite == AutoSuggest.Text
+                                   select Item;
+                var HistoryItem = HistoryItems.FirstOrDefault();
+                var RecordTime = HistoryItem.Key;
+                if (RecordTime == DateTime.Today)
+                {
+                    foreach (var (RootNode, InnerNode) in from RootNode in HistoryTree.RootNodes
+                                                          where (RootNode.Content as WebSiteItem).Subject == "今天"
+                                                          from InnerNode in RootNode.Children
+                                                          where (InnerNode.Content as WebSiteItem) == HistoryItem.Value
+                                                          select (RootNode, InnerNode))
+                    {
+                        RootNode.Children.Remove(InnerNode);
+                        SQLite.GetInstance().DeleteWebHistory(HistoryItem);
+                        break;
+                    }
+                    WebTab.ThisPage.HistoryCollection.Remove(HistoryItem);
+                }
+
+                if (AutoSuggest.Text != "about:blank")
+                {
+                    CurrentHistory = new KeyValuePair<DateTime, WebSiteItem>(DateTime.Today, new WebSiteItem(WebBrowser.DocumentTitle != "" ? WebBrowser.DocumentTitle : "正在加载...", AutoSuggest.Text));
+                    WebTab.ThisPage.HistoryCollection.Insert(0, CurrentHistory);
+                }
             }
         }
 
         private void WebBrowser_NewWindowRequested(WebView sender, WebViewNewWindowRequestedEventArgs args)
         {
+            WebPage Web = new WebPage(args.Uri);
             TabViewItem NewItem = new TabViewItem
             {
                 Header = "空白页",
                 Icon = new SymbolIcon(Symbol.Document),
-                Content = new WebPage(args.Uri)
+                Content = Web
             };
+            Web.ThisTab = NewItem;
+
             WebTab.ThisPage.TabCollection.Add(NewItem);
             WebTab.ThisPage.TabControl.SelectedItem = NewItem;
             args.Handled = true;
@@ -508,23 +581,26 @@ namespace SmartLens
 
         private void WebBrowser_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
-            if ((string)(WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header == "正在加载...")
+            if (ThisTab.Header.ToString() == "正在加载...")
             {
-                (WebTab.ThisPage.TabControl.SelectedItem as TabViewItem).Header = WebBrowser.DocumentTitle == "" ? "空白页" : WebBrowser.DocumentTitle;
+                ThisTab.Header = WebBrowser.DocumentTitle == "" ? "空白页" : WebBrowser.DocumentTitle;
             }
             if (CurrentHistory.Equals(default(KeyValuePair<DateTime, WebSiteItem>)))
             {
                 goto FLAG;
             }
-            if (CurrentHistory.Value.Subject == "正在加载...")
+            lock (SyncRootProvider.SyncRoot)
             {
-                WebTab.ThisPage.HistoryCollection.Remove(CurrentHistory);
-                if (WebBrowser.DocumentTitle != "")
+                if (CurrentHistory.Value.Subject == "正在加载...")
                 {
-                    WebTab.ThisPage.HistoryCollection.Insert(0, new KeyValuePair<DateTime, WebSiteItem>(DateTime.Today, new WebSiteItem(WebBrowser.DocumentTitle, AutoSuggest.Text)));
+                    WebTab.ThisPage.HistoryCollection.Remove(CurrentHistory);
+                    if (WebBrowser.DocumentTitle != "")
+                    {
+                        WebTab.ThisPage.HistoryCollection.Insert(0, new KeyValuePair<DateTime, WebSiteItem>(DateTime.Today, new WebSiteItem(WebBrowser.DocumentTitle, AutoSuggest.Text)));
+                    }
                 }
             }
-            FLAG:
+        FLAG:
             RefreshState.Symbol = Symbol.Refresh;
             ProGrid.Width = new GridLength(8);
             Progress.IsActive = false;
@@ -670,6 +746,8 @@ namespace SmartLens
 
         private async void ClearCache_Click(object sender, RoutedEventArgs e)
         {
+            TipsFly.Hide();
+
             await WebView.ClearTemporaryWebDataAsync();
             await SQLite.GetInstance().ClearTable("WebHistory");
             WebTab.ThisPage.HistoryCollection.Clear();
@@ -715,6 +793,8 @@ namespace SmartLens
                 });
             }
             CurrentHistory = default;
+            ThisTab = null;
+            InPrivate.Toggled -= InPrivate_Toggled;
         }
 
         private void FavoutiteListButton_Click(object sender, RoutedEventArgs e)
@@ -722,7 +802,7 @@ namespace SmartLens
             SplitControl.IsPaneOpen = !SplitControl.IsPaneOpen;
         }
 
-        private void Favourite_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void Favourite_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (IsPressedFavourite)
             {
@@ -731,7 +811,7 @@ namespace SmartLens
             Favourite.Foreground = new SolidColorBrush(Colors.Gold);
         }
 
-        private void Favourite_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void Favourite_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (IsPressedFavourite)
             {
@@ -740,9 +820,9 @@ namespace SmartLens
             Favourite.Foreground = new SolidColorBrush(Colors.White);
         }
 
-        private async void Favourite_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private async void Favourite_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            if (WebTab.ThisPage.TabCollection[WebTab.ThisPage.TabControl.SelectedIndex].Header.ToString() == "空白页")
+            if (ThisTab.Header.ToString() == "空白页")
             {
                 return;
             }
@@ -922,6 +1002,55 @@ namespace SmartLens
         {
             var WebItem = (args.InvokedItem as TreeViewNode).Content as WebSiteItem;
             WebBrowser.Navigate(new Uri(WebItem.WebSite));
+        }
+
+        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
+            InPrivateNotification.Dismiss();
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            InPrivate.IsOn = false;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            TipsFly.Hide();
+        }
+
+        private void SettingControl_PaneOpening(SplitView sender, object args)
+        {
+            Scroll.ChangeView(null, 0, null);
+        }
+
+        private void TextBlock_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
+        }
+
+        private async void ClearData_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button).Name == "ClearFav")
+            {
+                ClearFavFly.Hide();
+                await SQLite.GetInstance().ClearTable("WebFavourite");
+                WebTab.ThisPage.FavouriteCollection.Clear();
+                WebTab.ThisPage.FavouriteDictionary.Clear();
+            }
+            else
+            {
+                ClearHistoryFly.Hide();
+                await SQLite.GetInstance().ClearTable("WebHistory");
+                WebTab.ThisPage.HistoryCollection.Clear();
+                HistoryTree.RootNodes.Clear();
+            }
+        }
+
+        private void CancelClear_Click(object sender, RoutedEventArgs e)
+        {
+            ClearFavFly.Hide();
+            ClearHistoryFly.Hide();
         }
     }
 }

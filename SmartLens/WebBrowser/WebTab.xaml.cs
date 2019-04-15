@@ -50,64 +50,74 @@ namespace SmartLens
                 CurrentWebPage.FavEmptyTips.Visibility = FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             };
 
-            HistoryCollection.CollectionChanged += async(s, e) =>
+            HistoryCollection.CollectionChanged += (s, e) =>
             {
-                switch (e.Action)
+                CurrentWebPage.HistoryEmptyTips.Visibility = HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+                lock (SyncRootProvider.SyncRoot)
                 {
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        var RemoveNode = from Item in CurrentWebPage.HistoryTree.RootNodes[0].Children
-                                         let temp = Item.Content as WebSiteItem
-                                         where temp.Subject == "正在加载..." && temp.WebSite == ((KeyValuePair<DateTime, WebSiteItem>)e.OldItems[0]).Value.WebSite
-                                         select Item;
-                        if (RemoveNode.Count() > 0)
-                        {
-                            CurrentWebPage.HistoryTree.RootNodes[0].Children.Remove(RemoveNode.First());
-                        }
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
-                                       where (Item.Content as WebSiteItem).Subject == "今天"
-                                       select Item;
-                        if (TreeNode.Count() == 0)
-                        {
-                            CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
+                    switch (e.Action)
+                    {
+                        case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+
+                            var RemoveNode = from Item in CurrentWebPage.HistoryTree.RootNodes[0].Children
+                                             let temp = Item.Content as WebSiteItem
+                                             where temp.Subject == "正在加载..." && temp.WebSite == ((KeyValuePair<DateTime, WebSiteItem>)e.OldItems[0]).Value.WebSite
+                                             select Item;
+                            if (RemoveNode.Count() > 0)
                             {
-                                Content = new WebSiteItem("今天", string.Empty),
-                                HasUnrealizedChildren = true,
-                                IsExpanded = true
-                            });
-                            HistoryFlag = HistoryTreeFlag.Today;
-                            foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
-                            {
-                                CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
-                                {
-                                    Content = New.Value,
-                                    HasUnrealizedChildren = false,
-                                    IsExpanded = false
-                                });
-                                if (New.Value.Subject != "正在加载...")
-                                {
-                                    await SQLite.GetInstance().SetWebHistoryList(New);
-                                }
+                                CurrentWebPage.HistoryTree.RootNodes[0].Children.Remove(RemoveNode.First());
                             }
-                        }
-                        else
-                        {
-                            foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+
+                            break;
+                        case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                            var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
+                                           where (Item.Content as WebSiteItem).Subject == "今天"
+                                           select Item;
+                            if (TreeNode.Count() == 0)
                             {
-                                TreeNode.First().Children.Insert(0, new TreeViewNode
+                                CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
                                 {
-                                    Content = New.Value,
-                                    HasUnrealizedChildren = false,
-                                    IsExpanded = false
+                                    Content = new WebSiteItem("今天", string.Empty),
+                                    HasUnrealizedChildren = true,
+                                    IsExpanded = true
                                 });
-                                if (New.Value.Subject != "正在加载...")
+                                HistoryFlag = HistoryTreeFlag.Today;
+                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
                                 {
-                                    await SQLite.GetInstance().SetWebHistoryList(New);
+                                    CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
+                                    {
+                                        Content = New.Value,
+                                        HasUnrealizedChildren = false,
+                                        IsExpanded = false
+                                    });
+                                    if (New.Value.Subject != "正在加载...")
+                                    {
+                                        SQLite.GetInstance().SetWebHistoryList(New);
+                                    }
                                 }
+
                             }
-                        }
-                        break;
+                            else
+                            {
+
+                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                                {
+                                    TreeNode.First().Children.Insert(0, new TreeViewNode
+                                    {
+                                        Content = New.Value,
+                                        HasUnrealizedChildren = false,
+                                        IsExpanded = false
+                                    });
+                                    if (New.Value.Subject != "正在加载...")
+                                    {
+                                        SQLite.GetInstance().SetWebHistoryList(New);
+                                    }
+                                }
+
+                            }
+                            break;
+                    }
                 }
             };
 
@@ -227,12 +237,14 @@ namespace SmartLens
         {
             lock (SyncRoot)
             {
+                WebPage Web = new WebPage(uri);
                 TabViewItem CurrentItem = new TabViewItem
                 {
                     Header = "空白页",
                     Icon = new SymbolIcon(Symbol.Document),
-                    Content = new WebPage(uri)
+                    Content = Web
                 };
+                Web.ThisTab = CurrentItem;
                 TabCollection.Add(CurrentItem);
                 TabControl.SelectedItem = CurrentItem;
             }

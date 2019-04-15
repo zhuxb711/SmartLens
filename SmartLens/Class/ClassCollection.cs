@@ -1234,24 +1234,24 @@ namespace SmartLens
             return HistoryList;
         }
 
-        public async Task DeleteWebHistory(KeyValuePair<DateTime, WebSiteItem> Info)
+        public void DeleteWebHistory(KeyValuePair<DateTime, WebSiteItem> Info)
         {
             SqliteCommand Command = new SqliteCommand("Delete From WebHistory Where Subject=@Subject And WebSite=@WebSite And DateTime=@DateTime", OLEDB);
             Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
             Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
             Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
 
-            _ = await Command.ExecuteNonQueryAsync();
+            Command.ExecuteNonQuery();
         }
 
-        public async Task SetWebHistoryList(KeyValuePair<DateTime, WebSiteItem> Info)
+        public void SetWebHistoryList(KeyValuePair<DateTime, WebSiteItem> Info)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WebHistory Values (@Subject,@WebSite,@DateTime)", OLEDB);
             Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
             Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
             Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
 
-            _ = await Command.ExecuteNonQueryAsync();
+            Command.ExecuteNonQuery();
         }
 
         public async Task SetWebFavouriteList(WebSiteItem Info)
@@ -3736,4 +3736,9 @@ namespace SmartLens
         None = 7
     }
     #endregion
+
+    public class SyncRootProvider
+    {
+        public static object SyncRoot = new object();
+    }
 }
