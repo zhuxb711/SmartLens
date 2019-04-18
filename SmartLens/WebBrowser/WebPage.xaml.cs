@@ -32,9 +32,18 @@ namespace SmartLens
         public WebPage(Uri uri = null)
         {
             InitializeComponent();
-
             FavouriteList.ItemsSource = WebTab.ThisPage.FavouriteCollection;
-            WebBrowser = new WebView(WebViewExecutionMode.SeparateProcess);
+
+        //由于未知原因此处new WebView时，若选择多进程模型则可能会引发异常
+        FLAG:
+            try
+            {
+                WebBrowser = new WebView(WebViewExecutionMode.SeparateProcess);
+            }
+            catch (Exception)
+            {
+                goto FLAG;
+            }
             InitHistoryList();
             InitializeWebView();
             Loaded += WebPage_Loaded;
@@ -45,8 +54,12 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 初始化历史记录列表
+        /// </summary>
         private void InitHistoryList()
         {
+            //根据WebTab提供的分类信息决定历史记录树应当展示多少分类
             switch (WebTab.ThisPage.HistoryFlag)
             {
                 case HistoryTreeFlag.All:
@@ -134,11 +147,14 @@ namespace SmartLens
                     break;
             }
 
+            //遍历HistoryCollection集合以向历史记录树中对应分类添加子对象
             foreach (var HistoryItem in WebTab.ThisPage.HistoryCollection)
             {
                 if (HistoryItem.Key == DateTime.Today.AddDays(-1))
                 {
-                    var TreeNode = from Item in HistoryTree.RootNodes where (Item.Content as WebSiteItem).Subject == "昨天" select Item;
+                    var TreeNode = from Item in HistoryTree.RootNodes
+                                   where (Item.Content as WebSiteItem).Subject == "昨天"
+                                   select Item;
                     TreeNode.First().Children.Add(new TreeViewNode
                     {
                         Content = HistoryItem.Value,
@@ -149,7 +165,9 @@ namespace SmartLens
                 }
                 else if (HistoryItem.Key == DateTime.Today)
                 {
-                    var TreeNode = from Item in HistoryTree.RootNodes where (Item.Content as WebSiteItem).Subject == "今天" select Item;
+                    var TreeNode = from Item in HistoryTree.RootNodes
+                                   where (Item.Content as WebSiteItem).Subject == "今天"
+                                   select Item;
                     TreeNode.First().Children.Add(new TreeViewNode
                     {
                         Content = HistoryItem.Value,
@@ -159,7 +177,9 @@ namespace SmartLens
                 }
                 else
                 {
-                    var TreeNode = from Item in HistoryTree.RootNodes where (Item.Content as WebSiteItem).Subject == "更早" select Item;
+                    var TreeNode = from Item in HistoryTree.RootNodes
+                                   where (Item.Content as WebSiteItem).Subject == "更早"
+                                   select Item;
                     TreeNode.First().Children.Add(new TreeViewNode
                     {
                         Content = HistoryItem.Value,
@@ -172,16 +192,24 @@ namespace SmartLens
 
         private void WebPage_Loaded(object sender, RoutedEventArgs e)
         {
+            //Loaded在每次切换至当前标签页时都会得到执行，因此在此处可以借机同步不同标签页之间的数据
+            //包括其他标签页向收藏列表新增的条目，或其他标签页通过访问网页而向历史记录添加的新条目
+
+            //确定历史记录或收藏列表是否为空，若空则显示“无内容”提示标签
             FavEmptyTips.Visibility = WebTab.ThisPage.FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             HistoryEmptyTips.Visibility = WebTab.ThisPage.HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
+            //其他标签页已执行清空历史记录时，当前标签页也必须删除历史记录树内的所有节点
             if (WebTab.ThisPage.HistoryCollection.Count == 0)
             {
                 HistoryTree.RootNodes.Clear();
             }
             else
             {
-                var TreeNodes = from Item in HistoryTree.RootNodes where (Item.Content as WebSiteItem).Subject == "今天" select Item;
+                //寻找分类标题为“今天”的节点，与HistoryCollection内的数量进行比对，若不同则发生了变动
+                var TreeNodes = from Item in HistoryTree.RootNodes
+                                where (Item.Content as WebSiteItem).Subject == "今天"
+                                select Item;
                 if (TreeNodes.Count() > 0)
                 {
                     var Node = TreeNodes.First();
@@ -202,6 +230,7 @@ namespace SmartLens
                 }
             }
 
+            //以下为检索各存储设置以同步各标签页之间对设置界面选项的更改
             if (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"] is string Method)
             {
                 foreach (var Item in from string Item in TabOpenMethod.Items
@@ -266,6 +295,8 @@ namespace SmartLens
                 AllowIndexedDB.IsOn = true;
             }
 
+            //切换不同标签页时，应当同步InPrivate模式的设置
+            //同时因为改变InPrivate设置将导致Toggled事件触发，因此先解除，改变后再绑定
             InPrivate.Toggled -= InPrivate_Toggled;
             if (ApplicationData.Current.LocalSettings.Values["WebActivateInPrivate"] is bool EnableInPrivate)
             {
@@ -309,7 +340,7 @@ namespace SmartLens
         }
 
         /// <summary>
-        /// 初始化WebView
+        /// 初始化WebView控件并部署至XAML界面
         /// </summary>
         private void InitializeWebView()
         {
@@ -367,6 +398,7 @@ namespace SmartLens
             Back.IsEnabled = WebBrowser.CanGoBack;
             Forward.IsEnabled = WebBrowser.CanGoForward;
 
+            //根据AutoSuggest.Text的内容决定是否改变收藏星星的状态
             if (WebTab.ThisPage.FavouriteDictionary.ContainsKey(AutoSuggest.Text))
             {
                 Favourite.Symbol = Symbol.SolidStar;
@@ -385,12 +417,14 @@ namespace SmartLens
                 return;
             }
 
+            //多个标签页可能同时执行至此处，因此引用全局锁对象来确保线程同步
             lock (SyncRootProvider.SyncRoot)
             {
                 if (AutoSuggest.Text != "about:blank" && WebBrowser.DocumentTitle != "")
                 {
                     var HistoryItems = from Item in WebTab.ThisPage.HistoryCollection
-                                       where Item.Value.WebSite == AutoSuggest.Text && Item.Key == DateTime.Today
+                                       let DominName = AutoSuggest.Text.StartsWith("https://") ? AutoSuggest.Text.Substring(8) : AutoSuggest.Text.StartsWith("http://") ? AutoSuggest.Text.Substring(7) : AutoSuggest.Text.StartsWith("ftp://") ? AutoSuggest.Text.Substring(6) : null
+                                       where Item.Value.DominName == DominName && Item.Key == DateTime.Today
                                        select Item;
                     var HistoryItem = HistoryItems.FirstOrDefault();
 
@@ -417,6 +451,8 @@ namespace SmartLens
         private void WebBrowser_NewWindowRequested(WebView sender, WebViewNewWindowRequestedEventArgs args)
         {
             WebPage Web = new WebPage(args.Uri);
+
+            //TabViewItem的Header必须设置否则将导致异常发生
             TabViewItem NewItem = new TabViewItem
             {
                 Header = "空白页",
@@ -427,6 +463,8 @@ namespace SmartLens
 
             WebTab.ThisPage.TabCollection.Add(NewItem);
             WebTab.ThisPage.TabControl.SelectedItem = NewItem;
+
+            //设置此标志以阻止打开外部浏览器
             args.Handled = true;
         }
 
@@ -437,6 +475,11 @@ namespace SmartLens
             public List<string> s { get; set; }
         }
 
+        /// <summary>
+        /// 从baidu搜索建议获取建议的Json字符串
+        /// </summary>
+        /// <param name="Context">搜索的内容</param>
+        /// <returns>Json</returns>
         private string GetJsonFromWeb(string Context)
         {
             string url = "http://suggestion.baidu.com/su?wd=" + Context + "&cb=window.baidu.sug";
@@ -477,11 +520,12 @@ namespace SmartLens
             }
             else
             {
-                try
+                //尝试创建搜索框键入内容的Uri，若创建失败则并非网址
+                if (Uri.TryCreate(args.QueryText, UriKind.Absolute, out Uri uri))
                 {
-                    WebBrowser.Navigate(new Uri(args.QueryText));
+                    WebBrowser.Navigate(uri);
                 }
-                catch (Exception)
+                else
                 {
                     WebBrowser.Navigate(new Uri("https://www.baidu.com/s?wd=" + args.QueryText));
                 }
@@ -524,11 +568,13 @@ namespace SmartLens
 
         private void Home_Click(object sender, RoutedEventArgs e)
         {
-            try
+            string HomeString = ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString();
+
+            if (Uri.TryCreate(HomeString, UriKind.Absolute, out Uri uri))
             {
-                WebBrowser.Navigate(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
+                WebBrowser.Navigate(uri);
             }
-            catch (Exception)
+            else
             {
                 ContentDialog dialog = new ContentDialog
                 {
@@ -571,6 +617,7 @@ namespace SmartLens
                 goto FLAG;
             }
 
+            //处理仅刷新的情况。点击刷新时将不会触发ContentLoading事件，因此需要单独处理
             if (IsRefresh)
             {
                 lock (SyncRootProvider.SyncRoot)
@@ -578,7 +625,8 @@ namespace SmartLens
                     if (AutoSuggest.Text != "about:blank" && WebBrowser.DocumentTitle != "")
                     {
                         var HistoryItems = from Item in WebTab.ThisPage.HistoryCollection
-                                           where Item.Value.WebSite == AutoSuggest.Text && Item.Key == DateTime.Today
+                                           let DominName = AutoSuggest.Text.StartsWith("https://") ? AutoSuggest.Text.Substring(8) : AutoSuggest.Text.StartsWith("http://") ? AutoSuggest.Text.Substring(7) : AutoSuggest.Text.StartsWith("ftp://") ? AutoSuggest.Text.Substring(6) : null
+                                           where Item.Value.DominName == DominName && Item.Key == DateTime.Today
                                            select Item;
                         var HistoryItem = HistoryItems.FirstOrDefault();
 
@@ -770,7 +818,7 @@ namespace SmartLens
         {
             ContentDialog dialog = new ContentDialog
             {
-                Content = "SmartLens自带浏览器\r\r具备SmartScreen保护和完整权限控制\r\r基于Microsoft Edge内核的轻型浏览器",
+                Content = "SmartLens浏览器\r\r具备SmartScreen保护和完整权限控制\r\r基于Microsoft Edge内核的轻型浏览器",
                 Title = "关于",
                 CloseButtonText = "确定"
             };
@@ -901,6 +949,8 @@ namespace SmartLens
 
         private void SettingControl_PaneClosed(SplitView sender, object args)
         {
+            //设置面板关闭时保存所有设置内容
+
             if (string.IsNullOrWhiteSpace(MainUrl.Text))
             {
                 ApplicationData.Current.LocalSettings.Values["WebTabMainPage"] = "about:blank";

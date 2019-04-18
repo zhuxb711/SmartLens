@@ -3647,12 +3647,36 @@ namespace SmartLens
     #endregion
 
     #region 条码识别历史记录显示类
+    /// <summary>
+    /// 保存条码识别的历史记录
+    /// </summary>
     public sealed class BarcodeItem
     {
+        /// <summary>
+        /// 指示所识别到的条码的类型
+        /// </summary>
         public string DataType { get; private set; }
+
+        /// <summary>
+        /// 条码所包含的数据
+        /// </summary>
         public string DataLabel { get; private set; }
+
+        /// <summary>
+        /// 指示文本控件的可见性
+        /// </summary>
         public Visibility TextVisibility { get; private set; }
+
+        /// <summary>
+        /// 指示超链接控件的可见性
+        /// </summary>
         public Visibility HyperLinkVisibility { get; private set; }
+
+        /// <summary>
+        /// 创建BarcodeItem的新实例
+        /// </summary>
+        /// <param name="DataType">数据类型</param>
+        /// <param name="DataLabel">数据</param>
         public BarcodeItem(string DataType, string DataLabel)
         {
             this.DataType = DataType + "码";
@@ -3673,11 +3697,36 @@ namespace SmartLens
     }
     #endregion
 
-    #region 网页信息项目
+    #region 网页信息存储类
+    /// <summary>
+    /// 存储网页信息
+    /// </summary>
     public sealed class WebSiteItem
     {
+        /// <summary>
+        /// 获取网页标题
+        /// </summary>
         public string Subject { get; private set; }
+
+        /// <summary>
+        /// 获取网址
+        /// </summary>
         public string WebSite { get; private set; }
+
+        /// <summary>
+        /// 获取网址域名
+        /// </summary>
+        public string DominName
+        {
+            get
+            {
+                return WebSite.StartsWith("https://") ? WebSite.Substring(8) : WebSite.StartsWith("http://") ? WebSite.Substring(7) : WebSite.StartsWith("ftp://") ? WebSite.Substring(6) : null;
+            }
+        }
+
+        /// <summary>
+        /// 指示历史记录树的分类标题前的星形控件的显隐性
+        /// </summary>
         public Visibility StarVisibility
         {
             get
@@ -3692,6 +3741,10 @@ namespace SmartLens
                 }
             }
         }
+
+        /// <summary>
+        /// 指示字体大小以区分网页内容和分类标题
+        /// </summary>
         public double FontSize
         {
             get
@@ -3706,6 +3759,12 @@ namespace SmartLens
                 }
             }
         }
+
+        /// <summary>
+        /// 创建WebSiteItem的新实例
+        /// </summary>
+        /// <param name="Subject">网页标题</param>
+        /// <param name="WebSite">网址</param>
         public WebSiteItem(string Subject, string WebSite)
         {
             this.Subject = Subject;
@@ -3715,6 +3774,9 @@ namespace SmartLens
     #endregion
 
     #region 网页历史记录标志枚举
+    /// <summary>
+    /// 历史记录分类标题种类枚举
+    /// </summary>
     public enum HistoryTreeFlag
     {
         All = 0,
@@ -3729,8 +3791,14 @@ namespace SmartLens
     #endregion
 
     #region lock关键字同步锁全局对象提供器
+    /// <summary>
+    /// 提供全局锁定根
+    /// </summary>
     public class SyncRootProvider
     {
+        /// <summary>
+        /// 锁定根对象
+        /// </summary>
         public static object SyncRoot { get; } = new object();
     }
     #endregion

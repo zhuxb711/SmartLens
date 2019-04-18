@@ -182,34 +182,48 @@ namespace SmartLens
                 }
             };
 
-            try
+            switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"]?.ToString() ?? "空白页")
             {
-                switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"]?.ToString() ?? "空白页")
-                {
-                    case "空白页":
+                case "空白页":
+                    CreateNewTab(new Uri("about:blank"));
+                    break;
+                case "主页":
+                    string TabMain = ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString();
+                    if (Uri.TryCreate(TabMain, UriKind.Absolute, out Uri uri))
+                    {
+                        CreateNewTab(uri);
+                    }
+                    else
+                    {
+                        ContentDialog dialog = new ContentDialog
+                        {
+                            Content = "导航失败，请检查网址或网络连接",
+                            Title = "提示",
+                            CloseButtonText = "确定"
+                        };
+                        _ = dialog.ShowAsync();
                         CreateNewTab(new Uri("about:blank"));
-                        break;
-                    case "主页":
-                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
-                        break;
-                    case "特定页":
-                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString()));
-                        break;
-                }
+                    }
+                    break;
+                case "特定页":
+                    string SpecifiedPage = ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString();
+                    if (Uri.TryCreate(SpecifiedPage, UriKind.Absolute, out Uri uri1))
+                    {
+                        CreateNewTab(uri1);
+                    }
+                    else
+                    {
+                        ContentDialog dialog = new ContentDialog
+                        {
+                            Content = "导航失败，请检查网址或网络连接",
+                            Title = "提示",
+                            CloseButtonText = "确定"
+                        };
+                        _ = dialog.ShowAsync();
+                        CreateNewTab(new Uri("about:blank"));
+                    }
+                    break;
             }
-            catch (Exception)
-            {
-                ContentDialog dialog = new ContentDialog
-                {
-                    Content = "导航失败，请检查网址或网络连接",
-                    Title = "提示",
-                    CloseButtonText = "确定"
-                };
-                _ = dialog.ShowAsync();
-                CreateNewTab(new Uri("about:blank"));
-            }
-
-
         }
 
         /// <summary>
@@ -244,31 +258,47 @@ namespace SmartLens
 
         private void AddTabButtonUpper_Click(object sender, RoutedEventArgs e)
         {
-            try
+            switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"].ToString())
             {
-                switch (ApplicationData.Current.LocalSettings.Values["WebTabOpenMethod"].ToString())
-                {
-                    case "空白页":
+                case "空白页":
+                    CreateNewTab(new Uri("about:blank"));
+                    break;
+                case "主页":
+                    string TabMain = ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString();
+                    if (Uri.TryCreate(TabMain, UriKind.Absolute, out Uri uri))
+                    {
+                        CreateNewTab(uri);
+                    }
+                    else
+                    {
+                        ContentDialog dialog = new ContentDialog
+                        {
+                            Content = "导航失败，请检查网址或网络连接",
+                            Title = "提示",
+                            CloseButtonText = "确定"
+                        };
+                        _ = dialog.ShowAsync();
                         CreateNewTab(new Uri("about:blank"));
-                        break;
-                    case "主页":
-                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabMainPage"].ToString()));
-                        break;
-                    case "特定页":
-                        CreateNewTab(new Uri(ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString()));
-                        break;
-                }
-            }
-            catch (Exception)
-            {
-                ContentDialog dialog = new ContentDialog
-                {
-                    Content = "导航失败，请检查网址或网络连接",
-                    Title = "提示",
-                    CloseButtonText = "确定"
-                };
-                _ = dialog.ShowAsync();
-                CreateNewTab(new Uri("about:blank"));
+                    }
+                    break;
+                case "特定页":
+                    string SpecifiedPage = ApplicationData.Current.LocalSettings.Values["WebTabSpecifiedPage"].ToString();
+                    if (Uri.TryCreate(SpecifiedPage, UriKind.Absolute, out Uri uri1))
+                    {
+                        CreateNewTab(uri1);
+                    }
+                    else
+                    {
+                        ContentDialog dialog = new ContentDialog
+                        {
+                            Content = "导航失败，请检查网址或网络连接",
+                            Title = "提示",
+                            CloseButtonText = "确定"
+                        };
+                        _ = dialog.ShowAsync();
+                        CreateNewTab(new Uri("about:blank"));
+                    }
+                    break;
             }
 
         }
