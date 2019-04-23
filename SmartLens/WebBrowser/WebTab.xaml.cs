@@ -30,7 +30,7 @@ namespace SmartLens
 
         private async void OnFirstLoad()
         {
-            var FavList = await SQLite.GetInstance().GetWebFavouriteList();
+            var FavList = await SQLite.GetInstance().GetWebFavouriteListAsync();
 
             if (FavList.Count > 0)
             {
@@ -48,7 +48,7 @@ namespace SmartLens
                 FavouriteDictionary = new Dictionary<string, WebSiteItem>();
             }
 
-            var HistoryList = await SQLite.GetInstance().GetWebHistoryList();
+            var HistoryList = await SQLite.GetInstance().GetWebHistoryListAsync();
 
             if (HistoryList.Count > 0)
             {

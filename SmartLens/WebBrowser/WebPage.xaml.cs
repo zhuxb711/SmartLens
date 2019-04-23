@@ -801,7 +801,7 @@ namespace SmartLens
             TipsFly.Hide();
 
             await WebView.ClearTemporaryWebDataAsync();
-            await SQLite.GetInstance().ClearTable("WebHistory");
+            await SQLite.GetInstance().ClearTableAsync("WebHistory");
             WebTab.ThisPage.HistoryCollection.Clear();
             HistoryTree.RootNodes.Clear();
 
@@ -890,7 +890,7 @@ namespace SmartLens
                     WebTab.ThisPage.FavouriteCollection.Remove(FavItem);
                     WebTab.ThisPage.FavouriteDictionary.Remove(FavItem.WebSite);
 
-                    await SQLite.GetInstance().DeleteWebFavouriteList(FavItem);
+                    await SQLite.GetInstance().DeleteWebFavouriteListAsync(FavItem);
                 }
             }
             else
@@ -1004,7 +1004,7 @@ namespace SmartLens
                 WebTab.ThisPage.FavouriteCollection.Add(FavItem);
                 WebTab.ThisPage.FavouriteDictionary.Add(AutoSuggest.Text, FavItem);
 
-                await SQLite.GetInstance().SetWebFavouriteList(FavItem);
+                await SQLite.GetInstance().SetWebFavouriteListAsync(FavItem);
             }
 
         }
@@ -1043,7 +1043,7 @@ namespace SmartLens
             WebTab.ThisPage.FavouriteCollection.Remove(FavItem);
             WebTab.ThisPage.FavouriteDictionary.Remove(FavItem.WebSite);
 
-            await SQLite.GetInstance().DeleteWebFavouriteList(FavItem);
+            await SQLite.GetInstance().DeleteWebFavouriteListAsync(FavItem);
         }
 
         private void FavouriteList_ItemClick(object sender, ItemClickEventArgs e)
@@ -1087,7 +1087,7 @@ namespace SmartLens
             if ((sender as Button).Name == "ClearFav")
             {
                 ClearFavFly.Hide();
-                await SQLite.GetInstance().ClearTable("WebFavourite");
+                await SQLite.GetInstance().ClearTableAsync("WebFavourite");
 
                 foreach (var Web in from Tab in WebTab.ThisPage.TabCollection
                                     let Web = Tab.Content as WebPage
@@ -1105,7 +1105,7 @@ namespace SmartLens
             else
             {
                 ClearHistoryFly.Hide();
-                await SQLite.GetInstance().ClearTable("WebHistory");
+                await SQLite.GetInstance().ClearTableAsync("WebHistory");
                 WebTab.ThisPage.HistoryCollection.Clear();
                 HistoryTree.RootNodes.Clear();
             }

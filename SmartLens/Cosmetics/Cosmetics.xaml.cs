@@ -95,7 +95,7 @@ namespace SmartLens
 
             //初始化摄像头并开始捕获
             CamHelper = CameraProvider.GetCameraHelperInstance();
-            await CamHelper.InitializeAndStartCaptureAsync();
+            _ = await CamHelper.InitializeAndStartCaptureAsync();
 
             //读取摄像头支持的格式，并选择预定的格式
             var SupportedFormats = CamHelper.PreviewFrameSource.SupportedFormats;
@@ -217,7 +217,7 @@ namespace SmartLens
             try
             {
                 CamHelper = CameraProvider.GetCameraHelperInstance();
-                await CamHelper.InitializeAndStartCaptureAsync();
+                _ = await CamHelper.InitializeAndStartCaptureAsync();
                 var SupportedFormats = CamHelper.PreviewFrameSource.SupportedFormats;
                 MediaFrameFormat NV12 = null;
                 MediaFrameFormat YUY2 = null;
@@ -358,7 +358,7 @@ namespace SmartLens
                                 try
                                 {
                                     //异步将处理完毕的图像刷新至Image控件
-                                    var task = ImageSource.SetBitmapAsync(CapturedImage);
+                                    _ = ImageSource.SetBitmapAsync(CapturedImage);
                                 }
                                 catch (Exception) { }
                             });
@@ -370,7 +370,7 @@ namespace SmartLens
                                 try
                                 {
                                     //异步将不含有人脸的图像刷新至Image控件
-                                    var task = ImageSource.SetBitmapAsync(CapturedImage);
+                                    _ = ImageSource.SetBitmapAsync(CapturedImage);
                                 }
                                 catch (Exception) { }
                             });
@@ -455,7 +455,10 @@ namespace SmartLens
         private List<FullObjectDetection> DlibFunction(Array2D<RgbPixel> img)
         {
             Rectangle[] dets = FaceDetector.Operator(img);
-            List<FullObjectDetection> FaceLandMarkContainer = (from rect in dets let FaceLandMarkRawData = FaceModel.Detect(img, rect) where FaceLandMarkRawData.Parts > 2 select FaceLandMarkRawData).ToList();
+            List<FullObjectDetection> FaceLandMarkContainer = (from rect in dets
+                                                               let FaceLandMarkRawData = FaceModel.Detect(img, rect)
+                                                               where FaceLandMarkRawData.Parts > 2
+                                                               select FaceLandMarkRawData).ToList();
             return FaceLandMarkContainer.Any() ? FaceLandMarkContainer : null;
         }
 

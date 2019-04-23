@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace UpdateBackgroundTask
 {
@@ -18,14 +17,27 @@ namespace UpdateBackgroundTask
 
         public void SetMD5ValueAsync(IList<KeyValuePair<string, string>> Hash)
         {
-            StringBuilder sb = new StringBuilder("Delete From HashTable;");
-            foreach (var Command in from Command in Hash
-                                    select "Insert Into HashTable Values ('" + Command.Key + "','" + Command.Value + "');")
+            SqliteTransaction Transaction = OLEDB.BeginTransaction();
+            try
             {
-                sb.Append(Command);
+                StringBuilder sb = new StringBuilder("Delete From HashTable;");
+                foreach (var Command in from Command in Hash
+                                        select "Insert Into HashTable Values ('" + Command.Key + "','" + Command.Value + "');")
+                {
+                    sb.Append(Command);
+                }
+                SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB, Transaction);
+                SQLCommand.ExecuteNonQuery();
+                Transaction.Commit();
             }
-            SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB);
-            SQLCommand.ExecuteNonQuery();
+            catch (Exception)
+            {
+                Transaction.Rollback();
+            }
+            finally
+            {
+                Transaction.Dispose();
+            }
         }
 
         public void Dispose()

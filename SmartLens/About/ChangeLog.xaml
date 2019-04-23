@@ -21,7 +21,11 @@
             <RowDefinition Height="13*"/>
         </Grid.RowDefinitions>
         <TextBlock Grid.Column="1" Text="更新日志" FontSize="50" Foreground="Cyan" VerticalAlignment="Center"/>
-        <ScrollViewer Grid.Column="1" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <ScrollViewer Name="Scroll" 
+                      Grid.Column="1" 
+                      Grid.Row="1" 
+                      HorizontalScrollBarVisibility="Disabled" 
+                      VerticalScrollBarVisibility="Visible">
             <my:MarkdownTextBlock 
                 HorizontalAlignment="Stretch" 
                 VerticalAlignment="Stretch" 

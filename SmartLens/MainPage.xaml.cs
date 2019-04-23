@@ -22,20 +22,7 @@ namespace SmartLens
         public static MainPage ThisPage { get; set; }
         private ApplicationTrigger ProcessingTrigger;
         private BackgroundTaskRegistration TaskRegistration;
-
-        private readonly Dictionary<Type, string> PageDictionary = new Dictionary<Type, string>()
-        {
-            {typeof(HomePage), "首页"},
-            {typeof(MusicPage), "音乐"},
-            {typeof(VoiceRec), "语音识别"},
-            {typeof(WebTab), "网页浏览"},
-            {typeof(Cosmetics),"智能美妆" },
-            {typeof(About),"关于" },
-            {typeof(ChangeLog),"关于" },
-            {typeof(USBControl),"USB管理" },
-            {typeof(EmailPage),"邮件" },
-            {typeof(CodeScanner),"QR识别" }
-        };
+        private Dictionary<Type, string> PageDictionary;
 
         public MainPage()
         {
@@ -59,6 +46,20 @@ namespace SmartLens
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            PageDictionary = new Dictionary<Type, string>()
+            {
+                {typeof(HomePage), "首页"},
+                {typeof(MusicPage), "音乐"},
+                {typeof(VoiceRec), "语音识别"},
+                {typeof(WebTab), "网页浏览"},
+                {typeof(Cosmetics),"智能美妆" },
+                {typeof(About),"关于" },
+                {typeof(ChangeLog),"关于" },
+                {typeof(USBControl),"USB管理" },
+                {typeof(EmailPage),"邮件" },
+                {typeof(CodeScanner),"QR识别" }
+            };
+
             NavigationViewItemBase MenuItem = NavigationView.MenuItems.FirstOrDefault() as NavigationViewItemBase;
             NavigationView.SelectedItem = MenuItem;
             NavFrame.Navigate(typeof(HomePage), NavFrame);
@@ -74,6 +75,12 @@ namespace SmartLens
             {
                 HtmlDocument HTMLDocument = await WebHtml.LoadFromWebAsync(WebURL);
                 HtmlNode VersionNode = HTMLDocument.DocumentNode.SelectSingleNode("//div[@class='app-version lg mb-24']");
+
+                if(VersionNode==null)
+                {
+                    return;
+                }
+
                 Regex RegexExpression = new Regex(@"(\d+)");
                 MatchCollection NewestVersion = RegexExpression.Matches(VersionNode.InnerText);
 
@@ -208,7 +215,7 @@ namespace SmartLens
             BackRequested();
         }
 
-        private void NavFrame_Navigated(object sender, Windows.UI.Xaml.Navigation.NavigationEventArgs e)
+        private void NavFrame_Navigated(object sender, NavigationEventArgs e)
         {
             if (About.IsEnterChangeLog)
             {

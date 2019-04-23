@@ -1192,13 +1192,22 @@ namespace SmartLens
             }
         }
 
-        public async Task ClearTable(string TableName)
+        /// <summary>
+        /// 异步清除特定表的所有内容
+        /// </summary>
+        /// <param name="TableName">表名称</param>
+        /// <returns></returns>
+        public async Task ClearTableAsync(string TableName)
         {
             SqliteCommand Command = new SqliteCommand("Delete From " + TableName, OLEDB);
             _ = await Command.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<WebSiteItem>> GetWebFavouriteList()
+        /// <summary>
+        /// 异步获取收藏夹列表
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<WebSiteItem>> GetWebFavouriteListAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select * From WebFavourite", OLEDB);
             SqliteDataReader Query = await Command.ExecuteReaderAsync();
@@ -1213,7 +1222,11 @@ namespace SmartLens
             return FavList;
         }
 
-        public async Task<List<KeyValuePair<DateTime, WebSiteItem>>> GetWebHistoryList()
+        /// <summary>
+        /// 异步获取历史记录列表
+        /// </summary>
+        /// <returns>List<KeyValuePair<DateTime, WebSiteItem>></returns>
+        public async Task<List<KeyValuePair<DateTime, WebSiteItem>>> GetWebHistoryListAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select * From WebHistory", OLEDB);
             SqliteDataReader Query = await Command.ExecuteReaderAsync();
@@ -1229,6 +1242,10 @@ namespace SmartLens
             return HistoryList;
         }
 
+        /// <summary>
+        /// 删除特定历史记录条目
+        /// </summary>
+        /// <param name="Info">历史记录</param>
         public void DeleteWebHistory(KeyValuePair<DateTime, WebSiteItem> Info)
         {
             SqliteCommand Command = new SqliteCommand("Delete From WebHistory Where Subject=@Subject And WebSite=@WebSite And DateTime=@DateTime", OLEDB);
@@ -1239,6 +1256,10 @@ namespace SmartLens
             Command.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// 保存历史记录条目
+        /// </summary>
+        /// <param name="Info">历史记录</param>
         public void SetWebHistoryList(KeyValuePair<DateTime, WebSiteItem> Info)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WebHistory Values (@Subject,@WebSite,@DateTime)", OLEDB);
@@ -1249,7 +1270,12 @@ namespace SmartLens
             Command.ExecuteNonQuery();
         }
 
-        public async Task SetWebFavouriteList(WebSiteItem Info)
+        /// <summary>
+        /// 异步保存收藏夹列表
+        /// </summary>
+        /// <param name="Info">收藏夹项</param>
+        /// <returns></returns>
+        public async Task SetWebFavouriteListAsync(WebSiteItem Info)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WebFavourite Values (@Subject,@WebSite)", OLEDB);
             Command.Parameters.AddWithValue("@Subject", Info.Subject);
@@ -1257,7 +1283,12 @@ namespace SmartLens
             _ = await Command.ExecuteNonQueryAsync();
         }
 
-        public async Task DeleteWebFavouriteList(WebSiteItem Info)
+        /// <summary>
+        /// 异步删除收藏夹条目
+        /// </summary>
+        /// <param name="Info">收藏夹项</param>
+        /// <returns></returns>
+        public async Task DeleteWebFavouriteListAsync(WebSiteItem Info)
         {
             SqliteCommand Command = new SqliteCommand("Delete From WebFavourite Where WebSite = @WebSite", OLEDB);
             Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
@@ -1325,18 +1356,41 @@ namespace SmartLens
             }
         }
 
+        /// <summary>
+        /// 异步保存MD5计算值
+        /// </summary>
+        /// <param name="Hash">MD5计算值列表</param>
+        /// <returns></returns>
         public async Task SetMD5ValueAsync(List<KeyValuePair<string, string>> Hash)
         {
-            StringBuilder sb = new StringBuilder("Delete From HashTable;");
-            foreach (var Command in from Command in Hash
-                                    select "Insert Into HashTable Values ('" + Command.Key + "','" + Command.Value + "');")
+            SqliteTransaction Transaction = OLEDB.BeginTransaction();
+            try
             {
-                sb.Append(Command);
+                StringBuilder sb = new StringBuilder("Delete From HashTable;");
+                foreach (var Command in from Command in Hash
+                                        select "Insert Into HashTable Values ('" + Command.Key + "','" + Command.Value + "');")
+                {
+                    sb.Append(Command);
+                }
+                SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB, Transaction);
+                _ = await SQLCommand.ExecuteNonQueryAsync();
+
+                Transaction.Commit();
             }
-            SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB);
-            _ = await SQLCommand.ExecuteNonQueryAsync();
+            catch (Exception)
+            {
+                Transaction.Rollback();
+            }
+            finally
+            {
+                Transaction.Dispose();
+            }
         }
 
+        /// <summary>
+        /// 异步提取MD5计算值
+        /// </summary>
+        /// <returns>List<KeyValuePair<string, string>></returns>
         public async Task<List<KeyValuePair<string, string>>> GetMD5ValueAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select * From HashTable", OLEDB);
@@ -1348,7 +1402,6 @@ namespace SmartLens
             }
             return list;
         }
-
 
         /// <summary>
         /// 向SQLite数据库中异步存储音乐数据
@@ -2291,59 +2344,6 @@ namespace SmartLens
             return result;
         }
 
-    }
-    #endregion
-
-    #region ListViewBase控件平滑位移扩展方法
-    public static class ListViewBaseExtensions
-    {
-        public static void ScrollIntoViewSmoothly(this ListViewBase listViewBase, object item)
-        {
-            ScrollIntoViewSmoothly(listViewBase, item, ScrollIntoViewAlignment.Default);
-        }
-
-        public static void ScrollIntoViewSmoothly(this ListViewBase listViewBase, object item, ScrollIntoViewAlignment alignment)
-        {
-            if (listViewBase == null)
-            {
-                throw new ArgumentNullException(nameof(listViewBase));
-            }
-
-            // GetFirstDescendantOfType 是 WinRTXamlToolkit 中的扩展方法，
-            // 寻找该控件在可视树上第一个符合类型的子元素。
-            ScrollViewer scrollViewer = listViewBase.GetFirstDescendantOfType<ScrollViewer>();
-
-            // 记录初始位置，用于 ScrollIntoView 检测目标位置后复原。
-            double originHorizontalOffset = scrollViewer.HorizontalOffset;
-            double originVerticalOffset = scrollViewer.VerticalOffset;
-
-            void layoutUpdatedHandler(object sender, object e)
-            {
-                listViewBase.LayoutUpdated -= layoutUpdatedHandler;
-
-                // 获取目标位置。
-                double targetHorizontalOffset = scrollViewer.HorizontalOffset;
-                double targetVerticalOffset = scrollViewer.VerticalOffset;
-
-                void scrollHandler(object s, ScrollViewerViewChangedEventArgs m)
-                {
-                    scrollViewer.ViewChanged -= scrollHandler;
-
-                    // 最终目的，带平滑滚动效果滚动到 item。
-                    scrollViewer.ChangeView(targetHorizontalOffset, targetVerticalOffset, null);
-                }
-
-                scrollViewer.ViewChanged += scrollHandler;
-
-                // 复原位置，且不需要使用动画效果。
-                scrollViewer.ChangeView(originHorizontalOffset, originVerticalOffset, null, true);
-
-            }
-
-            listViewBase.LayoutUpdated += layoutUpdatedHandler;
-
-            listViewBase.ScrollIntoView(item, alignment);
-        }
     }
     #endregion
 
@@ -3563,12 +3563,93 @@ namespace SmartLens
 
     #endregion
 
+    #region 扩展方法类
+    public static class ExtentionMethodClass
+    {
+        public static List<T[]> SplitToArray<T>(this List<T> list, int GroupNum)
+        {
+            if (list.Count < GroupNum)
+            {
+                return new List<T[]>(GroupNum)
+                {
+                    list.ToArray()
+                };
+            }
+
+            int BlockLength = list.Count / GroupNum;
+            List<T[]> Result = new List<T[]>(GroupNum);
+
+            for (int i = 0; i < GroupNum; i++)
+            {
+                if (i == GroupNum - 1)
+                {
+                    int RestLength = list.Count - BlockLength * i;
+                    T[] array = new T[RestLength];
+                    list.CopyTo(BlockLength * i, array, 0, RestLength);
+                    Result.Add(array);
+                }
+                else
+                {
+                    T[] array = new T[BlockLength];
+                    list.CopyTo(BlockLength * i, array, 0, BlockLength);
+                    Result.Add(array);
+                }
+            }
+            return Result;
+        }
+
+        public static void ScrollIntoViewSmoothly(this ListViewBase listViewBase, object item, ScrollIntoViewAlignment alignment = ScrollIntoViewAlignment.Default)
+        {
+            if (listViewBase == null)
+            {
+                throw new ArgumentNullException(nameof(listViewBase));
+            }
+
+            // GetFirstDescendantOfType 是 WinRTXamlToolkit 中的扩展方法，
+            // 寻找该控件在可视树上第一个符合类型的子元素。
+            ScrollViewer scrollViewer = listViewBase.GetFirstDescendantOfType<ScrollViewer>();
+
+            // 记录初始位置，用于 ScrollIntoView 检测目标位置后复原。
+            double originHorizontalOffset = scrollViewer.HorizontalOffset;
+            double originVerticalOffset = scrollViewer.VerticalOffset;
+
+            void layoutUpdatedHandler(object sender, object e)
+            {
+                listViewBase.LayoutUpdated -= layoutUpdatedHandler;
+
+                // 获取目标位置。
+                double targetHorizontalOffset = scrollViewer.HorizontalOffset;
+                double targetVerticalOffset = scrollViewer.VerticalOffset;
+
+                void scrollHandler(object s, ScrollViewerViewChangedEventArgs m)
+                {
+                    scrollViewer.ViewChanged -= scrollHandler;
+
+                    // 最终目的，带平滑滚动效果滚动到 item。
+                    scrollViewer.ChangeView(targetHorizontalOffset, targetVerticalOffset, null);
+                }
+
+                scrollViewer.ViewChanged += scrollHandler;
+
+                // 复原位置，且不需要使用动画效果。
+                scrollViewer.ChangeView(originHorizontalOffset, originVerticalOffset, null, true);
+
+            }
+
+            listViewBase.LayoutUpdated += layoutUpdatedHandler;
+
+            listViewBase.ScrollIntoView(item, alignment);
+        }
+    }
+    #endregion
+
     #region MD5哈希值计算和检验工具类
     /// <summary>
     /// 计算或验证哈希值
     /// </summary>
     public sealed class MD5Util
     {
+        private static readonly int StartTaskNums = Environment.ProcessorCount;
         /// <summary>
         /// 异步计算SmartLens所有文件哈希值并保存至数据库中
         /// </summary>
@@ -3576,8 +3657,12 @@ namespace SmartLens
         public static async Task CalculateAndStorageMD5Async()
         {
             var InstallFolder = Package.Current.InstalledLocation;
-            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
-            await CalculateMD5Async(InstallFolder, CalculateResult);
+
+            List<StorageFile> FileList = new List<StorageFile>();
+            await EnumAllFileAsync(InstallFolder, FileList);
+
+            List<KeyValuePair<string, string>> CalculateResult = await CalculateMD5Async(FileList);
+
             await SQLite.GetInstance().SetMD5ValueAsync(CalculateResult);
         }
 
@@ -3588,8 +3673,12 @@ namespace SmartLens
         public static async Task<KeyValuePair<bool, string>> CheckSmartLensIntegrityAsync()
         {
             var InstallFolder = Package.Current.InstalledLocation;
-            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
-            await CalculateMD5Async(InstallFolder, CalculateResult);
+
+            List<StorageFile> FileList = new List<StorageFile>();
+            await EnumAllFileAsync(InstallFolder, FileList);
+
+            List<KeyValuePair<string, string>> CalculateResult = await CalculateMD5Async(FileList);
+
             var DataBaseResult = await SQLite.GetInstance().GetMD5ValueAsync();
 
             foreach (var ErrorPart in from item in DataBaseResult
@@ -3605,41 +3694,75 @@ namespace SmartLens
         }
 
         /// <summary>
-        /// 异步递归计算指定文件夹的所有文件的MD5值
+        /// 异步并行计算所有文件的MD5值
         /// </summary>
-        /// <param name="Folder">要计算的文件夹</param>
-        /// <param name="MD5List">计算结果</param>
-        /// <returns>无</returns>
-        private static async Task CalculateMD5Async(StorageFolder Folder, List<KeyValuePair<string, string>> MD5List)
+        /// <param name="FileList">文件枚举</param>
+        /// <returns>计算结果</returns>
+        private static async Task<List<KeyValuePair<string, string>>> CalculateMD5Async(List<StorageFile> FileList)
         {
-            var FileList = await Folder.GetFilesAsync();
-            using (MD5 md5 = new MD5CryptoServiceProvider())
+            List<StorageFile[]> FileGroup = FileList.SplitToArray(StartTaskNums);
+            Task<List<KeyValuePair<string, string>>>[] TaskGroup = new Task<List<KeyValuePair<string, string>>>[StartTaskNums];
+
+            for (int i = 0; i < StartTaskNums; i++)
             {
-                foreach (var file in FileList)
+                TaskGroup[i] = Task.Factory.StartNew(new Func<object, List<KeyValuePair<string, string>>>((e) =>
                 {
-                    if (file.Name == "SmartLens.exe")
+                    StorageFile[] FileCollection = e as StorageFile[];
+                    List<KeyValuePair<string, string>> Result = new List<KeyValuePair<string, string>>(FileCollection.Length);
+                    using (MD5 md5 = new MD5CryptoServiceProvider())
                     {
-                        continue;
-                    }
-                    using (Stream stream = await file.OpenStreamForReadAsync())
-                    {
-                        byte[] Val = md5.ComputeHash(stream);
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < Val.Length; i++)
+                        foreach (var file in FileCollection)
                         {
-                            sb.Append(Val[i].ToString("x2"));
+                            using (Stream stream = file.OpenStreamForReadAsync().Result)
+                            {
+                                byte[] Val = md5.ComputeHash(stream);
+                                StringBuilder sb = new StringBuilder();
+                                for (int n = 0; n < Val.Length; n++)
+                                {
+                                    _ = sb.Append(Val[n].ToString("x2"));
+                                }
+                                Result.Add(new KeyValuePair<string, string>(file.Name, sb.ToString()));
+                            }
                         }
-                        MD5List.Add(new KeyValuePair<string, string>(file.Name, sb.ToString()));
                     }
-                }
+                    return Result;
+
+                }), FileGroup[i]);
             }
 
-            var FolderList = await Folder.GetFoldersAsync();
+            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>(FileList.Count);
+
+            foreach (var Result in await Task.WhenAll(TaskGroup))
+            {
+                CalculateResult.AddRange(Result);
+            }
+
+            return CalculateResult;
+        }
+
+        /// <summary>
+        /// 异步枚举所有文件
+        /// </summary>
+        /// <param name="Folder">要计算的文件夹</param>
+        /// <param name="FileList">计算结果</param>
+        /// <returns>无</returns>
+        private static async Task EnumAllFileAsync(StorageFolder Folder, List<StorageFile> FileList)
+        {
+            foreach (var file in await Folder.GetFilesAsync())
+            {
+                if (file.Name == "SmartLens.exe")
+                {
+                    continue;
+                }
+                FileList.Add(file);
+            }
+
+            IReadOnlyList<StorageFolder> FolderList = await Folder.GetFoldersAsync();
             if (FolderList.Count != 0)
             {
                 foreach (var folder in FolderList)
                 {
-                    await CalculateMD5Async(folder, MD5List);
+                    await EnumAllFileAsync(folder, FileList);
                 }
             }
         }

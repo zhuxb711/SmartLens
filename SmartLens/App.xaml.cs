@@ -27,11 +27,10 @@ namespace SmartLens
             Resuming += App_Resuming;
             UnhandledException += App_UnhandledException;
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Auto;
-
             RequestedTheme = ThemeSwitcher.IsLightEnabled ? ApplicationTheme.Light : ApplicationTheme.Dark;
         }
 
-        private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+        private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (!(Window.Current.Content is Frame rootFrame))
             {
