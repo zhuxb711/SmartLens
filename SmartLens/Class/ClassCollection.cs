@@ -1893,10 +1893,29 @@ namespace SmartLens
         /// 创建BluetoothList的实例
         /// </summary>
         /// <param name="DeviceInfo">蓝牙设备</param>
-        public BluetoothList(DeviceInformation DeviceInfo,BitmapImage Glyph)
+        public BluetoothList(DeviceInformation DeviceInfo)
         {
             this.DeviceInfo = DeviceInfo;
-            this.Glyph = Glyph;
+            GetGlyphImage();
+        }
+
+        private async void GetGlyphImage()
+        {
+            BitmapImage Image = new BitmapImage
+            {
+                DecodePixelHeight = 30,
+                DecodePixelWidth = 30,
+                DecodePixelType = DecodePixelType.Logical
+            };
+
+            using (var Thumbnail = await DeviceInfo.GetGlyphThumbnailAsync())
+            {
+                await Image.SetSourceAsync(Thumbnail);
+            }
+
+            Glyph = Image;
+
+            OnPropertyChanged("Glyph");
         }
     }
     #endregion

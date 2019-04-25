@@ -199,27 +199,15 @@ namespace SmartLens
 
         private async void BluetoothWatcher_Added(DeviceWatcher sender, DeviceInformation args)
         {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async() =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,() =>
             {
-                BitmapImage Image = new BitmapImage
-                {
-                    DecodePixelHeight = 30,
-                    DecodePixelWidth = 30,
-                    DecodePixelType = DecodePixelType.Logical
-                };
-
-                using (var Thumbnail = await args.GetGlyphThumbnailAsync())
-                {
-                    await Image.SetSourceAsync(Thumbnail);
-                }
-
                 lock (SyncRootProvider.SyncRoot)
                 {
                     try
                     {
                         if (BluetoothDeviceCollection != null)
                         {
-                            BluetoothDeviceCollection.Add(new BluetoothList(args, Image));
+                            BluetoothDeviceCollection.Add(new BluetoothList(args));
                         }
                     }
                     catch (Exception) { }

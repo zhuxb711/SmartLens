@@ -26,7 +26,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" Margin="-10,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0">
                             <Viewbox Width="30">
-                                <Image Stretch="UniformToFill" Source="{x:Bind Glyph}"/>
+                                <Image Stretch="UniformToFill" Source="{x:Bind Glyph,Mode=OneWay}"/>
                             </Viewbox>
                             <StackPanel Margin="5,0,0,0" Orientation="Vertical">
                                 <TextBlock Text="{x:Bind Name,Mode=OneWay}"/>
