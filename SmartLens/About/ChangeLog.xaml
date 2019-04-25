@@ -20,7 +20,7 @@
             <RowDefinition Height="149*"/>
             <RowDefinition Height="13*"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Column="1" Text="更新日志" FontSize="50" Foreground="Cyan" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1" Text="更新日志" FontSize="40" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center"/>
         <ScrollViewer Name="Scroll" 
                       Grid.Column="1" 
                       Grid.Row="1" 

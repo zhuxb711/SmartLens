@@ -1,4 +1,5 @@
-﻿using Bluetooth.Services.Obex;
+﻿using Bluetooth.Core.Services;
+using Bluetooth.Services.Obex;
 using ICSharpCode.SharpZipLib.Zip;
 using MailKit;
 using MailKit.Net.Imap;
@@ -1824,9 +1825,11 @@ namespace SmartLens
         {
             get
             {
-                return DeviceInfo.Name;
+                return string.IsNullOrWhiteSpace(DeviceInfo.Name) ? "未知设备" : DeviceInfo.Name;
             }
         }
+
+        public BitmapImage Glyph { get; private set; }
 
         /// <summary>
         /// 获取蓝牙标识字符串
@@ -1847,8 +1850,13 @@ namespace SmartLens
             get
             {
                 if (DeviceInfo.Pairing.IsPaired)
+                {
                     return "已配对";
-                else return "准备配对";
+                }
+                else
+                {
+                    return "准备配对";
+                }
             }
         }
 
@@ -1860,8 +1868,13 @@ namespace SmartLens
             get
             {
                 if (DeviceInfo.Pairing.IsPaired)
+                {
                     return "取消配对";
-                else return "配对";
+                }
+                else
+                {
+                    return "配对";
+                }
             }
         }
 
@@ -1880,9 +1893,10 @@ namespace SmartLens
         /// 创建BluetoothList的实例
         /// </summary>
         /// <param name="DeviceInfo">蓝牙设备</param>
-        public BluetoothList(DeviceInformation DeviceInfo)
+        public BluetoothList(DeviceInformation DeviceInfo,BitmapImage Glyph)
         {
             this.DeviceInfo = DeviceInfo;
+            this.Glyph = Glyph;
         }
     }
     #endregion
@@ -1894,25 +1908,32 @@ namespace SmartLens
     public sealed class ObexServiceProvider
     {
         /// <summary>
+        /// 蓝牙设备
+        /// </summary>
+        private static BluetoothDevice BTDevice;
+
+        /// <summary>
         /// OBEX协议服务
         /// </summary>
-        public static ObexService ObexClient { get; private set; }
+        public static ObexService GetObexNewInstance()
+        {
+            if (BTDevice != null)
+            {
+                return ObexService.GetDefaultForBluetoothDevice(BTDevice);
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// 设置Obex对象的实例
         /// </summary>
         /// <param name="obex">OBEX对象</param>
-        public static void SetObexInstance(ObexService obex)
+        public static void SetObexInstance(BluetoothDevice BT)
         {
-            ObexClient = obex;
-        }
-
-        /// <summary>
-        /// 释放OBEX服务资源
-        /// </summary>
-        public static void Dispose()
-        {
-            ObexClient = null;
+            BTDevice = BT;
         }
     }
     #endregion
@@ -3568,7 +3589,12 @@ namespace SmartLens
     {
         public static List<T[]> SplitToArray<T>(this List<T> list, int GroupNum)
         {
-            if (list.Count < GroupNum)
+            if (GroupNum == 0)
+            {
+                return null;
+            }
+
+            if (list.Count < GroupNum || GroupNum == 1)
             {
                 return new List<T[]>(GroupNum)
                 {

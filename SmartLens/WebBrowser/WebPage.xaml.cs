@@ -773,6 +773,7 @@ namespace SmartLens
             }
             IRandomAccessStream stream = new InMemoryRandomAccessStream();
             await WebBrowser.CapturePreviewToStreamAsync(stream);
+
             BluetoothUI Bluetooth = new BluetoothUI();
 
             var result = await Bluetooth.ShowAsync();
@@ -788,8 +789,9 @@ namespace SmartLens
                 {
                     BluetoothFileTransfer FileTransfer = new BluetoothFileTransfer
                     {
-                        Filestream = stream.AsStream(),
-                        FileName = "屏幕截图.jpg"
+                        StreamToSend = stream.AsStream(),
+                        FileName = WebBrowser.DocumentTitle == "" ? "屏幕截图.jpg" : WebBrowser.DocumentTitle + ".jpg",
+                        UseStorageFileRatherThanStream = false
                     };
                     await FileTransfer.ShowAsync();
                 });

@@ -692,8 +692,9 @@ namespace SmartLens
                     {
                         BluetoothFileTransfer FileTransfer = new BluetoothFileTransfer
                         {
-                            Filestream = (await file.File.OpenAsync(FileAccessMode.Read)).AsStream(),
-                            FileName = file.File.Name
+                            FileToSend = file.File,
+                            FileName = file.File.Name,
+                            UseStorageFileRatherThanStream = true
                         };
                         await FileTransfer.ShowAsync();
                     }

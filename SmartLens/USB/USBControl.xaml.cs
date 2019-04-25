@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -200,8 +199,7 @@ namespace SmartLens
              * 此处激活取消指令，等待当前遍历结束，再开始下一次文件遍历
              * 确保不会出现异常
              */
-            //防止多次点击同一文件夹导致的多重查找
-
+            //防止多次点击同一文件夹导致的多重查找            
             if ((args.InvokedItem as TreeViewNode).Content is StorageFolder folder)
             {
                 if (folder.FolderRelativeId == CurrentFolder?.FolderRelativeId)

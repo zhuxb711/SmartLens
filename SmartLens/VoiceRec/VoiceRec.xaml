@@ -26,18 +26,18 @@
                 <SymbolIcon IsHitTestVisible="False" Symbol="Microphone"/>
             </Viewbox>
         </Grid>
-        <RichTextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <RichTextBlock Grid.Column="1" Foreground="{ThemeResource SystemAccentColor}" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Paragraph TextIndent="30">
-                <Run Text="您可以说：" Foreground="Aqua" FontSize="25"/>
+                <Run Text="您可以说：" FontSize="25"/>
             </Paragraph>
             <Paragraph TextIndent="60">
-                <Run Text="今天天气如何？" Foreground="Aqua" FontSize="25"/>
+                <Run Text="今天天气如何？" FontSize="25"/>
             </Paragraph>
             <Paragraph TextIndent="60">
-                <Run Text="播放音乐" Foreground="Aqua" FontSize="25"/>
+                <Run Text="播放音乐" FontSize="25"/>
             </Paragraph>
             <Paragraph TextIndent="60">
-                <Run Text="暂停音乐" Foreground="Aqua" FontSize="25"/>
+                <Run Text="暂停音乐" FontSize="25"/>
             </Paragraph>
         </RichTextBlock>
         <Grid Grid.RowSpan="3" Grid.Column="2" Name="Gri">

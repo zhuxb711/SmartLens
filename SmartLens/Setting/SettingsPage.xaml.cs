@@ -17,6 +17,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -150,6 +151,11 @@ namespace SmartLens
             if (ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] is bool IsEnable)
             {
                 Integrity.IsOn = IsEnable;
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] is bool Enable)
+            {
+                ScreenCaptureSwitch.IsOn = !Enable;
             }
 
             MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
@@ -767,6 +773,20 @@ namespace SmartLens
             else
             {
                 ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = false;
+            }
+        }
+
+        private void ScreenCaptureSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (ScreenCaptureSwitch.IsOn)
+            {
+                ApplicationView.GetForCurrentView().IsScreenCaptureEnabled = false;
+                ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] = false;
+            }
+            else
+            {
+                ApplicationView.GetForCurrentView().IsScreenCaptureEnabled = true;
+                ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] = true;
             }
         }
     }

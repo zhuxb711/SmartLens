@@ -6,13 +6,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="正在准备传输"
+    Title="正在初始化"
     SecondaryButtonText="中止"
-    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
-    Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
 
     <StackPanel Orientation="Vertical">
         <ProgressBar Name="ProgressControl" Height="20"/>
-        <TextBlock Name="ProgressText"/>
+        <TextBlock HorizontalAlignment="Left" Name="ProgressText" Width="270" TextTrimming="CharacterEllipsis" TextWrapping="Wrap"/>
     </StackPanel>
 </ContentDialog>

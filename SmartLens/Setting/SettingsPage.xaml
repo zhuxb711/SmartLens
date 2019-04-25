@@ -30,7 +30,7 @@
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="WiFiPressState" x:DataType="local:WiFiInfo">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="380" MinHeight="120">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Bind SignalBar,Mode=OneWay,Converter={StaticResource GlyphConverter}}" Style="{StaticResource SignalBarsStyle}"/>
                     <StackPanel Orientation="Vertical">
@@ -39,12 +39,12 @@
                     </StackPanel>
                 </StackPanel>
                 <TextBlock Text="{x:Bind Message,Mode=OneWay}" Visibility="{x:Bind MessageVisibility,Mode=OneWay}"/>
-                <CheckBox Content="自动连接" IsChecked="{x:Bind AutoConnect,Mode=TwoWay}" Margin="50,0,0,0" FontSize="16" MinHeight="30" VerticalAlignment="Center"/>
-                <Button VerticalAlignment="Center" Content="连接" Height="30" Width="120" Margin="230,0,0,0" Name="ConnectButton" Click="ConnectButton_Click"/>
+                <CheckBox Content="自动连接" IsChecked="{x:Bind AutoConnect,Mode=TwoWay}" Margin="50,0,0,0" MinHeight="30" VerticalAlignment="Center"/>
+                <Button VerticalAlignment="Center" Content="连接" Height="30" Width="110" Margin="180,10,0,10" Name="ConnectButton" Click="ConnectButton_Click"/>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="WiFiPasswordState" x:DataType="local:WiFiInfo">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="380" MinHeight="130">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Bind SignalBar,Mode=OneWay,Converter={StaticResource GlyphConverter}}" Style="{StaticResource SignalBarsStyle}"/>
                     <StackPanel>
@@ -52,16 +52,16 @@
                         <TextBlock Text="{x:Bind Encryption,Mode=OneWay}"/>
                     </StackPanel>
                 </StackPanel>
-                <PasswordBox Header="请输入WiFi安全密钥" PlaceholderText="WiFi密码" HorizontalAlignment="Left" VerticalAlignment="Center" MinWidth="300" MinHeight="30" Margin="50,0,0,0" Name="WiFiPassword" Password="{x:Bind Password,Mode=TwoWay}"/>
+                <PasswordBox Header="请输入WiFi安全密钥" PlaceholderText="WiFi密码" HorizontalAlignment="Left" VerticalAlignment="Center" MinWidth="230" MinHeight="30" Margin="50,0,0,0" Name="WiFiPassword" Password="{x:Bind Password,Mode=TwoWay}"/>
                 <TextBlock Text="{x:Bind Message,Mode=OneWay}" Visibility="{x:Bind MessageVisibility,Mode=OneWay}" Margin="50,0,0,0"/>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" MinHeight="45"  Margin="100,0,0,0" MinWidth="260">
-                    <Button  Content="下一步" Height="30" Width="120" HorizontalAlignment="Left" Name="ConfirmButton" Click="ConfirmButton_Click"/>
-                    <Button  Content="取消" Height="30" Width="120" HorizontalAlignment="Left" Margin="10,0,0,0" Name="CancelButton" Click="CancelButton_Click"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Margin="50,10,0,10">
+                    <Button  Content="下一步" Height="30" Width="110" HorizontalAlignment="Left" Name="ConfirmButton" Click="ConfirmButton_Click"/>
+                    <Button  Content="取消" Height="30" Width="110" HorizontalAlignment="Left" Margin="10,0,0,0" Name="CancelButton" Click="CancelButton_Click"/>
                 </StackPanel>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="WiFiConnectingState" x:DataType="local:WiFiInfo">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="380" MinHeight="140">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Bind SignalBar,Mode=OneWay,Converter={StaticResource GlyphConverter}}" Style="{StaticResource SignalBarsStyle}"/>
                     <StackPanel>
@@ -70,12 +70,12 @@
                     </StackPanel>
                 </StackPanel>
                 <ProgressBar IsIndeterminate="True" MinHeight="20" VerticalAlignment="Center" Margin="50,0,0,0"/>
-                <TextBlock Text="正在检查网络要求" FontSize="16" MinHeight="25" VerticalAlignment="Center" Margin="50,0,0,0"/>
-                <Button Margin="230,0,0,0" MinHeight="30" MinWidth="120" Content="取消"/>
+                <TextBlock Text="正在检查网络要求" MinHeight="25" VerticalAlignment="Center" Margin="50,0,0,0"/>
+                <Button Margin="180,10,0,10" MinHeight="30" MinWidth="110" Content="取消"/>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="WiFiErrorState" x:DataType="local:WiFiInfo">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="380" MinHeight="130">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Bind SignalBar,Mode=OneWay,Converter={StaticResource GlyphConverter}}" Style="{StaticResource SignalBarsStyle}"/>
                     <StackPanel>
@@ -83,12 +83,12 @@
                         <TextBlock Text="{x:Bind Encryption,Mode=OneWay}"/>
                     </StackPanel>
                 </StackPanel>
-                <TextBlock Text="{x:Bind Message,Mode=OneWay}" Visibility="{x:Bind MessageVisibility,Mode=OneWay}" FontSize="17" MinHeight="35" VerticalAlignment="Center" Margin="50,0,0,0"/>
-                <Button Margin="230,0,0,0" MinHeight="30" MinWidth="120" Content="关闭" Name="CloseButton" Click="CloseButton_Click"/>
+                <TextBlock Text="{x:Bind Message,Mode=OneWay}" Visibility="{x:Bind MessageVisibility,Mode=OneWay}" MinHeight="35" VerticalAlignment="Center" Margin="50,0,0,0"/>
+                <Button Margin="180,10,0,10" MinHeight="30" MinWidth="110" Content="关闭" Name="CloseButton" Click="CloseButton_Click"/>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="WiFiConnectedState" x:DataType="local:WiFiInfo">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="380" MinHeight="120">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Bind SignalBar,Mode=OneWay,Converter={StaticResource GlyphConverter}}" Style="{StaticResource SignalBarsStyle}"/>
                     <StackPanel Orientation="Vertical">
@@ -96,7 +96,7 @@
                         <TextBlock Text="{x:Bind Encryption,Mode=OneWay}"/>
                     </StackPanel>
                 </StackPanel>
-                <Button VerticalAlignment="Center" Content="断开连接" Height="30" Width="120" Margin="230,30,0,0" Name="DisconnectButton" Click="DisconnectButton_Click"/>
+                <Button VerticalAlignment="Center" Content="断开连接" Height="30" Width="110" Margin="180,25,0,10" Name="DisconnectButton" Click="DisconnectButton_Click"/>
             </StackPanel>
         </DataTemplate>
     </Page.Resources>
@@ -104,15 +104,16 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
-            <RowDefinition Height="70"/>
-            <RowDefinition Height="60"/>
+            <RowDefinition Height="65"/>
+            <RowDefinition Height="65"/>
+            <RowDefinition Height="65"/>
             <RowDefinition Height="50"/>
             <RowDefinition/>
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="50"/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="70"/>
             <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="50"/>
@@ -120,7 +121,7 @@
         </Grid.ColumnDefinitions>
         <ToggleSwitch Header="蓝牙" OnContent="开" OffContent="关" HorizontalAlignment="Stretch" Grid.Row="1" VerticalAlignment="Stretch" Name="BluetoothSwitch" Toggled="BluetoothSwitch_Toggled" Grid.Column="1"/>
         <ToggleSwitch Header="WIFI" OnContent="开" OffContent="关" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Stretch" Name="WiFiSwitch" Toggled="WiFiSwitch_Toggled" Grid.Column="1"/>
-        <Grid Grid.Row="3" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2">
+        <Grid Grid.Row="3" Grid.RowSpan="3" Grid.Column="1" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="*"/>
@@ -129,13 +130,14 @@
                 <TextBlock Text="正在刷新" FontSize="15" MinWidth="80" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                 <ProgressRing HorizontalAlignment="Stretch" VerticalAlignment="Center" MinHeight="20" MinWidth="20" IsActive="True"/>
             </StackPanel>
-            <ListView Grid.Row="1" ItemTemplate="{StaticResource WiFiNormalState}" Name="WiFiControl" ItemClick="WiFiControl_ItemClick" IsItemClickEnabled="True" SelectionChanged="WiFiControl_SelectionChanged" x:FieldModifier="Public" Grid.RowSpan="2"/>
+            <ListView Grid.Row="1" ItemTemplate="{StaticResource WiFiNormalState}" Name="WiFiControl" ItemClick="WiFiControl_ItemClick" IsItemClickEnabled="True" SelectionChanged="WiFiControl_SelectionChanged" x:FieldModifier="Public"/>
         </Grid>
-        <ComboBox Grid.Column="3" Grid.Row="1" Header="选择摄像头设备" HorizontalAlignment="Stretch" MinHeight="30" Name="CameraSelection" DisplayMemberPath="DisplayName"/>
-        <Button Grid.Row="2" Grid.Column="3" Width="160" Height="40" Content="重置SmartLens" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
-        <Button Grid.Row="3" Grid.Column="3" Width="160" Height="40" Content="清除缓存" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
+        <ComboBox Margin="10,0,0,0" Grid.Column="3" Grid.Row="1" Header="选择摄像头设备" HorizontalAlignment="Stretch" MinHeight="30" Name="CameraSelection" DisplayMemberPath="DisplayName"/>
+        <Button Margin="10,0,0,0" Grid.Row="2" Grid.Column="3" Width="160" Height="40" Content="重置SmartLens" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ResetButton" Click="ResetButton_Click"/>
+        <Button Margin="10,0,0,0" Grid.Row="3" Grid.Column="3" Width="160" Height="40" Content="清除缓存" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ClearCache" Click="ClearCache_Click"/>
         <ToggleSwitch Grid.Row="1" IsOn="{x:Bind local:ThemeSwitcher.IsLightEnabled}" Grid.Column="5" Header="切换主题模式(重启SmartLens生效)" OnContent="Light模式" OffContent="Dark模式" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Theme" Toggled="Theme_Toggled"/>
         <ToggleSwitch Grid.Row="2" Grid.Column="5" Header="完整性校验(推荐)" OnContent="开" OffContent="关" Name="Integrity" Toggled="Integrity_Toggled"/>
-        <Button Grid.Row="3" Grid.Column="5" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
+        <ToggleSwitch Grid.Row="3" Grid.Column="5" Header="阻止截取屏幕" OnContent="开" OffContent="关" Name="ScreenCaptureSwitch" Toggled="ScreenCaptureSwitch_Toggled"/>
+        <Button Margin="10,0,0,0" Grid.Row="4" Grid.Column="3" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
     </Grid>
 </Page>

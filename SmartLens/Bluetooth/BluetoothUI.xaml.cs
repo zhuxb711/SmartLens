@@ -12,6 +12,7 @@ using Windows.Foundation;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace SmartLens
 {
@@ -20,10 +21,8 @@ namespace SmartLens
         ObservableCollection<BluetoothList> BluetoothDeviceCollection;
         List<BluetoothDevice> PairedBluetoothDeviceCollection;
         AutoResetEvent PinLock = null;
-        DeviceWatcher DeviceWatcher = null;
+        DeviceWatcher BluetoothWatcher = null;
         private int LastSelectIndex = -1;
-        private readonly object Locker = new object();
-        private bool ClosePermission = true;
         private bool IsPinConfirm = false;
         public BluetoothUI()
         {
@@ -34,14 +33,14 @@ namespace SmartLens
 
         private void BluetoothUI_Closing(ContentDialog sender, ContentDialogClosingEventArgs args)
         {
-            if (!ClosePermission)
+            if (BluetoothWatcher != null)
             {
-                args.Cancel = true;
-            }
-            if (DeviceWatcher != null)
-            {
-                DeviceWatcher.Stop();
-                DeviceWatcher = null;
+                BluetoothWatcher.Added -= BluetoothWatcher_Added;
+                BluetoothWatcher.Updated -= BluetoothWatcher_Updated;
+                BluetoothWatcher.Removed -= BluetoothWatcher_Removed;
+                BluetoothWatcher.EnumerationCompleted -= BluetoothWatcher_EnumerationCompleted;
+                BluetoothWatcher.Stop();
+                BluetoothWatcher = null;
             }
 
             PinLock.Dispose();
@@ -63,14 +62,17 @@ namespace SmartLens
 
         private async void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
+            var Deferral = args.GetDeferral();
+
             if (BluetoothControl.SelectedIndex == -1 || !BluetoothDeviceCollection[BluetoothControl.SelectedIndex].DeviceInfo.Pairing.IsPaired)
             {
                 Tips.Text = "请先选择一个已配对的设备";
                 Tips.Visibility = Visibility.Visible;
-                ClosePermission = false;
+                args.Cancel = true;
+                Deferral.Complete();
                 return;
             }
-            ClosePermission = true;
+
 
             try
             {
@@ -91,11 +93,11 @@ namespace SmartLens
                                          select BTDevice)
                 {
                     //从该设备的BluetoothDevice对象获取到Obex服务的实例
-                    ObexServiceProvider.SetObexInstance(ObexService.GetDefaultForBluetoothDevice(BTDevice));
+                    ObexServiceProvider.SetObexInstance(BTDevice);
                     break;
                 }
 
-                if (ObexServiceProvider.ObexClient == null)
+                if (ObexServiceProvider.GetObexNewInstance() == null)
                 {
                     throw new Exception("未能找到已配对的设备，请打开该设备的蓝牙开关");
                 }
@@ -104,8 +106,9 @@ namespace SmartLens
             {
                 Tips.Text = e.Message;
                 Tips.Visibility = Visibility.Visible;
-                ClosePermission = false;
             }
+
+            Deferral.Complete();
         }
 
         /// <summary>
@@ -113,95 +116,115 @@ namespace SmartLens
         /// </summary>
         public void CreateBluetoothWatcher()
         {
-            if (DeviceWatcher != null)
+            if (BluetoothWatcher != null)
             {
-                DeviceWatcher.Stop();
-                DeviceWatcher = null;
+                BluetoothWatcher.Added -= BluetoothWatcher_Added;
+                BluetoothWatcher.Updated -= BluetoothWatcher_Updated;
+                BluetoothWatcher.Removed -= BluetoothWatcher_Removed;
+                BluetoothWatcher.EnumerationCompleted -= BluetoothWatcher_EnumerationCompleted;
+                BluetoothWatcher.Stop();
+                BluetoothWatcher = null;
                 Progress.IsActive = true;
                 StatusText.Text = "正在搜索";
             }
 
             //根据指定的筛选条件创建检测器
-            DeviceWatcher = DeviceInformation.CreateWatcher("(System.Devices.Aep.ProtocolId:=\"{e0cbf06c-cd8b-4647-bb8a-263b43f0f974}\")", new string[] { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" }, DeviceInformationKind.AssociationEndpoint);
+            BluetoothWatcher = DeviceInformation.CreateWatcher("(System.Devices.Aep.ProtocolId:=\"{e0cbf06c-cd8b-4647-bb8a-263b43f0f974}\")", new string[] { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected", "System.Devices.Aep.Bluetooth.Le.IsConnectable" }, DeviceInformationKind.AssociationEndpoint);
 
-            DeviceWatcher.Added += async (s, e) =>
-            {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    lock (Locker)
-                    {
-                        try
-                        {
-                            if (BluetoothDeviceCollection != null)
-                            {
-                                BluetoothDeviceCollection.Add(new BluetoothList(e));
-                            }
-                        }
-                        catch (Exception) { }
-                    }
-                });
+            BluetoothWatcher.Added += BluetoothWatcher_Added;
+            BluetoothWatcher.Updated += BluetoothWatcher_Updated;
+            BluetoothWatcher.Removed += BluetoothWatcher_Removed;
+            BluetoothWatcher.EnumerationCompleted += BluetoothWatcher_EnumerationCompleted;
 
-            };
-            DeviceWatcher.Updated += async (s, e) =>
+            BluetoothWatcher.Start();
+        }
+
+        private async void BluetoothWatcher_EnumerationCompleted(DeviceWatcher sender, object args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                Progress.IsActive = false;
+                StatusText.Text = "搜索完成";
+            });
+        }
+
+        private async void BluetoothWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                lock (SyncRootProvider.SyncRoot)
                 {
-                    lock (Locker)
+                    try
                     {
-                        try
+                        if (BluetoothDeviceCollection != null)
                         {
-                            if (BluetoothDeviceCollection != null)
+                            for (int i = 0; i < BluetoothDeviceCollection.Count; i++)
                             {
-                                for (int i = 0; i < BluetoothDeviceCollection.Count; i++)
+                                if (BluetoothDeviceCollection[i].Id == args.Id)
                                 {
-                                    if (BluetoothDeviceCollection[i].Id == e.Id)
-                                    {
-                                        BluetoothDeviceCollection[i].Update(e);
-                                        break;
-                                    }
+                                    BluetoothDeviceCollection.RemoveAt(i);
+                                    i--;
                                 }
                             }
                         }
-                        catch (Exception) { }
                     }
-                });
-            };
-            DeviceWatcher.Removed += async (s, e) =>
+                    catch (Exception) { }
+
+                }
+            });
+        }
+
+        private async void BluetoothWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                lock (SyncRootProvider.SyncRoot)
                 {
-                    lock (Locker)
+                    try
                     {
-                        try
+                        if (BluetoothDeviceCollection != null)
                         {
-                            if (BluetoothDeviceCollection != null)
+                            foreach (var Bluetooth in from BluetoothList Bluetooth in BluetoothDeviceCollection
+                                                      where Bluetooth.Id == args.Id
+                                                      select Bluetooth)
                             {
-                                for (int i = 0; i < BluetoothDeviceCollection.Count; i++)
-                                {
-                                    if (BluetoothDeviceCollection[i].Id == e.Id)
-                                    {
-                                        BluetoothDeviceCollection.RemoveAt(i);
-                                        i--;
-                                    }
-                                }
+                                Bluetooth.Update(args);
                             }
                         }
-                        catch (Exception) { }
-
                     }
-                });
+                    catch (Exception) { }
+                }
+            });
+        }
 
-            };
-            DeviceWatcher.EnumerationCompleted += async (s, e) =>
+        private async void BluetoothWatcher_Added(DeviceWatcher sender, DeviceInformation args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async() =>
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                BitmapImage Image = new BitmapImage
                 {
-                    Progress.IsActive = false;
-                    StatusText.Text = "搜索完成";
-                });
-            };
+                    DecodePixelHeight = 30,
+                    DecodePixelWidth = 30,
+                    DecodePixelType = DecodePixelType.Logical
+                };
 
-            DeviceWatcher.Start();
+                using (var Thumbnail = await args.GetGlyphThumbnailAsync())
+                {
+                    await Image.SetSourceAsync(Thumbnail);
+                }
+
+                lock (SyncRootProvider.SyncRoot)
+                {
+                    try
+                    {
+                        if (BluetoothDeviceCollection != null)
+                        {
+                            BluetoothDeviceCollection.Add(new BluetoothList(args, Image));
+                        }
+                    }
+                    catch (Exception) { }
+                }
+            });
         }
 
         /// <summary>
@@ -262,9 +285,9 @@ namespace SmartLens
 
             if (PairResult.Status == DevicePairingResultStatus.Paired)
             {
-                DeviceWatcher.Stop();
+                BluetoothWatcher.Stop();
                 BluetoothDeviceCollection.Clear();
-                DeviceWatcher.Start();
+                BluetoothWatcher.Start();
             }
             else
             {
@@ -332,14 +355,6 @@ namespace SmartLens
             Tips.Visibility = Visibility.Collapsed;
             PinConfirm.Visibility = Visibility.Collapsed;
             PinRefuse.Visibility = Visibility.Collapsed;
-        }
-
-        private void RefreshContainer_RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args)
-        {
-            Deferral RefreshDeferral = args.GetDeferral();
-            BluetoothDeviceCollection.Clear();
-            CreateBluetoothWatcher();
-            RefreshDeferral.Complete();
         }
     }
 

@@ -559,7 +559,7 @@
       <Version>19.16.0.20190313</Version>
     </PackageReference>
     <PackageReference Include="HtmlAgilityPack">
-      <Version>1.11.2</Version>
+      <Version>1.11.3</Version>
     </PackageReference>
     <PackageReference Include="MailKit">
       <Version>2.1.4</Version>
@@ -589,7 +589,7 @@
       <Version>5.1.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.1</Version>
+      <Version>12.0.2</Version>
     </PackageReference>
     <PackageReference Include="runtime.win10-arm64.Microsoft.Net.Native.Compiler">
       <Version>2.2.4</Version>
