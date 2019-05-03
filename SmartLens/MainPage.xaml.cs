@@ -9,6 +9,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Background;
 using Windows.Storage;
 using Windows.System;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -46,6 +47,17 @@ namespace SmartLens
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            var View = ApplicationView.GetForCurrentView();
+            if (ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] is bool Enable)
+            {
+                View.IsScreenCaptureEnabled = Enable;
+            }
+            else
+            {
+                View.IsScreenCaptureEnabled = false;
+                ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] = false;
+            }
+
             PageDictionary = new Dictionary<Type, string>()
             {
                 {typeof(HomePage), "首页"},

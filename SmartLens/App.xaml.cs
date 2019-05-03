@@ -185,18 +185,7 @@ namespace SmartLens
 
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
 
-            var View = ApplicationView.GetForCurrentView();
-            if (ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] is bool Enable)
-            {
-                View.IsScreenCaptureEnabled = Enable;
-            }
-            else
-            {
-                View.IsScreenCaptureEnabled = false;
-                ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] = false;
-            }
-
-            var viewTitleBar = View.TitleBar;
+            var viewTitleBar = ApplicationView.GetForCurrentView().TitleBar;
             viewTitleBar.ButtonBackgroundColor = Colors.Transparent;
             viewTitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
             viewTitleBar.ButtonForegroundColor = (Color)Resources["SystemBaseHighColor"];
