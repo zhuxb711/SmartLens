@@ -99,7 +99,7 @@ namespace SmartLens
                     }
                 case ErrorReason.APIError:
                     {
-                        Notise.Text = "天气API异常";
+                        Notise.Text = "云端API异常";
                         break;
                     }
             }

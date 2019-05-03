@@ -16,14 +16,13 @@ namespace OpenCVBridge
 	public ref class OpenCVLibrary sealed
     {
     public:
-        OpenCVLibrary();
-
-		void ApplyLipstickPrimaryMethod(SoftwareBitmap^ input, SoftwareBitmap^ output, Windows::Foundation::Collections::IVector<Windows::Foundation::Point>^ Points, Color SelectedColors);
+		static void ApplyLipstickPrimaryMethod(SoftwareBitmap^ input, SoftwareBitmap^ output, Windows::Foundation::Collections::IVector<Windows::Foundation::Point>^ Points, Color SelectedColors);
 
 	private:
+		OpenCVLibrary();
 
-		bool GetPointerToPixelData(SoftwareBitmap^ bitmap, unsigned char** pPixelData, unsigned int* capacity);
+		static bool GetPointerToPixelData(SoftwareBitmap^ bitmap, unsigned char** pPixelData, unsigned int* capacity);
 
-		bool TryConvert(SoftwareBitmap^ from, Mat& convertedMat);
+		static bool TryConvert(SoftwareBitmap^ from, Mat& convertedMat);
     };
 }

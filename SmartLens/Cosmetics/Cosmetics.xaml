@@ -13,30 +13,30 @@
 
     <Grid Name="Gr">
         <Grid.RowDefinitions>
-            <RowDefinition Height="20*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
         <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Name="CosmeticsControl" SelectionChanged="CosmeticsControl_SelectionChanged" MinWidth="400">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:CosmeticsItem">
                     <StackPanel Orientation="Horizontal">
-                        <Image Width="190" Height="130" Stretch="Fill" Margin="5">
+                        <Image Width="100" Height="70" Stretch="Fill" Margin="-5,5,0,0">
                             <Image.Source>
-                                <BitmapImage UriSource="{x:Bind ImageUri}" DecodePixelHeight="130" DecodePixelWidth="190" DecodePixelType="Logical"/>
+                                <BitmapImage UriSource="{x:Bind ImageUri}" DecodePixelHeight="70" DecodePixelWidth="100" DecodePixelType="Logical"/>
                             </Image.Source>
                         </Image>
                         <StackPanel>
-                            <TextBlock Text="{x:Bind Name}" FontSize="23" Margin="5,5" TextWrapping="Wrap"/>
-                            <TextBlock Text="{x:Bind Description}" FontSize="19" Margin="5" TextWrapping="Wrap"/>
+                            <TextBlock Text="{x:Bind Name}" FontSize="20" Margin="5,5" TextWrapping="Wrap"/>
+                            <TextBlock Text="{x:Bind Description}" FontSize="16" Margin="5" TextWrapping="Wrap"/>
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <Image Name="CaptureControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="UniformToFill" FlowDirection="RightToLeft"/>
+        <CaptureElement Name="CaptureControl" FlowDirection="RightToLeft" Stretch="Uniform"/>
         <controls:Loading x:Name="LoadingControl" IsLoading="True"  Grid.ColumnSpan="2" >
             <controls:Loading.Background>
                 <SolidColorBrush Color="Black" Opacity="0.7"/>

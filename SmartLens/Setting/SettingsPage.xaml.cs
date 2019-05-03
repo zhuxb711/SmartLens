@@ -158,7 +158,7 @@ namespace SmartLens
                 ScreenCaptureSwitch.IsOn = !Enable;
             }
 
-            MediaFraSourceGroup = await CameraHelper.GetFrameSourceGroupsAsync();
+            MediaFraSourceGroup = await MediaFrameSourceGroup.FindAllAsync();
             if (MediaFraSourceGroup.Count == 0)
             {
                 /*
@@ -200,7 +200,6 @@ namespace SmartLens
                 {
                     if (CameraSelection.SelectedIndex >= 0)
                     {
-                        CameraProvider.SetCameraFrameSource(MediaFraSourceGroup[CameraSelection.SelectedIndex]);
                         ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = MediaFraSourceGroup[CameraSelection.SelectedIndex].DisplayName;
                     }
                 };

@@ -2,10 +2,10 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.ApplicationModel;
 using Windows.Devices.Geolocation;
 using Windows.UI.Xaml.Controls;
 
@@ -101,7 +101,7 @@ namespace SmartLens
                 HttpWebResponse httpResp = (HttpWebResponse)await httpReq.GetResponseAsync();
                 Stream respStream = httpResp.GetResponseStream();
                 StreamReader respStreamReader = new StreamReader(respStream, Encoding.UTF8);
-                strBuff = respStreamReader.ReadToEnd();
+                strBuff = await respStreamReader.ReadToEndAsync();
             }
             catch (Exception)
             {
@@ -149,25 +149,29 @@ namespace SmartLens
         private async Task<Weather.Root> GetWeatherInfoAsync(string City)
         {
             string URL = null;
-            var Jarray = JArray.Parse(File.ReadAllText("Weather/CityCode.json"));
-
+            var Jarray = JArray.Parse(await File.ReadAllTextAsync("Weather/CityCode.json"));
             try
             {
-                for (int i = 0; i < Jarray.Count; i++)
+                var CityCode = (from Token in Jarray
+                                let CityName = Token.Last
+                                where CityName.First.ToString() == City
+                                select CityName.Previous.First.ToString()).FirstOrDefault();
+                if(string.IsNullOrEmpty(CityCode))
                 {
-                    if (Jarray[i].Last.First.ToString() == City)
-                    {
-                        URL = "http://t.weather.sojson.com/api/weather/city/" + Jarray[i].Last.Previous.First;
-                    }
+                    return null;
                 }
 
+                URL = "http://t.weather.sojson.com/api/weather/city/" + CityCode;
                 string JSON = await GetWebResponseAsync(URL);
-                Weather.Root WeatherResult = new Weather.Root();
                 if (JSON != "")
                 {
-                    WeatherResult = JsonConvert.DeserializeObject<Weather.Root>(JSON);
+                    Weather.Root WeatherResult = JsonConvert.DeserializeObject<Weather.Root>(JSON);
+                    return WeatherResult;
                 }
-                return WeatherResult;
+                else
+                {
+                    return null;
+                }
             }
             catch (Exception)
             {

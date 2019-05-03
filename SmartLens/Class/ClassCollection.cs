@@ -5,7 +5,6 @@ using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
 using Microsoft.Data.Sqlite;
-using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using MimeKit;
 using MimeKit.Text;
@@ -27,8 +26,11 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Devices.Enumeration;
 using Windows.Devices.WiFi;
+using Windows.Graphics.Imaging;
+using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
 using Windows.Media.Core;
+using Windows.Media.MediaProperties;
 using Windows.Media.Playback;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
@@ -1576,10 +1578,10 @@ namespace SmartLens
     /// <summary>
     /// 提供摄像头的支持
     /// </summary>
-    public sealed class CameraProvider
+    public sealed class MediaCaptureProvider
     {
-        private static CameraHelper CamHelper = null;
-        private CameraProvider() { }
+        private static MediaCapture Capture = null;
+        private MediaCaptureProvider() { }
 
         /// <summary>
         /// 释放CameraProvider资源
@@ -1588,43 +1590,67 @@ namespace SmartLens
         {
             lock (SyncRootProvider.SyncRoot)
             {
-                if (CamHelper != null)
+                if (Capture != null)
                 {
-                    CamHelper.Dispose();
-                    CamHelper = null;
+                    Capture.Dispose();
+                    Capture = null;
                 }
             }
         }
 
+        [Obsolete("该方法已弃用，仅在需要特别手动设置时才应当启用")]
         /// <summary>
-        /// 获取CameraHelper实例
+        /// 异步设置视频捕获编码属性
         /// </summary>
-        /// <returns>CameraHelper实例</returns>
-        public static CameraHelper GetCameraHelperInstance()
+        /// <param name="Width">编码宽度</param>
+        /// <param name="Height">编码高度</param>
+        /// <returns>更改是否成功</returns>
+        public static async Task<bool> SetVideoEncodingPropertiesAsync(int Width, int Height)
         {
-            lock (SyncRootProvider.SyncRoot)
+            var MediaProperties = Capture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview);
+            foreach (var Properties in from Properties in MediaProperties
+                                       where Properties is VideoEncodingProperties
+                                       let Encoding = Properties as VideoEncodingProperties
+                                       where Encoding.Width == Width && Encoding.Height == Height
+                                       select Encoding)
             {
-                return CamHelper = CamHelper ?? new CameraHelper();
+                await Capture.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.VideoPreview, Properties);
+                return true;
             }
+            return false;
         }
 
         /// <summary>
-        /// 设置视频帧采集来源
+        /// 异步设置视频帧采集来源并返回已初始化的MediaCapture
         /// </summary>
         /// <param name="FrameSource">来源</param>
-        public static void SetCameraFrameSource(MediaFrameSourceGroup FrameSource)
+        public static async Task<MediaCapture> SetFrameSourceAndInitializeCaptureAsync(MediaFrameSourceGroup FrameSource = null)
         {
-            if (CamHelper == null)
+            lock (SyncRootProvider.SyncRoot)
             {
-                CamHelper = new CameraHelper
+                if (Capture == null)
                 {
-                    FrameSourceGroup = FrameSource
+                    Capture = new MediaCapture();
+                }
+            }
+            if (FrameSource == null)
+            {
+                MediaCaptureInitializationSettings Settings = new MediaCaptureInitializationSettings
+                {
+                    StreamingCaptureMode = StreamingCaptureMode.Video
                 };
+                await Capture.InitializeAsync(Settings);
             }
             else
             {
-                CamHelper.FrameSourceGroup = FrameSource;
+                MediaCaptureInitializationSettings Settings = new MediaCaptureInitializationSettings
+                {
+                    StreamingCaptureMode = StreamingCaptureMode.Video,
+                    SourceGroup = FrameSource
+                };
+                await Capture.InitializeAsync(Settings);
             }
+            return Capture;
         }
     }
     #endregion
