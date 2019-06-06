@@ -33,7 +33,7 @@ namespace SmartLens
         bool IsScanRunning = false;
         public static SettingsPage ThisPage { get; private set; }
         private bool IsResetBluetooth = true;
-        private bool IsResetWiFi = false;
+        private bool IsResetWiFi = true;
         private List<WiFiInDataBase> StoragedWiFiInfoCollection;
         IReadOnlyList<MediaFrameSourceGroup> MediaFraSourceGroup;
 
@@ -75,7 +75,6 @@ namespace SmartLens
 
         private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            await Radio.RequestAccessAsync();
             StoragedWiFiInfoCollection = await SQLite.GetInstance().GetAllWiFiDataAsync();
             var Size = await GetFolderSize(ApplicationData.Current.TemporaryFolder.Path);
 
@@ -145,6 +144,18 @@ namespace SmartLens
                 else if (Device.Kind == RadioKind.WiFi && Device.State == RadioState.On)
                 {
                     WiFiSwitch.IsOn = true;
+                    await InitializeWiFiAdapterAsync();
+                    if (WiFiScanTimer == null)
+                    {
+                        WiFiScanTimer = new DispatcherTimer
+                        {
+                            Interval = TimeSpan.FromSeconds(15)
+                        };
+                        WiFiScanTimer_Tick(null, null);
+
+                        WiFiScanTimer.Tick += WiFiScanTimer_Tick;
+                        WiFiScanTimer.Start();
+                    }
                 }
             }
 
@@ -252,29 +263,34 @@ namespace SmartLens
         {
             try
             {
-                var RadioDevice = await Radio.GetRadiosAsync();
-
-                foreach (var Device in from Device in RadioDevice
-                                       where Device.Kind == RadioKind.Bluetooth
-                                       select Device)
+                if (await Radio.RequestAccessAsync() == RadioAccessStatus.Allowed)
                 {
-                    if (OnOrOff)
-                    {
-                        await Device.SetStateAsync(RadioState.On);
-                    }
-                    else
-                    {
-                        await Device.SetStateAsync(RadioState.Off);
-                    }
-                }
+                    var RadioDevice = await Radio.GetRadiosAsync();
 
+                    foreach (var Device in from Device in RadioDevice
+                                           where Device.Kind == RadioKind.Bluetooth
+                                           select Device)
+                    {
+                        if (OnOrOff)
+                        {
+                            await Device.SetStateAsync(RadioState.On);
+                        }
+                        else
+                        {
+                            await Device.SetStateAsync(RadioState.Off);
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception)
             {
                 return false;
             }
-
-            return false;
         }
 
         private async void BluetoothSwitch_Toggled(object sender, RoutedEventArgs e)
@@ -353,25 +369,36 @@ namespace SmartLens
         /// <returns>成功与否</returns>
         private async Task<bool> ToggleWiFiStatusAsync(bool IsOn)
         {
-            var RadioDevice = await Radio.GetRadiosAsync();
-
-            foreach (var Device in from Device in RadioDevice
-                                   where Device.Kind == RadioKind.WiFi
-                                   select Device)
+            try
             {
-                if (IsOn)
+                if (await Radio.RequestAccessAsync() == RadioAccessStatus.Allowed)
                 {
-                    await Device.SetStateAsync(RadioState.On);
+                    var RadioDevice = await Radio.GetRadiosAsync();
+
+                    foreach (var Device in from Device in RadioDevice
+                                           where Device.Kind == RadioKind.WiFi
+                                           select Device)
+                    {
+                        if (IsOn)
+                        {
+                            await Device.SetStateAsync(RadioState.On);
+                        }
+                        else
+                        {
+                            await Device.SetStateAsync(RadioState.Off);
+                        }
+                    }
                     return true;
                 }
                 else
                 {
-                    await Device.SetStateAsync(RadioState.Off);
-                    return true;
+                    return false;
                 }
             }
-
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private async void WiFiSwitch_Toggled(object sender, RoutedEventArgs e)

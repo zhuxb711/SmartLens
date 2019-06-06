@@ -88,7 +88,7 @@ namespace SmartLens
                 HtmlDocument HTMLDocument = await WebHtml.LoadFromWebAsync(WebURL);
                 HtmlNode VersionNode = HTMLDocument.DocumentNode.SelectSingleNode("//div[@class='app-version lg mb-24']");
 
-                if(VersionNode==null)
+                if (VersionNode == null)
                 {
                     return;
                 }

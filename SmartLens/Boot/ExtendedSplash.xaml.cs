@@ -92,7 +92,7 @@ namespace SmartLens
                 ApplicationData.Current.LocalSettings.Values["FirstStartUp"] = "FALSE";
                 if (await Package.Current.VerifyContentIntegrityAsync())
                 {
-                    await MD5Util.CalculateAndStorageMD5Async();
+                    await HeshUtil.ComputeAndStorageHeshAsync();
                     DismissExtendedSplash();
                 }
                 else
@@ -109,7 +109,7 @@ namespace SmartLens
             }
             else
             {
-                KeyValuePair<bool, string> Result = await MD5Util.CheckSmartLensIntegrityAsync();
+                KeyValuePair<bool, string> Result = await HeshUtil.CheckSmartLensIntegrityAsync();
                 if (Result.Key)
                 {
                     DismissExtendedSplash();

@@ -1360,11 +1360,11 @@ namespace SmartLens
         }
 
         /// <summary>
-        /// 异步保存MD5计算值
+        /// 异步保存哈希计算值
         /// </summary>
-        /// <param name="Hash">MD5计算值列表</param>
+        /// <param name="Hash">哈希计算值列表</param>
         /// <returns></returns>
-        public async Task SetMD5ValueAsync(List<KeyValuePair<string, string>> Hash)
+        public async Task SetHeshValueAsync(List<KeyValuePair<string, string>> Hash)
         {
             SqliteTransaction Transaction = OLEDB.BeginTransaction();
             try
@@ -1391,10 +1391,10 @@ namespace SmartLens
         }
 
         /// <summary>
-        /// 异步提取MD5计算值
+        /// 异步提取哈希计算值
         /// </summary>
         /// <returns>List<KeyValuePair<string, string>></returns>
-        public async Task<List<KeyValuePair<string, string>>> GetMD5ValueAsync()
+        public async Task<List<KeyValuePair<string, string>>> GetHeshValueAsync()
         {
             SqliteCommand Command = new SqliteCommand("Select * From HashTable", OLEDB);
             SqliteDataReader query = await Command.ExecuteReaderAsync();
@@ -1639,7 +1639,14 @@ namespace SmartLens
                 {
                     StreamingCaptureMode = StreamingCaptureMode.Video
                 };
-                await Capture.InitializeAsync(Settings);
+                try
+                {
+                    await Capture.InitializeAsync(Settings);
+                }
+                catch(Exception)
+                {
+                    return null;
+                }
             }
             else
             {
@@ -3632,7 +3639,7 @@ namespace SmartLens
     #region 扩展方法类
     public static class ExtentionMethodClass
     {
-        public static List<T[]> SplitToArray<T>(this List<T> list, int GroupNum)
+        public static IReadOnlyList<T[]> SplitToArray<T>(this List<T> list, int GroupNum)
         {
             if (GroupNum == 0)
             {
@@ -3714,27 +3721,27 @@ namespace SmartLens
     }
     #endregion
 
-    #region MD5哈希值计算和检验工具类
+    #region 哈希值计算和检验工具类
     /// <summary>
     /// 计算或验证哈希值
     /// </summary>
-    public sealed class MD5Util
+    public sealed class HeshUtil
     {
         private static readonly int StartTaskNums = Environment.ProcessorCount;
         /// <summary>
         /// 异步计算SmartLens所有文件哈希值并保存至数据库中
         /// </summary>
         /// <returns>无</returns>
-        public static async Task CalculateAndStorageMD5Async()
+        public static async Task ComputeAndStorageHeshAsync()
         {
             var InstallFolder = Package.Current.InstalledLocation;
 
             List<StorageFile> FileList = new List<StorageFile>();
             await EnumAllFileAsync(InstallFolder, FileList);
 
-            List<KeyValuePair<string, string>> CalculateResult = await CalculateMD5Async(FileList);
+            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList);
 
-            await SQLite.GetInstance().SetMD5ValueAsync(CalculateResult);
+            await SQLite.GetInstance().SetHeshValueAsync(CalculateResult);
         }
 
         /// <summary>
@@ -3748,9 +3755,9 @@ namespace SmartLens
             List<StorageFile> FileList = new List<StorageFile>();
             await EnumAllFileAsync(InstallFolder, FileList);
 
-            List<KeyValuePair<string, string>> CalculateResult = await CalculateMD5Async(FileList);
+            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList);
 
-            var DataBaseResult = await SQLite.GetInstance().GetMD5ValueAsync();
+            var DataBaseResult = await SQLite.GetInstance().GetHeshValueAsync();
 
             foreach (var ErrorPart in from item in DataBaseResult
                                       from item1 in CalculateResult
@@ -3765,13 +3772,13 @@ namespace SmartLens
         }
 
         /// <summary>
-        /// 异步并行计算所有文件的MD5值
+        /// 异步并行计算所有文件的哈希值
         /// </summary>
         /// <param name="FileList">文件枚举</param>
         /// <returns>计算结果</returns>
-        private static async Task<List<KeyValuePair<string, string>>> CalculateMD5Async(List<StorageFile> FileList)
+        private static async Task<List<KeyValuePair<string, string>>> ComputeHashAsync(List<StorageFile> FileList)
         {
-            List<StorageFile[]> FileGroup = FileList.SplitToArray(StartTaskNums);
+            IReadOnlyList<StorageFile[]> FileGroup = FileList.SplitToArray(StartTaskNums);
             Task<List<KeyValuePair<string, string>>>[] TaskGroup = new Task<List<KeyValuePair<string, string>>>[StartTaskNums];
 
             for (int i = 0; i < StartTaskNums; i++)
@@ -3780,13 +3787,13 @@ namespace SmartLens
                 {
                     StorageFile[] FileCollection = e as StorageFile[];
                     List<KeyValuePair<string, string>> Result = new List<KeyValuePair<string, string>>(FileCollection.Length);
-                    using (MD5 md5 = new MD5CryptoServiceProvider())
+                    using (SHA256 SHA = SHA256.Create())
                     {
                         foreach (var file in FileCollection)
                         {
                             using (Stream stream = file.OpenStreamForReadAsync().Result)
                             {
-                                byte[] Val = md5.ComputeHash(stream);
+                                byte[] Val = SHA.ComputeHash(stream);
                                 StringBuilder sb = new StringBuilder();
                                 for (int n = 0; n < Val.Length; n++)
                                 {

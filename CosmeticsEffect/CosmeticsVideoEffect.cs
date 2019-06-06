@@ -3,7 +3,6 @@ using OpenCVBridge;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Foundation.Collections;
 using Windows.Graphics.DirectX.Direct3D11;

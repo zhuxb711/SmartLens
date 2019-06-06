@@ -132,22 +132,39 @@ namespace SmartLens
                 CaptureControl.Source = Capture = await MediaCaptureProvider.SetFrameSourceAndInitializeCaptureAsync();
             }
 
-            await Task.Run(async () =>
+            if (Capture != null)
             {
-                ApplicationData.Current.LocalSettings.Values["ReturnCosmeticsEffectExcution"] = true;
-                VideoEffectDefinition EffectDefinition = new VideoEffectDefinition("CosmeticsEffect.CosmeticsVideoEffect");
+                await Task.Run(async () =>
+                {
+                    ApplicationData.Current.LocalSettings.Values["ReturnCosmeticsEffectExcution"] = true;
+                    VideoEffectDefinition EffectDefinition = new VideoEffectDefinition("CosmeticsEffect.CosmeticsVideoEffect");
 
-                ApplicationData.Current.LocalSettings.Values["ReturnCosmeticsEffectExcution"] = false;
-                VideoEffect = await Capture.AddVideoEffectAsync(EffectDefinition, MediaStreamType.VideoPreview);
-            });
+                    ApplicationData.Current.LocalSettings.Values["ReturnCosmeticsEffectExcution"] = false;
+                    VideoEffect = await Capture.AddVideoEffectAsync(EffectDefinition, MediaStreamType.VideoPreview);
+                });
 
-            if (!Cancellation.IsCancellationRequested)
+                if (!Cancellation.IsCancellationRequested)
+                {
+                    await Capture.StartPreviewAsync();
+
+                    CosmeticsControl.SelectedIndex = 0;
+
+                    LoadingControl.IsLoading = false;
+                }
+            }
+            else
             {
-                await Capture.StartPreviewAsync();
-
-                CosmeticsControl.SelectedIndex = 0;
-
-                LoadingControl.IsLoading = false;
+                ContentDialog dialog = new ContentDialog
+                {
+                    Title = "错误",
+                    Content = "无可用的摄像头设备或设备异常，请检查摄像头连接",
+                    CloseButtonText = "确定"
+                };
+                _ = await dialog.ShowAsync();
+                if (MainPage.ThisPage.NavFrame.CanGoBack)
+                {
+                    MainPage.ThisPage.NavFrame.GoBack();
+                }
             }
 
             StayAwake = new DisplayRequest();
@@ -171,15 +188,17 @@ namespace SmartLens
             Windows.ApplicationModel.Core.CoreApplication.LeavingBackground -= CoreApplication_LeavingBackground;
             Windows.ApplicationModel.Core.CoreApplication.EnteredBackground -= CoreApplication_EnteredBackground;
 
-            await Capture.ClearEffectsAsync(MediaStreamType.VideoPreview);
-
-            if (Capture.CameraStreamState == Windows.Media.Devices.CameraStreamState.Streaming)
+            if (Capture != null)
             {
-                await Capture.StopPreviewAsync();
+                await Capture.ClearEffectsAsync(MediaStreamType.VideoPreview);
+
+                if (Capture.CameraStreamState == Windows.Media.Devices.CameraStreamState.Streaming)
+                {
+                    await Capture.StopPreviewAsync();
+                }
+
+                Capture = null;
             }
-
-            Capture = null;
-
             MediaCaptureProvider.Dispose();
 
             CaptureControl.Source = null;

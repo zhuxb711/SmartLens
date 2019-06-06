@@ -69,48 +69,118 @@ namespace UpdateBackgroundTask
         private async Task CalculateAndStorageMD5Async()
         {
             var InstallFolder = Package.Current.InstalledLocation;
-            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>();
-            await CalculateMD5Async(InstallFolder, CalculateResult);
+            List<StorageFile> FileList = new List<StorageFile>();
+
+            await EnumAllFileAsync(InstallFolder, FileList);
+            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList);
 
             using (SQLite SQL = new SQLite())
             {
-                SQL.SetMD5ValueAsync(CalculateResult);
+                SQL.SetHeshValueAsync(CalculateResult);
             }
         }
 
-        private async Task CalculateMD5Async(StorageFolder Folder, List<KeyValuePair<string, string>> MD5List)
+        private IReadOnlyList<StorageFile[]> SplitToArray(List<StorageFile> list, int GroupNum)
         {
-            var FileList = await Folder.GetFilesAsync();
-            using (MD5 md5 = new MD5CryptoServiceProvider())
+            if (GroupNum == 0)
             {
-                foreach (var file in FileList)
-                {
-                    if (file.Name == "SmartLens.exe")
-                    {
-                        continue;
-                    }
-                    using (Stream stream = await file.OpenStreamForReadAsync())
-                    {
-                        byte[] Val = md5.ComputeHash(stream);
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < Val.Length; i++)
-                        {
-                            sb.Append(Val[i].ToString("x2"));
-                        }
-                        MD5List.Add(new KeyValuePair<string, string>(file.Name, sb.ToString()));
-                    }
-                }
+                return null;
             }
 
-            var FolderList = await Folder.GetFoldersAsync();
+            if (list.Count < GroupNum || GroupNum == 1)
+            {
+                return new List<StorageFile[]>(GroupNum)
+                {
+                    list.ToArray()
+                };
+            }
+
+            int BlockLength = list.Count / GroupNum;
+            List<StorageFile[]> Result = new List<StorageFile[]>(GroupNum);
+
+            for (int i = 0; i < GroupNum; i++)
+            {
+                if (i == GroupNum - 1)
+                {
+                    int RestLength = list.Count - BlockLength * i;
+                    StorageFile[] array = new StorageFile[RestLength];
+                    list.CopyTo(BlockLength * i, array, 0, RestLength);
+                    Result.Add(array);
+                }
+                else
+                {
+                    StorageFile[] array = new StorageFile[BlockLength];
+                    list.CopyTo(BlockLength * i, array, 0, BlockLength);
+                    Result.Add(array);
+                }
+            }
+            return Result;
+        }
+
+
+        private async Task<List<KeyValuePair<string, string>>> ComputeHashAsync(List<StorageFile> FileList)
+        {
+            IReadOnlyList<StorageFile[]> FileGroup = SplitToArray(FileList, Environment.ProcessorCount);
+            Task<List<KeyValuePair<string, string>>>[] TaskGroup = new Task<List<KeyValuePair<string, string>>>[Environment.ProcessorCount];
+
+            for (int i = 0; i < Environment.ProcessorCount; i++)
+            {
+                TaskGroup[i] = Task.Factory.StartNew(new Func<object, List<KeyValuePair<string, string>>>((e) =>
+                {
+                    StorageFile[] FileCollection = e as StorageFile[];
+                    List<KeyValuePair<string, string>> Result = new List<KeyValuePair<string, string>>(FileCollection.Length);
+                    using (SHA256 SHA = SHA256.Create())
+                    {
+                        foreach (var file in FileCollection)
+                        {
+                            using (Stream stream = file.OpenStreamForReadAsync().Result)
+                            {
+                                byte[] Val = SHA.ComputeHash(stream);
+                                StringBuilder sb = new StringBuilder();
+                                for (int n = 0; n < Val.Length; n++)
+                                {
+                                    _ = sb.Append(Val[n].ToString("x2"));
+                                }
+                                Result.Add(new KeyValuePair<string, string>(file.Name, sb.ToString()));
+                            }
+                        }
+                    }
+                    return Result;
+
+                }), FileGroup[i]);
+            }
+
+            List<KeyValuePair<string, string>> CalculateResult = new List<KeyValuePair<string, string>>(FileList.Count);
+
+            foreach (var Result in await Task.WhenAll(TaskGroup))
+            {
+                CalculateResult.AddRange(Result);
+            }
+
+            return CalculateResult;
+        }
+
+        private async Task EnumAllFileAsync(StorageFolder Folder, List<StorageFile> FileList)
+        {
+            foreach (var file in await Folder.GetFilesAsync())
+            {
+                if (file.Name == "SmartLens.exe")
+                {
+                    continue;
+                }
+                FileList.Add(file);
+            }
+
+            IReadOnlyList<StorageFolder> FolderList = await Folder.GetFoldersAsync();
             if (FolderList.Count != 0)
             {
                 foreach (var folder in FolderList)
                 {
-                    await CalculateMD5Async(folder, MD5List);
+                    await EnumAllFileAsync(folder, FileList);
                 }
             }
         }
+
 
         private void BackTaskInstance_Canceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {

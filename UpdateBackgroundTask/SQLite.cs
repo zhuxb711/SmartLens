@@ -15,7 +15,7 @@ namespace UpdateBackgroundTask
             OLEDB.Open();
         }
 
-        public void SetMD5ValueAsync(IList<KeyValuePair<string, string>> Hash)
+        public void SetHeshValueAsync(IList<KeyValuePair<string, string>> Hash)
         {
             SqliteTransaction Transaction = OLEDB.BeginTransaction();
             try

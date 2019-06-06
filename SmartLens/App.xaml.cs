@@ -181,14 +181,13 @@ namespace SmartLens
 
             }
 
-            Window.Current.Activate();
-
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-
             var viewTitleBar = ApplicationView.GetForCurrentView().TitleBar;
             viewTitleBar.ButtonBackgroundColor = Colors.Transparent;
             viewTitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
             viewTitleBar.ButtonForegroundColor = (Color)Resources["SystemBaseHighColor"];
+
+            Window.Current.Activate();
         }
 
 

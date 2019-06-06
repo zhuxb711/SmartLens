@@ -79,7 +79,7 @@
                         <RowDefinition Height="550*"/>
                     </Grid.RowDefinitions>
                     <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" Grid.Row="1"/>
-                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Title" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"/>
+                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="Title" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"/>
                 </Grid>
             </NavigationView.Content>
         </NavigationView>
