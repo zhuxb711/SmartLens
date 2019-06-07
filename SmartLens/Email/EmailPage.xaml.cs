@@ -36,6 +36,7 @@ namespace SmartLens
                         LoadingControl.IsLoading = true;
 
                         KeyCredentialRetrievalResult CredentiaResult = await KeyCredentialManager.RequestCreateAsync("SmartLens-EmailProtection", KeyCredentialCreationOption.ReplaceExisting);
+                        await Task.Delay(1500);
                         switch (CredentiaResult.Status)
                         {
                             case KeyCredentialStatus.Success:

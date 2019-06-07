@@ -270,6 +270,11 @@ namespace SmartLens
                         NotSeenDictionary.Add(uid);
                         EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
                     }
+
+                    if (NotSeenDictionary.Count > 0)
+                    {
+                        ShowEmailNotification(NotSeenDictionary.Count);
+                    }
                 }
 
                 //编写查询语句，查找邮箱中的所有，且来源不等于UserName的邮件
