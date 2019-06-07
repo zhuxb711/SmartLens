@@ -3063,7 +3063,7 @@ namespace SmartLens
 
             //随机数来进行颜色指定
             Random random = new Random();
-            switch (random.Next(1, 7))
+            switch (random.Next(1, 8))
             {
                 case 1: Color = Colors.DarkSeaGreen; break;
                 case 2: Color = Colors.Brown; break;

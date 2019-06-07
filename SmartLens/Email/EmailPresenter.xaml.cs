@@ -3,16 +3,16 @@ using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
 using MailKit.Search;
 using MailKit.Security;
+using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -153,7 +153,7 @@ namespace SmartLens
             {
                 await ActivateSyncNotification(false);
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 await ActivateSyncNotification(false);
             }
@@ -172,7 +172,7 @@ namespace SmartLens
                 Updating = false;
                 return;
             }
-            catch(ImapProtocolException)
+            catch (ImapProtocolException)
             {
                 SyncNotification.Dismiss();
 
@@ -202,7 +202,7 @@ namespace SmartLens
                 Updating = false;
                 return;
             }
-            catch(SslHandshakeException)
+            catch (SslHandshakeException)
             {
                 SyncNotification.Dismiss();
 
@@ -301,21 +301,25 @@ namespace SmartLens
              */
             switch (DisplayMode.SelectedIndex)
             {
-                case 0: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem 
-                                                                                                        in EmailAllItemCollection
-                                                                                                        group EmailItem 
-                                                                                                        by EmailItem.Date 
-                                                                                                        into GroupedItem
-                                                                                                        orderby GroupedItem.Key 
-                                                                                                        descending select GroupedItem);
+                case 0:
+                    EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem
+                                                                                                    in EmailAllItemCollection
+                                                                                                    group EmailItem
+                                                                                                    by EmailItem.Date
+                                                                                                    into GroupedItem
+                                                                                                    orderby GroupedItem.Key
+                                                                                                    descending
+                                                                                                    select GroupedItem);
                     break;
-                case 1: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem 
-                                                                                                        in EmailNotSeenItemCollection
-                                                                                                        group EmailItem
-                                                                                                        by EmailItem.Date 
-                                                                                                        into GroupedItem
-                                                                                                        orderby GroupedItem.Key
-                                                                                                        descending select GroupedItem);
+                case 1:
+                    EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem
+                                                                                                    in EmailNotSeenItemCollection
+                                                                                                    group EmailItem
+                                                                                                    by EmailItem.Date
+                                                                                                    into GroupedItem
+                                                                                                    orderby GroupedItem.Key
+                                                                                                    descending
+                                                                                                    select GroupedItem);
                     break;
             }
 
@@ -528,6 +532,11 @@ namespace SmartLens
                         NotSeenDictionary.Add(uid);
                         EmailNotSeenItemCollection.Add(new EmailItem(message, uid));
                     }
+
+                    if (NotSeenDictionary.Count > 0)
+                    {
+                        ShowEmailNotification(NotSeenDictionary.Count);
+                    }
                 }
 
                 var SearchResult = await Inbox?.SearchAsync(SearchQuery.All.And(SearchQuery.Not(SearchQuery.FromContains(EmailService.UserName))), ConnectionCancellation.Token);
@@ -548,7 +557,7 @@ namespace SmartLens
                 Updating = false;
                 return;
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 await ActivateSyncNotification(false);
                 Updating = false;
@@ -631,8 +640,6 @@ namespace SmartLens
             }
 
 
-
-
             /*
              * 更新邮件列表逻辑：
              * 将新获取到的所有邮件与现有邮件按日期分类来对比
@@ -679,6 +686,40 @@ namespace SmartLens
 
             await ActivateSyncNotification(false);
             Updating = false;
+        }
+
+        private void ShowEmailNotification(int NotSeenEmailNum)
+        {
+            ToastNotificationManager.History.Clear();
+            var Content = new ToastContent()
+            {
+                Scenario = ToastScenario.Default,
+                Launch = "Email",
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "有" + NotSeenEmailNum + "封未读邮件正在等待您查看"
+                            },
+
+                            new AdaptiveText()
+                            {
+                               Text = "SmartLens邮件模块发现新邮件"
+                            },
+
+                            new AdaptiveText()
+                            {
+                               Text = "已获取并准备好查看"
+                            }
+                        }
+                    }
+                },
+            };
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
         }
 
         public async void Delete_Click(object sender, RoutedEventArgs e)

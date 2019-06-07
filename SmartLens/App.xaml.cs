@@ -71,7 +71,7 @@ namespace SmartLens
         {
             if (args is ToastNotificationActivatedEventArgs e)
             {
-                if (e.Argument == "Transcode"||e.Argument=="Update")
+                if (e.Argument == "Transcode" || e.Argument == "Update" || e.Argument == "Email")
                 {
                     return;
                 }
