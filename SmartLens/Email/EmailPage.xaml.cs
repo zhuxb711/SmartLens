@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Windows.Security.Credentials;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -19,16 +20,50 @@ namespace SmartLens
             Loaded += EmailPage_Loaded;
         }
 
-        private void EmailPage_Loaded(object sender, RoutedEventArgs e)
+        public async void EmailPage_Loaded(object sender, RoutedEventArgs e)
         {
-            string Status = ApplicationData.Current.RoamingSettings.Values["EmailStartup"]?.ToString();
+            string Status = ApplicationData.Current.LocalSettings.Values["EmailStartup"]?.ToString();
             if (Status == null)
             {
                 Nav.Navigate(typeof(EmailStartupOne), Nav, new DrillInNavigationTransitionInfo());
             }
             else if (Status == "True")
             {
-                Nav.Navigate(typeof(EmailPresenter), null, new DrillInNavigationTransitionInfo());
+                if (ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] is bool Enable)
+                {
+                    if (Enable)
+                    {
+                        LoadingControl.IsLoading = true;
+
+                        KeyCredentialRetrievalResult CredentiaResult = await KeyCredentialManager.RequestCreateAsync("SmartLens-EmailProtection", KeyCredentialCreationOption.ReplaceExisting);
+                        switch (CredentiaResult.Status)
+                        {
+                            case KeyCredentialStatus.Success:
+                                LoadingControl.IsLoading = false;
+
+                                Nav.Navigate(typeof(EmailPresenter), null, new DrillInNavigationTransitionInfo());
+                                Loaded -= EmailPage_Loaded;
+                                break;
+                            case KeyCredentialStatus.UserCanceled:
+                                LoadingControl.IsLoading = false;
+
+                                if (MainPage.ThisPage.NavFrame.CanGoBack)
+                                {
+                                    MainPage.ThisPage.NavFrame.GoBack();
+                                }
+                                break;
+                            default:
+                                LoadingControl.IsLoading = false;
+
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        Nav.Navigate(typeof(EmailPresenter), null, new DrillInNavigationTransitionInfo());
+                        Loaded -= EmailPage_Loaded;
+                    }
+                }
             }
         }
 

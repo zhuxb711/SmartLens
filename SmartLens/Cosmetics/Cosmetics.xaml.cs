@@ -158,7 +158,7 @@ namespace SmartLens
                 {
                     Title = "错误",
                     Content = "无可用的摄像头设备或设备异常，请检查摄像头连接",
-                    CloseButtonText = "确定"
+                    CloseButtonText = "返回"
                 };
                 _ = await dialog.ShowAsync();
                 if (MainPage.ThisPage.NavFrame.CanGoBack)

@@ -139,5 +139,6 @@
         <ToggleSwitch Grid.Row="2" Grid.Column="5" Header="完整性校验(推荐)" OnContent="开" OffContent="关" Name="Integrity" Toggled="Integrity_Toggled"/>
         <ToggleSwitch Grid.Row="3" Grid.Column="5" Header="阻止截取屏幕" OnContent="开" OffContent="关" Name="ScreenCaptureSwitch" Toggled="ScreenCaptureSwitch_Toggled"/>
         <Button Margin="10,0,0,0" Grid.Row="4" Grid.Column="3" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
+        <ToggleSwitch Grid.Row="4" Grid.Column="5" Header="使用Windows Hello保护邮件安全(重启SmartLens生效)" OnContent="开" OffContent="关" Name="EmailProtectionSwitch" Toggled="EmailProtectionSwitch_Toggled"/>
     </Grid>
 </Page>

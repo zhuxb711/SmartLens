@@ -15,6 +15,7 @@ using Windows.Media.Capture.Frames;
 using Windows.Security.Credentials;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
@@ -169,6 +170,12 @@ namespace SmartLens
                 ScreenCaptureSwitch.IsOn = !Enable;
             }
 
+            if(ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] is bool EnableEmailProtection)
+            {
+                EmailProtectionSwitch.IsOn = EnableEmailProtection;
+            }
+
+
             MediaFraSourceGroup = await MediaFrameSourceGroup.FindAllAsync();
             if (MediaFraSourceGroup.Count == 0)
             {
@@ -178,6 +185,7 @@ namespace SmartLens
                  */
                 CameraSelection.Items.Add(new EmptyCameraDevice());
                 CameraSelection.SelectedIndex = 0;
+                ApplicationData.Current.LocalSettings.Values["LastSelectedCameraSource"] = null;
                 return;
             }
 
@@ -813,6 +821,38 @@ namespace SmartLens
             {
                 ApplicationView.GetForCurrentView().IsScreenCaptureEnabled = true;
                 ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] = true;
+            }
+        }
+
+        private async void EmailProtectionSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (EmailProtectionSwitch.IsOn)
+            {
+                if (await KeyCredentialManager.IsSupportedAsync())
+                {
+                    ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] = true;
+                }
+                else
+                {
+                    EmailProtectionSwitch.IsOn = false;
+                    ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] = false;
+                    ContentDialog dialog = new ContentDialog
+                    {
+                        Title = "警告",
+                        Content = "    由于Windows Hello尚未设置，无法启用Windows Hello验证\r\r    请先设置Windows Hello后再试",
+                        PrimaryButtonText="前往",
+                        CloseButtonText = "取消"
+                    };
+                    dialog.PrimaryButtonClick += async(s, t) =>
+                    {
+                        await Launcher.LaunchUriAsync(new Uri("ms-settings:signinoptions"));
+                    };
+                    _ = await dialog.ShowAsync();
+                }
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] = false;
             }
         }
     }

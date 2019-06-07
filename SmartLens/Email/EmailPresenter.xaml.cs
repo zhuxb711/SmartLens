@@ -301,8 +301,22 @@ namespace SmartLens
              */
             switch (DisplayMode.SelectedIndex)
             {
-                case 0: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem in EmailAllItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem); break;
-                case 1: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem in EmailNotSeenItemCollection group EmailItem by EmailItem.Date into GroupedItem orderby GroupedItem.Key descending select GroupedItem); break;
+                case 0: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem 
+                                                                                                        in EmailAllItemCollection
+                                                                                                        group EmailItem 
+                                                                                                        by EmailItem.Date 
+                                                                                                        into GroupedItem
+                                                                                                        orderby GroupedItem.Key 
+                                                                                                        descending select GroupedItem);
+                    break;
+                case 1: EmailDisplayCollection = new ObservableCollection<IGrouping<string, EmailItem>>(from EmailItem 
+                                                                                                        in EmailNotSeenItemCollection
+                                                                                                        group EmailItem
+                                                                                                        by EmailItem.Date 
+                                                                                                        into GroupedItem
+                                                                                                        orderby GroupedItem.Key
+                                                                                                        descending select GroupedItem);
+                    break;
             }
 
             NothingDisplayControl.Visibility = Visibility.Collapsed;
@@ -841,7 +855,7 @@ namespace SmartLens
 
             EmailService = null;
 
-            ApplicationData.Current.RoamingSettings.Values["EmailStartup"] = null;
+            ApplicationData.Current.LocalSettings.Values["EmailStartup"] = null;
             ApplicationData.Current.RoamingSettings.Values["EmailCredentialName"] = null;
             ApplicationData.Current.RoamingSettings.Values["EmailCredentialPassword"] = null;
             ApplicationData.Current.RoamingSettings.Values["EmailIMAPAddress"] = null;
@@ -859,6 +873,8 @@ namespace SmartLens
             EmailDisplayCollection?.Clear();
 
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailStartupOne), EmailPage.ThisPage.Nav, new DrillInNavigationTransitionInfo());
+
+            NothingDisplayControl.Visibility = Visibility.Visible;
         }
     }
 }

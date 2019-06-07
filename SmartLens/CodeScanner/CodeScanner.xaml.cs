@@ -121,6 +121,47 @@ namespace SmartLens
                     }
                     break;
                 }
+
+                if (Capture == null)
+                {
+                    ContentDialog dialog = new ContentDialog
+                    {
+                        Title = "提示",
+                        Content = "    设置所指定的摄像头无法应用于条码识别\r\r    已自动选择最合适的摄像头",
+                        CloseButtonText = "确定"
+                    };
+                    _ = await dialog.ShowAsync();
+
+                    using (BarcodeScanner Scanner = await BarcodeScanner.FromIdAsync(DeviceCollection.FirstOrDefault().Id))
+                    {
+                        Capture = new MediaCapture();
+                        var InitializeSettings = new MediaCaptureInitializationSettings
+                        {
+                            VideoDeviceId = Scanner.VideoDeviceId,
+                            StreamingCaptureMode = StreamingCaptureMode.Video,
+                            PhotoCaptureSource = PhotoCaptureSource.VideoPreview
+                        };
+                        await Capture.InitializeAsync(InitializeSettings);
+
+                        var CameraFocusControl = Capture.VideoDeviceController.FocusControl;
+                        if (CameraFocusControl.Supported)
+                        {
+                            await CameraFocusControl.UnlockAsync();
+                            CameraFocusControl.Configure(new FocusSettings { Mode = FocusMode.Continuous, AutoFocusRange = AutoFocusRange.FullRange });
+                            await CameraFocusControl.FocusAsync();
+                        }
+                        PreviewControl.Source = Capture;
+
+                        ClaimedScanner = await Scanner.ClaimScannerAsync();
+                        ClaimedScanner.IsDisabledOnDataReceived = false;
+                        ClaimedScanner.IsDecodeDataEnabled = true;
+                        ClaimedScanner.DataReceived += ClaimedScanner_DataReceived;
+                        await ClaimedScanner.EnableAsync();
+                        await ClaimedScanner.StartSoftwareTriggerAsync();
+
+                        await Capture.StartPreviewAsync();
+                    }
+                }
             }
             else
             {

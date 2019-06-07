@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Background;
+using Windows.Security.Credentials;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.ViewManagement;
@@ -56,6 +57,11 @@ namespace SmartLens
             {
                 View.IsScreenCaptureEnabled = false;
                 ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] = false;
+            }
+
+            if (ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] == null && await KeyCredentialManager.IsSupportedAsync())
+            {
+                ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] = true;
             }
 
             PageDictionary = new Dictionary<Type, string>()

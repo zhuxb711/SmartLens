@@ -104,7 +104,7 @@ namespace SmartLens
             EmailPage.ThisPage.Nav.Navigate(typeof(EmailPresenter), Data, new DrillInNavigationTransitionInfo());
 
             //在设置中设置初始化完成标志，初始化完成
-            ApplicationData.Current.RoamingSettings.Values["EmailStartup"] = "True";
+            ApplicationData.Current.LocalSettings.Values["EmailStartup"] = "True";
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

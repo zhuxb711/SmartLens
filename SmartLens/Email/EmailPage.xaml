@@ -5,11 +5,21 @@
     xmlns:local="using:SmartLens"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
     Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
 
     <Grid>
         <Frame Name="Nav" x:FieldModifier="Public"/>
+        <controls:Loading x:Name="LoadingControl" IsLoading="False" Grid.ColumnSpan="2">
+            <controls:Loading.Background>
+                <SolidColorBrush Color="Black" Opacity="0.7"/>
+            </controls:Loading.Background>
+            <StackPanel Orientation="Vertical" Padding="12">
+                <TextBlock FontSize="22" Text="正在与TPM安全芯片通讯..." Foreground="White" VerticalAlignment="Center" TextAlignment="Center"/>
+                <ProgressBar x:Name="ProRing" Margin="0,10,0,0" IsIndeterminate="True" Height="10" Width="300" />
+            </StackPanel>
+        </controls:Loading>
     </Grid>
 </Page>

@@ -173,21 +173,21 @@
 
                     <Viewbox  Margin="125,0,0,0" >
                         <Button Name="Sync" ToolTipService.ToolTip="同步" Click="Sync_Click" BorderThickness="1" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}">
-                            <SymbolIcon Symbol="Sync"/>
+                            <SymbolIcon Symbol="Sync" ToolTipService.ToolTip="同步"/>
                         </Button>
                     </Viewbox>
                     <Viewbox Margin="10,0,0,0">
                         <Button Name="Logout" ToolTipService.ToolTip="注销" Click="Logout_Click" BorderThickness="1" Style="{StaticResource ButtonRevealStyle}" Background="{ThemeResource SystemControlBackgroundTransparentRevealBorderBrush}">
-                            <SymbolIcon Symbol="Forward"/>
+                            <SymbolIcon Symbol="Forward" ToolTipService.ToolTip="注销"/>
                         </Button>
                     </Viewbox>
                 </StackPanel>
-                <StackPanel  Margin="10,0,10,20" Orientation="Horizontal">
+                <StackPanel Margin="12,0,10,20" Orientation="Horizontal">
                     <Viewbox>
                         <SymbolIcon Symbol="Read" Margin="1,0,0,0"/>
                     </Viewbox>
                     <TextBlock Margin="9,0,0,0" Text="收件箱" FontSize="23"/>
-                    <ComboBox Name="DisplayMode" x:FieldModifier="Public" FontSize="18" Width="80" BorderThickness="0" Background="Transparent" Margin="138,0,0,0">
+                    <ComboBox Name="DisplayMode" x:FieldModifier="Public" FontSize="18" Width="80" BorderThickness="1" Background="Transparent" Margin="138,0,0,0">
                         <x:String>全部</x:String>
                         <x:String>未读</x:String>
                     </ComboBox>
