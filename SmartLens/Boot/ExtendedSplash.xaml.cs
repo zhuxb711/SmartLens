@@ -120,7 +120,7 @@ namespace SmartLens
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async() =>
                     {
                         SplashProgressRing.Visibility = Visibility.Collapsed;
-                        Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常组件:" + Result.Value;
+                        Display.Text = "完整性校验失败\rSmartLens存在异常" + "\r异常根源:" + Result.Value;
                         Continue.Visibility = Visibility.Visible;
                         await SaveErrorToLogAsync(Result.Value);
                     });

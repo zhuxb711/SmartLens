@@ -26,7 +26,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Devices.Enumeration;
 using Windows.Devices.WiFi;
-using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
 using Windows.Media.Core;
@@ -1643,7 +1642,7 @@ namespace SmartLens
                 {
                     await Capture.InitializeAsync(Settings);
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -3728,6 +3727,7 @@ namespace SmartLens
     public sealed class HeshUtil
     {
         private static readonly int StartTaskNums = Environment.ProcessorCount;
+
         /// <summary>
         /// 异步计算SmartLens所有文件哈希值并保存至数据库中
         /// </summary>
@@ -3739,7 +3739,7 @@ namespace SmartLens
             List<StorageFile> FileList = new List<StorageFile>();
             await EnumAllFileAsync(InstallFolder, FileList);
 
-            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList);
+            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList.Where((x, i) => FileList.FindIndex(y => y.Name == x.Name) == i).ToList());
 
             await SQLite.GetInstance().SetHeshValueAsync(CalculateResult);
         }
@@ -3755,9 +3755,14 @@ namespace SmartLens
             List<StorageFile> FileList = new List<StorageFile>();
             await EnumAllFileAsync(InstallFolder, FileList);
 
-            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList);
+            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList.Where((x, i) => FileList.FindIndex(y => y.Name == x.Name) == i).ToList());
 
             var DataBaseResult = await SQLite.GetInstance().GetHeshValueAsync();
+
+            if (DataBaseResult.Count != CalculateResult.Count)
+            {
+                return new KeyValuePair<bool, string>(false, "缺失部分文件");
+            }
 
             foreach (var ErrorPart in from item in DataBaseResult
                                       from item1 in CalculateResult

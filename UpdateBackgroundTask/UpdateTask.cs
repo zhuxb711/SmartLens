@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace UpdateBackgroundTask
 
             if (await Package.Current.VerifyContentIntegrityAsync())
             {
-                await CalculateAndStorageMD5Async();
+                await ComputeAndStorageHeshAsync();
             }
 
             ShowCompleteNotification();
@@ -66,13 +67,13 @@ namespace UpdateBackgroundTask
 
         }
 
-        private async Task CalculateAndStorageMD5Async()
+        private async Task ComputeAndStorageHeshAsync()
         {
             var InstallFolder = Package.Current.InstalledLocation;
             List<StorageFile> FileList = new List<StorageFile>();
 
             await EnumAllFileAsync(InstallFolder, FileList);
-            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList);
+            List<KeyValuePair<string, string>> CalculateResult = await ComputeHashAsync(FileList.Where((x, i) => FileList.FindIndex(y => y.Name == x.Name) == i).ToList());
 
             using (SQLite SQL = new SQLite())
             {
@@ -186,5 +187,6 @@ namespace UpdateBackgroundTask
         {
             ApplicationData.Current.LocalSettings.Values["CurrentVersion"] = "ReCalculateNextTime";
         }
+
     }
 }
