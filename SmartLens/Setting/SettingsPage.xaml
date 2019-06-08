@@ -107,7 +107,8 @@
             <RowDefinition Height="65"/>
             <RowDefinition Height="65"/>
             <RowDefinition Height="65"/>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="65"/>
+            <RowDefinition Height="65"/>
             <RowDefinition/>
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
@@ -121,7 +122,7 @@
         </Grid.ColumnDefinitions>
         <ToggleSwitch Header="蓝牙" OnContent="开" OffContent="关" HorizontalAlignment="Stretch" Grid.Row="1" VerticalAlignment="Stretch" Name="BluetoothSwitch" Toggled="BluetoothSwitch_Toggled" Grid.Column="1"/>
         <ToggleSwitch Header="WIFI" OnContent="开" OffContent="关" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Stretch" Name="WiFiSwitch" Toggled="WiFiSwitch_Toggled" Grid.Column="1"/>
-        <Grid Grid.Row="3" Grid.RowSpan="3" Grid.Column="1" Grid.ColumnSpan="2">
+        <Grid Grid.Row="3" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="*"/>
@@ -140,5 +141,6 @@
         <ToggleSwitch Grid.Row="3" Grid.Column="5" Header="阻止截取屏幕" OnContent="开" OffContent="关" Name="ScreenCaptureSwitch" Toggled="ScreenCaptureSwitch_Toggled"/>
         <Button Margin="10,0,0,0" Grid.Row="4" Grid.Column="3" Width="160" Height="40" Content="导出错误日志" VerticalAlignment="Top" Style="{ThemeResource ButtonRevealStyle}" Name="ErrorExport" Click="ErrorExport_Click"/>
         <ToggleSwitch Grid.Row="4" Grid.Column="5" Header="使用Windows Hello保护邮件安全(重启SmartLens生效)" OnContent="开" OffContent="关" Name="EmailProtectionSwitch" Toggled="EmailProtectionSwitch_Toggled"/>
+        <ToggleSwitch Grid.Row="5" Grid.Column="5" Header="使用SmartLens内置浏览器打开链接" OnContent="是" OffContent="否" Name="WebDirectionSwitch" Toggled="WebDirectionSwitch_Toggled"/>
     </Grid>
 </Page>

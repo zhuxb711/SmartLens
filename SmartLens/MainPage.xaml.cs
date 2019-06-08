@@ -64,6 +64,11 @@ namespace SmartLens
                 ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] = true;
             }
 
+            if (ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] = true;
+            }
+
             PageDictionary = new Dictionary<Type, string>()
             {
                 {typeof(HomePage), "首页"},

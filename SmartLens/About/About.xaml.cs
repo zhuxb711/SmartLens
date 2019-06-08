@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
 using Windows.ApplicationModel;
+using Windows.Storage;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
@@ -20,6 +22,18 @@ namespace SmartLens
         {
             IsEnterChangeLog = true;
             MainPage.ThisPage.NavFrame.Navigate(typeof(ChangeLog), new DrillInNavigationTransitionInfo());
+        }
+
+        private async void HyperlinkButton_Click_1(object sender, RoutedEventArgs e)
+        {
+            if (ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] is true)
+            {
+                MainPage.ThisPage.NavFrame.Navigate(typeof(WebTab), new Uri("https://github.com/zhuxb711/SmartLens"), new DrillInNavigationTransitionInfo());
+            }
+            else
+            {
+                await Launcher.LaunchUriAsync(new Uri("https://github.com/zhuxb711/SmartLens"));
+            }
         }
     }
 }

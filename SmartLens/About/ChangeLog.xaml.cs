@@ -2,6 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
@@ -91,9 +93,16 @@ namespace SmartLens
             }
         }
 
-        private void MarkdownControl_LinkClicked(object sender, Microsoft.Toolkit.Uwp.UI.Controls.LinkClickedEventArgs e)
+        private async void MarkdownControl_LinkClicked(object sender, Microsoft.Toolkit.Uwp.UI.Controls.LinkClickedEventArgs e)
         {
-            MainPage.ThisPage.NavFrame.Navigate(typeof(WebTab), new Uri(e.Link), new DrillInNavigationTransitionInfo());
+            if (ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] is true)
+            {
+                MainPage.ThisPage.NavFrame.Navigate(typeof(WebTab), new Uri(e.Link), new DrillInNavigationTransitionInfo());
+            }
+            else
+            {
+                await Launcher.LaunchUriAsync(new Uri(e.Link));
+            }
         }
     }
 }

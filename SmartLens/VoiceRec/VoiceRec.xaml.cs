@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.SpeechRecognition;
+using Windows.Media.SpeechSynthesis;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -15,6 +16,7 @@ namespace SmartLens
     public sealed partial class VoiceRec : Page
     {
         SpeechRecognizer SpeechRec;
+        SpeechSynthesizer SpeechSynth;
         bool IsRecognizing = false;
         Task LoadTask;
         CancellationTokenSource Cancellation;
@@ -39,6 +41,7 @@ namespace SmartLens
             {
                 Cancellation = new CancellationTokenSource();
                 SpeechRec = new SpeechRecognizer();
+                SpeechSynth = new SpeechSynthesizer();
 
                 //获取SRGS.grxml识别语法文件
                 var GrammarFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///VoiceRec/SRGS.grxml"));
@@ -73,6 +76,8 @@ namespace SmartLens
                 IsRecognizing = true;
             }
 
+            AudioPlay.Stop();
+
             StatusText.Visibility = Visibility.Collapsed;
             ListeningDisplay.Visibility = Visibility.Visible;
 
@@ -96,6 +101,10 @@ namespace SmartLens
                 StatusText.Text = RecResult;
             }
 
+            SpeechSynthesisStream stream = await SpeechSynth.SynthesizeTextToStreamAsync(StatusText.Text);
+            AudioPlay.SetSource(stream, stream.ContentType);
+            AudioPlay.Play();
+
             IsRecognizing = false;
         }
 
@@ -111,8 +120,15 @@ namespace SmartLens
                 Cancellation?.Dispose();
                 Cancellation = null;
             }
+
+            AudioPlay.Stop();
+            AudioPlay.Source = null;
+
             SpeechRec?.Dispose();
             SpeechRec = null;
+
+            SpeechSynth?.Dispose();
+            SpeechSynth = null;
             LoadTask = null;
             StatusText.Visibility = Visibility.Collapsed;
             ListeningDisplay.Visibility = Visibility.Collapsed;

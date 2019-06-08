@@ -175,6 +175,11 @@ namespace SmartLens
                 EmailProtectionSwitch.IsOn = EnableEmailProtection;
             }
 
+            if (ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] is bool EnableInsideWebBrowser)
+            {
+                WebDirectionSwitch.IsOn = EnableInsideWebBrowser;
+            }
+
 
             MediaFraSourceGroup = await MediaFrameSourceGroup.FindAllAsync();
             if (MediaFraSourceGroup.Count == 0)
@@ -853,6 +858,18 @@ namespace SmartLens
             else
             {
                 ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] = false;
+            }
+        }
+
+        private void WebDirectionSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            if(WebDirectionSwitch.IsOn)
+            {
+                ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] = true;
+            }
+            else
+            {
+                ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] = false;
             }
         }
     }
