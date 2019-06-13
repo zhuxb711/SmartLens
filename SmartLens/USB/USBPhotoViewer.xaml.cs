@@ -30,7 +30,12 @@ namespace SmartLens
             PhotoCollection = new ObservableCollection<PhotoDisplaySupport>();
             ImageList.ItemsSource = PhotoCollection;
 
-            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
+            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null)
+            {
+                FolderDepth = FolderDepth.Shallow,
+                IndexerOption = IndexerOption.UseIndexerWhenAvailable
+            };
+
             Options.SetThumbnailPrefetch(ThumbnailMode.PicturesView, 250, ThumbnailOptions.ResizeThumbnail);
 
             StorageFileQueryResult QueryResult = USBControl.ThisPage.CurrentFolder.CreateFileQueryWithOptions(Options);

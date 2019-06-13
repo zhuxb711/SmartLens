@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
 using Windows.Devices.Enumeration;
 using Windows.Devices.WiFi;
 using Windows.Media.Capture;
@@ -33,6 +34,7 @@ using Windows.Media.MediaProperties;
 using Windows.Media.Playback;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
+using Windows.Storage.Search;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Core;
@@ -4006,6 +4008,397 @@ namespace SmartLens
         /// 锁定根对象
         /// </summary>
         public static object SyncRoot { get; } = new object();
+    }
+    #endregion
+
+    #region 文件系统追踪类
+    public enum TrackerMode
+    {
+        TraceFolder = 0,
+        TraceFile = 1
+    }
+
+    public sealed class FileSystemChangeSet : EventArgs
+    {
+        public List<IStorageItem> StorageItems { get; private set; }
+        public TreeViewNode ParentNode { get; private set; }
+
+        public FileSystemChangeSet(List<IStorageItem> Item)
+        {
+            StorageItems = Item;
+        }
+
+        public FileSystemChangeSet(List<IStorageItem> Item, TreeViewNode Node)
+        {
+            StorageItems = Item;
+            ParentNode = Node;
+        }
+    }
+
+    public sealed class FileSystemRenameSet : EventArgs
+    {
+        public List<IStorageItem> ToDeleteFileList { get; private set; }
+        public List<IStorageItem> ToAddFileList { get; private set; }
+        public TreeViewNode ParentNode { get; private set; }
+
+        public FileSystemRenameSet(List<IStorageItem> ToDeleteFileList, List<IStorageItem> ToAddFileList)
+        {
+            this.ToDeleteFileList = ToDeleteFileList;
+            this.ToAddFileList = ToAddFileList;
+        }
+
+        public FileSystemRenameSet(List<IStorageItem> ToDeleteFileList, List<IStorageItem> ToAddFileList, TreeViewNode Node)
+        {
+            this.ToDeleteFileList = ToDeleteFileList;
+            this.ToAddFileList = ToAddFileList;
+            ParentNode = Node;
+        }
+    }
+
+    public sealed class FileSystemTracker : IDisposable
+    {
+        private StorageFolderQueryResult FolderQuery;
+        private StorageFileQueryResult FileQuery;
+        private TreeViewNode TrackNode;
+        public TrackerMode TrackerMode { get; }
+        public event EventHandler<FileSystemChangeSet> Deleted;
+        public event EventHandler<FileSystemRenameSet> Renamed;
+        public event EventHandler<FileSystemChangeSet> Created;
+
+        public FileSystemTracker(TreeViewNode TrackNode)
+        {
+            TrackerMode = TrackerMode.TraceFolder;
+
+            this.TrackNode = TrackNode ?? throw new ArgumentNullException("TrackNode");
+
+            StorageFolder TrackFolder = TrackNode.Content as StorageFolder;
+            _ = Initialize(TrackFolder);
+        }
+
+        public FileSystemTracker(StorageFolder TrackFolder)
+        {
+            if (TrackFolder == null)
+            {
+                throw new ArgumentNullException("TrackFolder");
+            }
+
+            TrackerMode = TrackerMode.TraceFile;
+
+            _ = Initialize(TrackFolder);
+        }
+
+        public FileSystemTracker(StorageFileQueryResult Query)
+        {
+            TrackerMode = TrackerMode.TraceFile;
+
+            FileQuery = Query ?? throw new ArgumentNullException("Query");
+
+            FileQuery.ContentsChanged += FileQuery_ContentsChanged;
+        }
+
+        private async Task Initialize(StorageFolder TrackFolder)
+        {
+            switch (TrackerMode)
+            {
+                case TrackerMode.TraceFolder:
+                    QueryOptions option = new QueryOptions(CommonFileQuery.DefaultQuery, null)
+                    {
+                        FolderDepth = FolderDepth.Deep,
+                        IndexerOption = IndexerOption.UseIndexerWhenAvailable
+                    };
+                    FolderQuery = TrackFolder.CreateFolderQueryWithOptions(option);
+
+                    _ = await FolderQuery.GetFoldersAsync(0, 1);
+
+                    FolderQuery.ContentsChanged += FolderQuery_ContentsChanged;
+                    break;
+
+                case TrackerMode.TraceFile:
+                    QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null)
+                    {
+                        FolderDepth = FolderDepth.Shallow,
+                        IndexerOption = IndexerOption.UseIndexerWhenAvailable
+                    };
+                    FileQuery = TrackFolder.CreateFileQueryWithOptions(Options);
+
+                    _ = await FileQuery.GetFilesAsync(0, 1);
+
+                    FileQuery.ContentsChanged += FileQuery_ContentsChanged;
+                    break;
+            }
+        }
+
+        private async Task FolderChangeAnalysis(TreeViewNode ParentNode)
+        {
+            var Folder = ParentNode.Content as StorageFolder;
+
+            var FolderList = await Folder.GetFoldersAsync();
+            if (FolderList.Count != ParentNode.Children.Count)
+            {
+                if (ParentNode.IsExpanded == false && ParentNode.HasUnrealizedChildren)
+                {
+                    return;
+                }
+
+                List<StorageFolder> SubFolders = new List<StorageFolder>(ParentNode.Children.Count);
+                foreach (var SubNode in ParentNode.Children)
+                {
+                    SubFolders.Add(SubNode.Content as StorageFolder);
+                }
+
+                if (FolderList.Count > ParentNode.Children.Count)
+                {
+                    List<IStorageItem> NewFolderList = new List<IStorageItem>(Except(SubFolders, FolderList));
+
+                    Created?.Invoke(this, new FileSystemChangeSet(NewFolderList, ParentNode));
+                }
+                else
+                {
+                    List<IStorageItem> OldFolderList = new List<IStorageItem>(Except(FolderList, SubFolders));
+
+                    Deleted?.Invoke(this, new FileSystemChangeSet(OldFolderList, ParentNode));
+                }
+                return;
+            }
+            else
+            {
+                if (ParentNode.IsExpanded == false && ParentNode.HasUnrealizedChildren)
+                {
+                    return;
+                }
+
+                var ExNodeList = Except(ParentNode.Children, FolderList);
+                var ExFolderList = Except(FolderList, ParentNode.Children);
+
+                if (ExNodeList.Count != 0 && ExFolderList.Count != 0)
+                {
+                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(ExNodeList);
+                    List<IStorageItem> AddFileList = new List<IStorageItem>(ExFolderList);
+
+                    Renamed?.Invoke(this, new FileSystemRenameSet(DeleteFileList, AddFileList, ParentNode));
+
+                    return;
+                }
+            }
+
+            foreach (TreeViewNode Node in ParentNode.Children)
+            {
+                await FolderChangeAnalysis(Node);
+            }
+        }
+
+
+        private async void FileQuery_ContentsChanged(IStorageQueryResultBase sender, object args)
+        {
+            IReadOnlyList<StorageFile> FileList = await sender.Folder.GetFilesAsync();
+
+            if (FileList.Count != USBFilePresenter.ThisPage.FileCollection.Count)
+            {
+                if (FileList.Count > USBFilePresenter.ThisPage.FileCollection.Count)
+                {
+                    List<IStorageItem> AddFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
+
+                    await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        Created?.Invoke(this, new FileSystemChangeSet(AddFileList));
+                    });
+                }
+                else
+                {
+                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
+
+                    await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        Deleted?.Invoke(this, new FileSystemChangeSet(DeleteFileList));
+                    });
+                }
+            }
+            else
+            {
+                List<IStorageItem> DeleteFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
+                List<IStorageItem> AddFileList = new List<IStorageItem>(Except(FileList, USBFilePresenter.ThisPage.FileCollection));
+
+                await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Renamed?.Invoke(this, new FileSystemRenameSet(DeleteFileList, AddFileList));
+                });
+            }
+        }
+
+        private async void FolderQuery_ContentsChanged(IStorageQueryResultBase sender, object args)
+        {
+            await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                foreach (var DeviceNode in TrackNode.Children)
+                {
+                    await FolderChangeAnalysis(DeviceNode);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            if (FolderQuery != null)
+            {
+                FolderQuery.ContentsChanged -= FolderQuery_ContentsChanged;
+                FolderQuery = null;
+            }
+            if (FileQuery != null)
+            {
+                FileQuery.ContentsChanged -= FileQuery_ContentsChanged;
+                FileQuery = null;
+            }
+            TrackNode = null;
+        }
+
+        private List<StorageFolder> Except(IEnumerable<TreeViewNode> list1, IEnumerable<StorageFolder> list2)
+        {
+            List<StorageFolder> FolderList = new List<StorageFolder>(list1.Count());
+            foreach (var Node in list1)
+            {
+                FolderList.Add(Node.Content as StorageFolder);
+            }
+
+            return Except(list2, FolderList);
+        }
+
+        private List<StorageFolder> Except(IEnumerable<StorageFolder> list2, IEnumerable<TreeViewNode> list1)
+        {
+            List<StorageFolder> FolderList = new List<StorageFolder>(list1.Count());
+            foreach (var Node in list1)
+            {
+                FolderList.Add(Node.Content as StorageFolder);
+            }
+
+            return Except(FolderList, list2);
+        }
+
+        private List<StorageFile> Except(IEnumerable<RemovableDeviceFile> list1, IEnumerable<StorageFile> list2)
+        {
+            List<StorageFile> FileList = new List<StorageFile>(list1.Count());
+            foreach (var DeviceFile in list1)
+            {
+                FileList.Add(DeviceFile.File);
+            }
+            return Except(list2, FileList);
+        }
+
+        private List<StorageFile> Except(IEnumerable<StorageFile> list2, IEnumerable<RemovableDeviceFile> list1)
+        {
+            List<StorageFile> FileList = new List<StorageFile>(list1.Count());
+            foreach (var DeviceFile in list1)
+            {
+                FileList.Add(DeviceFile.File);
+            }
+            return Except(FileList, list2);
+        }
+
+
+        private List<StorageFolder> Except(IEnumerable<StorageFolder> list1, IEnumerable<StorageFolder> list2)
+        {
+            if (list1.Count() == 0 && list2.Count() != 0)
+            {
+                return list2.ToList();
+            }
+            if (list1.Count() != 0 && list2.Count() == 0)
+            {
+                return list1.ToList();
+            }
+            if (list1.Count() == 0 && list2.Count() == 0)
+            {
+                return new List<StorageFolder>();
+            }
+
+            List<StorageFolder> result = new List<StorageFolder>();
+
+            if (list1.Count() > list2.Count())
+            {
+                foreach (var NewFolder in list1)
+                {
+                    foreach (var _ in from SubFolder in list2
+                                      where SubFolder.FolderRelativeId == NewFolder.FolderRelativeId
+                                      select new { })
+                    {
+                        goto FLAG;
+                    }
+
+                    result.Add(NewFolder);
+
+                FLAG: continue;
+                }
+            }
+            else
+            {
+                foreach (var NewFolder in list2)
+                {
+                    foreach (var _ in from SubFolder in list1
+                                      where SubFolder.FolderRelativeId == NewFolder.FolderRelativeId
+                                      select new { })
+                    {
+                        goto FLAG;
+                    }
+
+                    result.Add(NewFolder);
+
+                FLAG: continue;
+                }
+            }
+
+            return result;
+        }
+
+        private List<StorageFile> Except(IEnumerable<StorageFile> list1, IEnumerable<StorageFile> list2)
+        {
+            if (list1.Count() == 0 && list2.Count() != 0)
+            {
+                return list2.ToList();
+            }
+            if (list1.Count() != 0 && list2.Count() == 0)
+            {
+                return list1.ToList();
+            }
+            if (list1.Count() == 0 && list2.Count() == 0)
+            {
+                return null;
+            }
+
+            List<StorageFile> result = new List<StorageFile>();
+
+            if (list1.Count() > list2.Count())
+            {
+                foreach (var NewFile in list1)
+                {
+                    foreach (var _ in from SubFolder in list2
+                                      where SubFolder.FolderRelativeId == NewFile.FolderRelativeId
+                                      select new { })
+                    {
+                        goto FLAG;
+                    }
+
+                    result.Add(NewFile);
+
+                FLAG: continue;
+                }
+            }
+            else
+            {
+                foreach (var NewFile in list2)
+                {
+                    foreach (var _ in from SubFolder in list1
+                                      where SubFolder.FolderRelativeId == NewFile.FolderRelativeId
+                                      select new { })
+                    {
+                        goto FLAG;
+                    }
+
+                    result.Add(NewFile);
+
+                FLAG: continue;
+                }
+            }
+
+            return result;
+        }
     }
     #endregion
 }

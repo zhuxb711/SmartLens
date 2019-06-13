@@ -327,7 +327,6 @@ namespace SmartLens
                                 Content = await USBControl.ThisPage.CurrentFolder.GetFolderAsync(NewFolder.Name),
                                 HasUnrealizedChildren = false
                             });
-                            USBControl.ThisPage.FolderDictionary[RelativeId].Add(NewFolder);
                         JUMP: break;
                         }
                     }

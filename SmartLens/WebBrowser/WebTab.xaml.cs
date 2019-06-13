@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -21,6 +22,8 @@ namespace SmartLens
         public ObservableCollection<KeyValuePair<DateTime, WebSiteItem>> HistoryCollection;
         public HistoryTreeFlag HistoryFlag;
         private WebPage CurrentWebPage;
+        private bool IsClosing = false;
+
         public WebTab()
         {
             InitializeComponent();
@@ -107,21 +110,6 @@ namespace SmartLens
             }
 
             TabControl.ItemsSource = TabCollection;
-            TabCollection.CollectionChanged += (s, e) =>
-            {
-                if (TabCollection.Count > 0)
-                {
-                    TabViewItem Item = TabCollection[0] as TabViewItem;
-                    if (TabCollection.Count == 1)
-                    {
-                        Item.IsClosable = false;
-                    }
-                    else if (Item.IsClosable == false)
-                    {
-                        Item.IsClosable = true;
-                    }
-                }
-            };
 
             FavouriteCollection.CollectionChanged += (s, e) =>
             {
@@ -303,10 +291,31 @@ namespace SmartLens
 
         }
 
-        private void TabControl_TabClosing(object sender, TabClosingEventArgs e)
+        private async void TabControl_TabClosing(object sender, TabClosingEventArgs e)
         {
-            (e.Tab.Content as WebPage).Dispose();
+            lock (SyncRootProvider.SyncRoot)
+            {
+                if (IsClosing)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                IsClosing = true;
+            }
+
+            if (TabCollection.Count == 1)
+            {
+                e.Cancel = true;
+                CreateNewTab(new Uri("about:blank"));
+                TabControl.SelectedIndex = 1;
+                await Task.Delay(900);
+                TabCollection.Remove(e.Tab);
+            }
+
+            (e.Tab.Content as WebPage)?.Dispose();
             e.Tab.Content = null;
+
+            IsClosing = false;
         }
 
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)

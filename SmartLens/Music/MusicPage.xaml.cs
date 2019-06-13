@@ -1,5 +1,6 @@
 ﻿using SmartLens.NetEase;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Media.Playback;
 using Windows.UI.Core;
@@ -9,7 +10,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using System.Linq;
 
 namespace SmartLens
 {
@@ -280,6 +280,10 @@ namespace SmartLens
                         CurrentMode = PlayMode.Repeat;
                         ModeNotification.Show("单曲循环");
                         MediaPlayList.FavouriteSongList.AutoRepeatEnabled = false;
+                        if (MediaControl.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
+                        {
+                            MediaControl.MediaPlayer.Play();
+                        }
                         MediaControl.MediaPlayer.IsLoopingEnabled = true;
                         CustomMediaTransportControls.ChangeModeButton.SetValue(StyleProperty, Application.Current.Resources["RepeatOneButtonStyle"]);
                         break;

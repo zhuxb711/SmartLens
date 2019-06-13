@@ -361,6 +361,12 @@ namespace SmartLens
             WebBrowser.PermissionRequested += WebBrowser_PermissionRequested;
             WebBrowser.SeparateProcessLost += WebBrowser_SeparateProcessLost;
             WebBrowser.NavigationFailed += WebBrowser_NavigationFailed;
+            WebBrowser.UnviewableContentIdentified += WebBrowser_UnviewableContentIdentified;
+        }
+
+        private void WebBrowser_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
+        {
+            
         }
 
         private async void WebBrowser_NavigationFailed(object sender, WebViewNavigationFailedEventArgs e)

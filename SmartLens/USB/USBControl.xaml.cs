@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Search;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -19,12 +22,13 @@ namespace SmartLens
         public TreeViewNode CurrentNode { get; private set; }
         public StorageFolder CurrentFolder { get; private set; }
         public static USBControl ThisPage { get; private set; }
-        public Dictionary<string, List<StorageFolder>> FolderDictionary;
         private bool IsAdding = false;
         private string RootFolderId;
         private CancellationTokenSource CancelToken;
         private AutoResetEvent Locker;
-        private readonly object SyncRoot = new object();
+        private FileSystemTracker FolderTracker;
+        private FileSystemTracker FileTracker;
+
 
         public USBControl()
         {
@@ -34,16 +38,85 @@ namespace SmartLens
             Loaded += USBControl_Loaded;
         }
 
-
         private void USBControl_Loaded(object sender, RoutedEventArgs e)
         {
             CancelToken = new CancellationTokenSource();
             Locker = new AutoResetEvent(false);
             Nav.Navigate(typeof(USBFilePresenter), Nav, new DrillInNavigationTransitionInfo());
+
+            FolderTracker = new FileSystemTracker(FolderTree.RootNodes.FirstOrDefault());
+            FolderTracker.Created += FolderTracker_Created;
+            FolderTracker.Deleted += FolderTracker_Deleted;
+            FolderTracker.Renamed += FolderTracker_Renamed;
+        }
+
+        private async void FolderTracker_Renamed(object sender, FileSystemRenameSet e)
+        {
+            foreach (var SubNode in from StorageFolder OldFolder in e.ToDeleteFileList
+                                    from SubNode in
+                                        from SubNode in e.ParentNode.Children
+                                        where (SubNode.Content as StorageFolder).FolderRelativeId == OldFolder.FolderRelativeId
+                                        select SubNode
+                                    select SubNode)
+            {
+                e.ParentNode.Children.Remove(SubNode);
+            }
+
+            foreach (StorageFolder NewFolder in e.ToAddFileList)
+            {
+                e.ParentNode.Children.Add(new TreeViewNode
+                {
+                    Content = NewFolder,
+                    HasUnrealizedChildren = (await NewFolder.GetFoldersAsync()).Count != 0
+                });
+            }
+        }
+
+        private void FolderTracker_Deleted(object sender, FileSystemChangeSet e)
+        {
+            foreach (StorageFolder OldFolder in e.StorageItems)
+            {
+                foreach (var SubNode in from SubNode in e.ParentNode.Children
+                                        where (SubNode.Content as StorageFolder).FolderRelativeId == OldFolder.FolderRelativeId
+                                        select SubNode)
+                {
+                    e.ParentNode.Children.Remove(SubNode);
+                }
+            }
+        }
+
+        private async void FolderTracker_Created(object sender, FileSystemChangeSet e)
+        {
+            foreach (StorageFolder NewFolder in e.StorageItems)
+            {
+                e.ParentNode.Children.Add(new TreeViewNode
+                {
+                    Content = NewFolder,
+                    HasUnrealizedChildren = (await NewFolder.GetFoldersAsync()).Count != 0
+                });
+            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            if (FileTracker != null)
+            {
+                FileTracker.Created -= FileTracker_Created;
+                FileTracker.Deleted -= FileTracker_Deleted;
+                FileTracker.Renamed -= FileTracker_Renamed;
+                FileTracker.Dispose();
+                FileTracker = null;
+            }
+
+            if(FolderTracker!=null)
+            {
+                FolderTracker.Created -= FolderTracker_Created;
+                FolderTracker.Deleted -= FolderTracker_Deleted;
+                FolderTracker.Renamed -= FolderTracker_Renamed;
+                FolderTracker.Dispose();
+                FolderTracker = null;
+            }
+
             Locker.Dispose();
             CancelToken.Dispose();
         }
@@ -53,7 +126,6 @@ namespace SmartLens
         /// </summary>
         private async void InitializeTreeView()
         {
-            FolderDictionary = new Dictionary<string, List<StorageFolder>>();
             StorageFolder RemovableFolder = KnownFolders.RemovableDevices;
             RootFolderId = RemovableFolder.FolderRelativeId;
             if (RemovableFolder != null)
@@ -90,34 +162,14 @@ namespace SmartLens
                 return;
             }
 
-            IReadOnlyList<StorageFolder> StorageFolderList;
-
-            /*
-             * 在FolderDictionary中查找对应文件夹的唯一ID
-             * 若存在则直接提取其下的文件夹列表
-             * 若不存在则重新查找
-             * 此处FolderDictionary作用类似缓存，任何文件夹展开一次后再次展开无需任何查询操作
-             */
-            if (FolderDictionary.ContainsKey(folder.FolderRelativeId))
+            IReadOnlyList<StorageFolder> StorageFolderList = await folder.GetFoldersAsync();
+            if (folder.FolderRelativeId == RootFolderId)
             {
-                StorageFolderList = FolderDictionary[folder.FolderRelativeId];
-            }
-            else
-            {
-                StorageFolderList = await folder.GetFoldersAsync();
-                if (folder.FolderRelativeId != RootFolderId)
+                //若当前节点为根节点，且在根节点下无任何文件夹被发现，说明无USB设备插入
+                //因此清除根文件夹下的节点
+                if (StorageFolderList.Count == 0)
                 {
-                    //非根节点加入缓存，根节点因为USB设备会变动，所以不加入缓存
-                    FolderDictionary.Add(folder.FolderRelativeId, new List<StorageFolder>(StorageFolderList));
-                }
-                else
-                {
-                    //若当前节点为根节点，且在根节点下无任何文件夹被发现，说明无USB设备插入
-                    //因此清除根文件夹下的节点
-                    if (StorageFolderList.Count == 0)
-                    {
-                        Node.Children.Clear();
-                    }
+                    Node.Children.Clear();
                 }
             }
 
@@ -126,23 +178,9 @@ namespace SmartLens
                 return;
             }
 
-            /*
-             * 每展开一次文件夹时，将自动遍历该文件夹下面的 所有子文件夹 的 所有子文件夹
-             * 一来超前缓存一级文件夹内容，二来能够确定哪些子文件夹下是不存在子文件夹的
-             * 从而决定子文件夹是否要显示展开按钮，缺点是当存在大量子文件夹嵌套时展开速度可能会比较慢
-             */
             foreach (var SubFolder in StorageFolderList)
             {
-                IReadOnlyList<StorageFolder> SubSubStorageFolderList;
-                if (FolderDictionary.ContainsKey(SubFolder.FolderRelativeId))
-                {
-                    SubSubStorageFolderList = FolderDictionary[SubFolder.FolderRelativeId];
-                }
-                else
-                {
-                    SubSubStorageFolderList = await SubFolder.GetFoldersAsync();
-                    FolderDictionary.Add(SubFolder.FolderRelativeId, new List<StorageFolder>(SubSubStorageFolderList));
-                }
+                IReadOnlyList<StorageFolder> SubSubStorageFolderList = await SubFolder.GetFoldersAsync();
 
                 TreeViewNode NewNode = new TreeViewNode
                 {
@@ -212,7 +250,7 @@ namespace SmartLens
                 {
                     await Task.Run(() =>
                     {
-                        lock (SyncRoot)
+                        lock (SyncRootProvider.SyncRoot)
                         {
                             CancelToken.Cancel();
                             Locker.WaitOne();
@@ -232,13 +270,32 @@ namespace SmartLens
 
                 USBFilePresenter.ThisPage.FileCollection.Clear();
 
-                QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
+                QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null)
+                {
+                    FolderDepth = FolderDepth.Shallow,
+                    IndexerOption = IndexerOption.UseIndexerWhenAvailable
+                };
+
                 Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
                 Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
 
-                StorageFileQueryResult QueryResult = folder.CreateFileQueryWithOptions(Options);
+                var FileQuery = folder.CreateFileQueryWithOptions(Options);
 
-                var FileList = await QueryResult.GetFilesAsync();
+                var FileList = await FileQuery.GetFilesAsync();
+
+                if (FileTracker != null)
+                {
+                    FileTracker.Created -= FileTracker_Created;
+                    FileTracker.Deleted -= FileTracker_Deleted;
+                    FileTracker.Renamed -= FileTracker_Renamed;
+                    FileTracker.Dispose();
+                    FileTracker = null;
+                }
+
+                FileTracker = new FileSystemTracker(FileQuery);
+                FileTracker.Created += FileTracker_Created;
+                FileTracker.Deleted += FileTracker_Deleted;
+                FileTracker.Renamed += FileTracker_Renamed;
 
                 USBFilePresenter.ThisPage.HasFile.Visibility = FileList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
@@ -277,6 +334,57 @@ namespace SmartLens
             else
             {
                 IsAdding = false;
+            }
+        }
+
+        private async void FileTracker_Renamed(object sender, FileSystemRenameSet e)
+        {
+            for (int i = 0; i < e.ToDeleteFileList.Count; i++)
+            {
+                for (int j = 0; j < USBFilePresenter.ThisPage.FileCollection.Count; j++)
+                {
+                    RemovableDeviceFile DeviceFile = USBFilePresenter.ThisPage.FileCollection[j];
+                    if (DeviceFile.RelativeId == ((StorageFile)e.ToDeleteFileList[i]).FolderRelativeId)
+                    {
+                        USBFilePresenter.ThisPage.FileCollection.Remove(DeviceFile);
+                        j--;
+                    }
+                }
+            }
+
+            foreach (StorageFile ExceptFile in e.ToAddFileList)
+            {
+                string Size = GetSizeDescription((await ExceptFile.GetBasicPropertiesAsync()).Size);
+
+                BitmapImage Thumbnail = await GetThumbnailAsync(ExceptFile);
+                USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, ExceptFile, Thumbnail));
+            }
+        }
+
+        private void FileTracker_Deleted(object sender, FileSystemChangeSet e)
+        {
+            for (int i = 0; i < e.StorageItems.Count; i++)
+            {
+                for (int j = 0; j < USBFilePresenter.ThisPage.FileCollection.Count; j++)
+                {
+                    RemovableDeviceFile DeviceFile = USBFilePresenter.ThisPage.FileCollection[j];
+                    if (DeviceFile.RelativeId == ((StorageFile)e.StorageItems[i]).FolderRelativeId)
+                    {
+                        USBFilePresenter.ThisPage.FileCollection.Remove(DeviceFile);
+                        j--;
+                    }
+                }
+            }
+        }
+
+        private async void FileTracker_Created(object sender, FileSystemChangeSet e)
+        {
+            foreach (StorageFile ExceptFile in e.StorageItems)
+            {
+                string Size = GetSizeDescription((await ExceptFile.GetBasicPropertiesAsync()).Size);
+
+                BitmapImage Thumbnail = await GetThumbnailAsync(ExceptFile);
+                USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, ExceptFile, Thumbnail));
             }
         }
 
@@ -356,9 +464,6 @@ namespace SmartLens
                     return;
                 }
 
-                //重命名后需要去除原文件夹的缓存
-                FolderDictionary.Remove(Folder.FolderRelativeId);
-
                 await Folder.RenameAsync(renameDialog.DesireName, NameCollisionOption.GenerateUniqueName);
 
                 var ChildCollection = CurrentNode.Parent.Children;
@@ -377,11 +482,6 @@ namespace SmartLens
                 Content = NewFolder,
                 HasUnrealizedChildren = false
             });
-            if (FolderDictionary.ContainsKey(CurrentFolder.FolderRelativeId))
-            {
-                FolderDictionary[CurrentFolder.FolderRelativeId].Add(NewFolder);
-            }
         }
     }
-
 }

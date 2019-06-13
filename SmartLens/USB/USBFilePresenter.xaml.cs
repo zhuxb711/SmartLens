@@ -217,7 +217,12 @@ namespace SmartLens
         /// </summary>
         public async Task RefreshFileDisplay()
         {
-            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null);
+            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null)
+            {
+                FolderDepth = FolderDepth.Shallow,
+                IndexerOption = IndexerOption.UseIndexerWhenAvailable
+            };
+
             Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
             Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
 
@@ -974,7 +979,6 @@ namespace SmartLens
                     Content = await USBControl.ThisPage.CurrentFolder.GetFolderAsync(NewFolder.Name),
                     HasUnrealizedChildren = false
                 });
-                USBControl.ThisPage.FolderDictionary[RelativeId].Add(NewFolder);
             JUMP: continue;
             }
         }
