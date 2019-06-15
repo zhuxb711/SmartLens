@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateBackgroundTask", "Upd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmeticsEffect", "CosmeticsEffect\CosmeticsEffect.csproj", "{51479EB4-54AA-4AB5-ADEE-CE6174F51F50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartLensDownloaderProvider", "SmartLensDownloaderProvider\SmartLensDownloaderProvider.csproj", "{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,6 +137,26 @@ Global
 		{51479EB4-54AA-4AB5-ADEE-CE6174F51F50}.Release|x64.Build.0 = Release|x64
 		{51479EB4-54AA-4AB5-ADEE-CE6174F51F50}.Release|x86.ActiveCfg = Release|x86
 		{51479EB4-54AA-4AB5-ADEE-CE6174F51F50}.Release|x86.Build.0 = Release|x86
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|ARM.ActiveCfg = Debug|ARM
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|ARM.Build.0 = Debug|ARM
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|ARM64.Build.0 = Debug|ARM64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|x64.ActiveCfg = Debug|x64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|x64.Build.0 = Debug|x64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|x86.ActiveCfg = Debug|x86
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Debug|x86.Build.0 = Debug|x86
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|ARM.ActiveCfg = Release|ARM
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|ARM.Build.0 = Release|ARM
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|ARM64.ActiveCfg = Release|ARM64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|ARM64.Build.0 = Release|ARM64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|x64.ActiveCfg = Release|x64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|x64.Build.0 = Release|x64
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|x86.ActiveCfg = Release|x86
+		{7C789BA6-8210-4EE6-9B10-FA16DDF790C2}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

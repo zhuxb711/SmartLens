@@ -1,5 +1,6 @@
 ﻿using Microsoft.Toolkit.Uwp.UI.Controls;
 using Newtonsoft.Json;
+using SmartLensDownloaderProvider;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,8 @@ using System.Text;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Radios;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -33,6 +36,7 @@ namespace SmartLens
         {
             InitializeComponent();
             FavouriteList.ItemsSource = WebTab.ThisPage.FavouriteCollection;
+            DownloadList.ItemsSource = SmartLensDownloader.GetInstance().DownloadList;
 
         //由于未知原因此处new WebView时，若选择多进程模型则可能会引发异常
         FLAG:
@@ -190,7 +194,7 @@ namespace SmartLens
             }
         }
 
-        private void WebPage_Loaded(object sender, RoutedEventArgs e)
+        private async void WebPage_Loaded(object sender, RoutedEventArgs e)
         {
             //Loaded在每次切换至当前标签页时都会得到执行，因此在此处可以借机同步不同标签页之间的数据
             //包括其他标签页向收藏列表新增的条目，或其他标签页通过访问网页而向历史记录添加的新条目
@@ -295,6 +299,18 @@ namespace SmartLens
                 AllowIndexedDB.IsOn = true;
             }
 
+            if (!StorageApplicationPermissions.FutureAccessList.ContainsItem("DownloadPath"))
+            {
+                StorageFolder Folder = await DownloadsFolder.CreateFolderAsync("SmartLensDownload", CreationCollisionOption.GenerateUniqueName);
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace("DownloadPath", Folder);
+                DownloadPath.Text = Folder.Path;
+            }
+            else
+            {
+                StorageFolder Folder = await StorageApplicationPermissions.FutureAccessList.GetItemAsync("DownloadPath") as StorageFolder;
+                DownloadPath.Text = Folder.Path;
+            }
+
             //切换不同标签页时，应当同步InPrivate模式的设置
             //同时因为改变InPrivate设置将导致Toggled事件触发，因此先解除，改变后再绑定
             InPrivate.Toggled -= InPrivate_Toggled;
@@ -317,6 +333,117 @@ namespace SmartLens
                 InPrivate.IsOn = false;
                 InPrivate.Toggled += InPrivate_Toggled;
             }
+
+            SmartLensDownloader.GetInstance().DownloadList.CollectionChanged += DownloadList_CollectionChanged;
+
+            for (int i = 0; i < SmartLensDownloader.GetInstance().DownloadList.Count; i++)
+            {
+                DownloadOperator DownloadTask = SmartLensDownloader.GetInstance().DownloadList[i];
+
+                switch (DownloadTask.State)
+                {
+                    case DownloadState.Paused:
+                        {
+                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                            Percent.Visibility = Visibility.Collapsed;
+
+                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                            State.Visibility = Visibility.Visible;
+                            State.Text = "暂停下载";
+
+                            Button btn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                            btn.Content = "继续";
+                            break;
+                        }
+
+                    case DownloadState.Stopped:
+                        {
+                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                            Pausebtn.Visibility = Visibility.Collapsed;
+
+                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
+                            Stopbtn.Visibility = Visibility.Collapsed;
+
+                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+                            Progress.Visibility = Visibility.Collapsed;
+
+                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                            State.Visibility = Visibility.Visible;
+                            State.Text = "停止下载";
+
+                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                            Percent.Visibility = Visibility.Collapsed;
+                            break;
+                        }
+
+                    case DownloadState.Downloading:
+                        {
+                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                            Pausebtn.Visibility = Visibility.Visible;
+
+                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
+                            Stopbtn.Visibility = Visibility.Visible;
+
+                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+                            Progress.Visibility = Visibility.Visible;
+
+                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                            State.Visibility = Visibility.Collapsed;
+
+                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                            Percent.Visibility = Visibility.Visible;
+                            break;
+                        }
+                }
+
+                switch (DownloadTask.DownloadResult)
+                {
+                    case DownloadResult.Error:
+                        {
+                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                            Pausebtn.Visibility = Visibility.Collapsed;
+
+                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
+                            Stopbtn.Visibility = Visibility.Collapsed;
+
+                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+                            Progress.Visibility = Visibility.Collapsed;
+
+                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                            State.Visibility = Visibility.Visible;
+                            State.Text = "下载出错";
+
+                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                            Percent.Visibility = Visibility.Collapsed;
+                            break;
+                        }
+
+                    case DownloadResult.Success:
+                        {
+                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                            Pausebtn.Visibility = Visibility.Collapsed;
+
+                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
+                            Stopbtn.Visibility = Visibility.Collapsed;
+
+                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+                            Progress.Visibility = Visibility.Collapsed;
+
+                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                            State.Visibility = Visibility.Visible;
+                            State.Text = "下载完成";
+
+                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                            Percent.Visibility = Visibility.Collapsed;
+                            break;
+                        }
+                }
+            }
+        }
+
+        private void DownloadList_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            DownloadEmptyTips.Visibility = SmartLensDownloader.GetInstance().DownloadList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private async void InPrivate_Toggled(object sender, RoutedEventArgs e)
@@ -364,9 +491,70 @@ namespace SmartLens
             WebBrowser.UnviewableContentIdentified += WebBrowser_UnviewableContentIdentified;
         }
 
-        private void WebBrowser_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
+        private async void WebBrowser_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
         {
-            
+            string URL = args.Referrer.ToString();
+            string FileName = URL.Substring(URL.LastIndexOf("/") + 1);
+
+            SmartLensDownloader Downloader = SmartLensDownloader.GetInstance();
+            DownloadOperator Operation = await Downloader.CreateNewDownloadTask(args.Referrer, FileName);
+            Operation.DownloadSucceed += Operation_DownloadSucceed;
+            Operation.DownloadErrorDetected += Operation_DownloadErrorDetected;
+            Operation.StartDownload();
+        }
+
+        private void Operation_DownloadErrorDetected(object sender, DownloadOperator e)
+        {
+            for (int i = 0; i < SmartLensDownloader.GetInstance().DownloadList.Count; i++)
+            {
+                DownloadOperator DownloadTask = SmartLensDownloader.GetInstance().DownloadList[i];
+
+                if (DownloadTask == e)
+                {
+                    Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                    Pausebtn.Visibility = Visibility.Collapsed;
+
+                    Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
+                    Stopbtn.Visibility = Visibility.Collapsed;
+
+                    ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+                    Progress.Visibility = Visibility.Collapsed;
+
+                    TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                    State.Visibility = Visibility.Visible;
+                    State.Text = "下载出错";
+
+                    StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                    Percent.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private void Operation_DownloadSucceed(object sender, DownloadOperator e)
+        {
+            for (int i = 0; i < SmartLensDownloader.GetInstance().DownloadList.Count; i++)
+            {
+                DownloadOperator DownloadTask = SmartLensDownloader.GetInstance().DownloadList[i];
+
+                if (DownloadTask == e)
+                {
+                    Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+                    Pausebtn.Visibility = Visibility.Collapsed;
+
+                    Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
+                    Stopbtn.Visibility = Visibility.Collapsed;
+
+                    ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+                    Progress.Visibility = Visibility.Collapsed;
+
+                    TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                    State.Visibility = Visibility.Visible;
+                    State.Text = "下载完成";
+
+                    StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                    Percent.Visibility = Visibility.Collapsed;
+                }
+            }
         }
 
         private async void WebBrowser_NavigationFailed(object sender, WebViewNavigationFailedEventArgs e)
@@ -854,6 +1042,7 @@ namespace SmartLens
             }
             ThisTab = null;
             InPrivate.Toggled -= InPrivate_Toggled;
+            SmartLensDownloader.GetInstance().DownloadList.CollectionChanged -= DownloadList_CollectionChanged;
         }
 
         private void FavoutiteListButton_Click(object sender, RoutedEventArgs e)
@@ -1123,6 +1312,112 @@ namespace SmartLens
         {
             ClearFavFly.Hide();
             ClearHistoryFly.Hide();
+        }
+
+        private void DownloadListButton_Click(object sender, RoutedEventArgs e)
+        {
+            DownloadControl.IsPaneOpen = !DownloadControl.IsPaneOpen;
+        }
+
+        private void PauseDownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = (Button)sender;
+            DownloadList.SelectedItem = btn.DataContext;
+
+            if (btn.Content.ToString() == "暂停")
+            {
+                StackPanel Percent = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                Percent.Visibility = Visibility.Collapsed;
+
+                TextBlock State = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                State.Visibility = Visibility.Visible;
+                State.Text = "暂停下载";
+
+                btn.Content = "继续";
+                SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex].PauseDownload();
+            }
+            else
+            {
+                StackPanel Percent = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+                Percent.Visibility = Visibility.Visible;
+
+                TextBlock State = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+                State.Visibility = Visibility.Collapsed;
+
+                btn.Content = "暂停";
+                SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex].ResumeDownload();
+            }
+        }
+
+        private void StopDownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            DownloadList.SelectedItem = ((Button)sender).DataContext;
+
+            Button Pausebtn = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
+            Pausebtn.Visibility = Visibility.Collapsed;
+
+            ((Button)sender).Visibility = Visibility.Collapsed;
+
+            ProgressBar Progress = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
+            Progress.Visibility = Visibility.Collapsed;
+
+            TextBlock State = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
+            State.Visibility = Visibility.Visible;
+            State.Text = "停止下载";
+
+            StackPanel Percent = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
+            Percent.Visibility = Visibility.Collapsed;
+
+            var Operation = SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex];
+            Operation.StopDownload();
+            Operation.DownloadSucceed -= Operation_DownloadSucceed;
+            Operation.DownloadErrorDetected -= Operation_DownloadErrorDetected;
+        }
+
+        private async void SetDownloadPathButton_Click(object sender, RoutedEventArgs e)
+        {
+            FolderPicker SavePicker = new FolderPicker
+            {
+                CommitButtonText = "保存",
+                SuggestedStartLocation = PickerLocationId.Downloads,
+                ViewMode = PickerViewMode.List
+            };
+            SavePicker.FileTypeFilter.Add(".exe");
+            StorageFolder SaveFolder = await SavePicker.PickSingleFolderAsync();
+
+            if (SaveFolder != null)
+            {
+                DownloadPath.Text = SaveFolder.Path;
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace("DownloadPath", SaveFolder);
+            }
+        }
+
+        private void CloseDownloadItemButton_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ((SymbolIcon)sender).Foreground = new SolidColorBrush(Colors.OrangeRed);
+        }
+
+        private void CloseDownloadItemButton_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            ((SymbolIcon)sender).Foreground = new SolidColorBrush(Colors.White);
+        }
+
+        private void CloseDownloadItemButton_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            DownloadList.SelectedItem = ((SymbolIcon)sender).DataContext;
+
+            var Operation = SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex];
+            if (Operation.State == DownloadState.Downloading || Operation.State == DownloadState.Paused)
+            {
+                Operation.StopDownload();
+            }
+
+            SmartLensDownloader.GetInstance().DownloadList.RemoveAt(DownloadList.SelectedIndex);
+
+            if (SmartLensDownloader.GetInstance().DownloadList.Count == 0)
+            {
+                DownloadEmptyTips.Visibility = Visibility.Visible;
+            }
         }
     }
 }

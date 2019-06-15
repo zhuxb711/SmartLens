@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.Uwp.UI.Controls;
+using SmartLensDownloaderProvider;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

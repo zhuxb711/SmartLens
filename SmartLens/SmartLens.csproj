@@ -11,8 +11,8 @@
     <AssemblyName>SmartLens</AssemblyName>
     <DefaultLanguage>zh-CN</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.17763.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -626,6 +626,10 @@
     <ProjectReference Include="..\OpenCVBridge\OpenCVBridge.vcxproj">
       <Project>{dcf8f794-eeef-413b-b74d-a9fc69872783}</Project>
       <Name>OpenCVBridge</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SmartLensDownloaderProvider\SmartLensDownloaderProvider.csproj">
+      <Project>{7c789ba6-8210-4ee6-9b10-fa16ddf790c2}</Project>
+      <Name>SmartLensDownloaderProvider</Name>
     </ProjectReference>
     <ProjectReference Include="..\UpdateBackgroundTask\UpdateBackgroundTask.csproj">
       <Project>{726f4c8a-6875-44e2-9384-aa00568bc867}</Project>

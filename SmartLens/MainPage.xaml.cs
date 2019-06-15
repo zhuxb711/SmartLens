@@ -7,9 +7,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Background;
+using Windows.ApplicationModel.Core;
 using Windows.Security.Credentials;
 using Windows.Storage;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -29,7 +31,6 @@ namespace SmartLens
         public MainPage()
         {
             InitializeComponent();
-            Window.Current.SetTitleBar(Title);
             ThisPage = this;
             Loaded += MainPage_Loaded;
         }
@@ -48,6 +49,8 @@ namespace SmartLens
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            Window.Current.SetTitleBar(Title);
+
             var View = ApplicationView.GetForCurrentView();
             if (ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] is bool Enable)
             {
