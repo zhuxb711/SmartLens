@@ -92,8 +92,8 @@ namespace SmartLens
         /// <returns>大小描述</returns>
         private string GetSize(long Size)
         {
-            return Size / 1024 < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
-            (Size / 1048576 >= 1024 ? Math.Round(Size / 1073741824f, 2).ToString() + " GB" :
+            return Size / 1024f < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
+            (Size / 1048576f >= 1024 ? Math.Round(Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Size / 1048576f, 2).ToString() + " MB");
         }
 
@@ -171,8 +171,8 @@ namespace SmartLens
         public async Task<string> GetSizeAsync(StorageFile file)
         {
             BasicProperties Properties = await file.GetBasicPropertiesAsync();
-            return Properties.Size / 1024 < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
-            (Properties.Size / 1048576 >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
+            return Properties.Size / 1024f < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
+            (Properties.Size / 1048576f >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
         }
 

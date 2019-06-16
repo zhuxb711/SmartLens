@@ -84,8 +84,8 @@ namespace SmartLens
         public async Task<string> GetSizeAsync(StorageFile file)
         {
             BasicProperties Properties = await file.GetBasicPropertiesAsync();
-            return Properties.Size / 1024 < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
-            (Properties.Size / 1048576 >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
+            return Properties.Size / 1024f < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
+            (Properties.Size / 1048576f >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
         }
 
@@ -266,7 +266,7 @@ namespace SmartLens
         /// <returns></returns>
         private string GetSizeDescription(ulong PropertiesSize)
         {
-            return PropertiesSize / 1024 < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576 >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
+            return PropertiesSize / 1024f < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576f >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
         }
 
         private void Cut_Click(object sender, RoutedEventArgs e)

@@ -33,8 +33,8 @@ namespace SmartLens
                 CreateTime = file.DateCreated.Year + "年" + file.DateCreated.Month + "月" + file.DateCreated.Day + "日, " + file.DateCreated.Hour + ":" + file.DateCreated.Minute + ":" + file.DateCreated.Second;
                 var Properties = await file.GetBasicPropertiesAsync();
 
-                FileSize = Properties.Size / 1024 < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
-            (Properties.Size / 1048576 >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
+                FileSize = Properties.Size / 1024f < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
+            (Properties.Size / 1048576f >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB") + " (" + Properties.Size.ToString("N0") + " 字节)";
 
                 ChangeTime = Properties.DateModified.Year + "年" + Properties.DateModified.Month + "月" + Properties.DateModified.Day + "日, " + (Properties.DateModified.Hour < 10 ? "0" + Properties.DateModified.Hour : Properties.DateModified.Hour.ToString()) + ":" + (Properties.DateModified.Minute < 10 ? "0" + Properties.DateModified.Minute : Properties.DateModified.Minute.ToString()) + ":" + (Properties.DateModified.Second < 10 ? "0" + Properties.DateModified.Second : Properties.DateModified.Second.ToString());

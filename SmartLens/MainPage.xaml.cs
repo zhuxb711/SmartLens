@@ -31,6 +31,7 @@ namespace SmartLens
         public MainPage()
         {
             InitializeComponent();
+            Window.Current.SetTitleBar(Title);
             ThisPage = this;
             Loaded += MainPage_Loaded;
         }
@@ -49,8 +50,6 @@ namespace SmartLens
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            Window.Current.SetTitleBar(Title);
-
             var View = ApplicationView.GetForCurrentView();
             if (ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] is bool Enable)
             {

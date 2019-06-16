@@ -35,7 +35,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
+        
         <DataTemplate x:Key="Template">
             <StackPanel Orientation="Horizontal">
                 <Viewbox Visibility="{Binding Content.StarVisibility,Mode=OneTime}" VerticalAlignment="Center" Margin="0,0,5,0" Width="16">
@@ -48,26 +48,24 @@
         <DataTemplate x:Key="InAppNotificationWithButtonsTemplate">
             <UserControl>
                 <Grid>
-                    <Grid x:Name="RootGrid">
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                        <TextBlock x:Name="TextBlock" Grid.RowSpan="2" 
+                    <TextBlock x:Name="TextBlock" Grid.RowSpan="2" 
                             Text="浏览器已进入InPrivate隐私模式，将不会记录任何信息" VerticalAlignment="Center" />
 
-                        <StackPanel x:Name="ButtonsStackPanel" Margin="10,0,0,0" Grid.RowSpan="2" Grid.Column="1" 
+                    <StackPanel x:Name="ButtonsStackPanel" Margin="10,0,0,0" Grid.RowSpan="2" Grid.Column="1" 
                             Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button x:Name="ConfirmButton" Content="确定" Width="120" Height="30" Click="ConfirmButton_Click" />
-                            <Button x:Name="ExitButton" Content="退出InPrivate" Width="120" Height="30" Margin="10 0 0 0" Click="ExitButton_Click"/>
-                        </StackPanel>
-                    </Grid>
+                        <Button x:Name="ConfirmButton" Content="确定" Width="120" Height="30" Click="ConfirmButton_Click" />
+                        <Button x:Name="ExitButton" Content="退出InPrivate" Width="120" Height="30" Margin="10 0 0 0" Click="ExitButton_Click"/>
+                    </StackPanel>
                 </Grid>
             </UserControl>
         </DataTemplate>
@@ -197,7 +195,7 @@
                         <TextBox Name="SpecificUrl" PlaceholderText="输入URL" Margin="0,20,0,0" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" HorizontalAlignment="Left" Width="270" Header="设置特定页URL" FontSize="16"/>
                         <ToggleSwitch Header="显示主页按钮" FontSize="16" Margin="0,20,0,0" Name="ShowMainButton" Toggled="ShowMainButton_Toggled"/>
                         <TextBox Name="MainUrl" Margin="0,20,0,0" PlaceholderText="输入URL" Background="{ThemeResource TextBoxDisabledBackgroundThemeBrush}" HorizontalAlignment="Left" Width="270" Header="设置主页URL" FontSize="16"/>
-                        <Grid Margin="0,20,0,0">
+                        <Grid Margin="0,25,0,0">
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
                                 <TextBlock FontSize="16" Text="默认下载位置"/>
                                 <TextBlock FontSize="14" Name="DownloadPath" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Width="230" Foreground="Gray" Margin="0,8,0,0"/>
@@ -302,5 +300,6 @@
             </SplitView.Pane>
         </SplitView>
         <controls:InAppNotification Grid.Row="1" Margin="0,30,0,0" Canvas.ZIndex="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Name="InPrivateNotification" StackMode="Replace" ShowDismissButton="False"/>
+        <controls:InAppNotification Grid.Row="1" Margin="0,30,0,0" Canvas.ZIndex="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Name="DownloadNotification" StackMode="Replace" ShowDismissButton="False"/>
     </Grid>
 </Page>

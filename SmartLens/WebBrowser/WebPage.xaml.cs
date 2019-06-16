@@ -491,16 +491,79 @@ namespace SmartLens
             WebBrowser.UnviewableContentIdentified += WebBrowser_UnviewableContentIdentified;
         }
 
-        private async void WebBrowser_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
+        private void WebBrowser_UnviewableContentIdentified(WebView sender, WebViewUnviewableContentIdentifiedEventArgs args)
         {
             string URL = args.Referrer.ToString();
             string FileName = URL.Substring(URL.LastIndexOf("/") + 1);
 
-            SmartLensDownloader Downloader = SmartLensDownloader.GetInstance();
-            DownloadOperator Operation = await Downloader.CreateNewDownloadTask(args.Referrer, FileName);
-            Operation.DownloadSucceed += Operation_DownloadSucceed;
-            Operation.DownloadErrorDetected += Operation_DownloadErrorDetected;
-            Operation.StartDownload();
+            DownloadNotification.Show(GenerateDownloadNotificationTemplate(FileName, args.Referrer));
+        }
+
+        private Grid GenerateDownloadNotificationTemplate(string FileName, Uri Refer)
+        {
+            Grid GridControl = new Grid();
+
+            GridControl.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                Width = new GridLength(1, GridUnitType.Star)
+            });
+            GridControl.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                Width = GridLength.Auto
+            });
+
+            TextBlock textBlock = new TextBlock
+            {
+                Text = "是否保存文件 " + FileName + " 至本地计算机?\r发布者：" + (string.IsNullOrWhiteSpace(Refer.Host) ? "Unknown" : Refer.Host),
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 16
+            };
+            GridControl.Children.Add(textBlock);
+
+            // Buttons part
+            StackPanel stackPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(20, 0, 0, 0),
+            };
+
+            Button SaveConfirmButton = new Button
+            {
+                Content = "保存",
+                Width = 120,
+                Height = 30,
+            };
+            SaveConfirmButton.Click += async (s, e) =>
+            {
+                DownloadNotification.Dismiss();
+                DownloadControl.IsPaneOpen = true;
+
+                SmartLensDownloader Downloader = SmartLensDownloader.GetInstance();
+                DownloadOperator Operation = await Downloader.CreateNewDownloadTask(Refer, FileName);
+                Operation.DownloadSucceed += Operation_DownloadSucceed;
+                Operation.DownloadErrorDetected += Operation_DownloadErrorDetected;
+                Operation.StartDownload();
+            };
+            stackPanel.Children.Add(SaveConfirmButton);
+
+            Button CancelButton = new Button
+            {
+                Content = "取消",
+                Width = 120,
+                Height = 30,
+                Margin = new Thickness(10, 0, 0, 0)
+            };
+            CancelButton.Click += (s, e) =>
+            {
+                DownloadNotification.Dismiss();
+            };
+            stackPanel.Children.Add(CancelButton);
+
+            Grid.SetColumn(stackPanel, 1);
+            GridControl.Children.Add(stackPanel);
+
+            return GridControl;
         }
 
         private void Operation_DownloadErrorDetected(object sender, DownloadOperator e)
@@ -1419,5 +1482,6 @@ namespace SmartLens
                 DownloadEmptyTips.Visibility = Visibility.Visible;
             }
         }
+
     }
 }

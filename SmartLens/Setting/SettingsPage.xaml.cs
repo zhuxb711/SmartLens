@@ -79,8 +79,8 @@ namespace SmartLens
             StoragedWiFiInfoCollection = await SQLite.GetInstance().GetAllWiFiDataAsync();
             var Size = await GetFolderSize(ApplicationData.Current.TemporaryFolder.Path);
 
-            ClearCache.Content = "清除缓存(" + (Size / 1024 < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
-            (Size / 1048576 >= 1024 ? Math.Round(Size / 1073741824f, 2).ToString() + " GB" :
+            ClearCache.Content = "清除缓存(" + (Size / 1024f < 1024 ? Math.Round(Size / 1024f, 2).ToString() + " KB" :
+            (Size / 1048576f >= 1024 ? Math.Round(Size / 1073741824f, 2).ToString() + " GB" :
             Math.Round(Size / 1048576f, 2).ToString() + " MB")) + ")";
         }
 

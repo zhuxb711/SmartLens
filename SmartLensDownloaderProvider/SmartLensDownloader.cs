@@ -99,7 +99,7 @@ namespace SmartLensDownloaderProvider
 
         private string GetSizeDescription(long PropertiesSize)
         {
-            return PropertiesSize / 1024 < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576 >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
+            return PropertiesSize / 1024f < 1024 ? (PropertiesSize / 1024f).ToString("0.00") + " KB" : (PropertiesSize / 1048576 >= 1024 ? (PropertiesSize / 1073741824f).ToString("0.00") + " GB" : (PropertiesSize / 1048576f).ToString("0.00") + " MB");
         }
 
         public async void StartDownload()
@@ -301,6 +301,8 @@ namespace SmartLensDownloaderProvider
                     FileStream = Para.TempFile.OpenStreamForWriteAsync().Result;
 
                     HttpWebRequest HttpRequest = WebRequest.CreateHttp(Para.Address);
+                    HttpRequest.Timeout = 20000;
+
                     Response = HttpRequest.GetResponse();
                     RemoteStream = Response.GetResponseStream();
 
