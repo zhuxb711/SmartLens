@@ -15,6 +15,7 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.UI;
+using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -36,7 +37,7 @@ namespace SmartLens
         {
             InitializeComponent();
             FavouriteList.ItemsSource = WebTab.ThisPage.FavouriteCollection;
-            DownloadList.ItemsSource = SmartLensDownloader.GetInstance().DownloadList;
+            DownloadList.ItemsSource = SmartLensDownloader.DownloadList;
 
         //由于未知原因此处new WebView时，若选择多进程模型则可能会引发异常
         FLAG:
@@ -64,91 +65,32 @@ namespace SmartLens
         private void InitHistoryList()
         {
             //根据WebTab提供的分类信息决定历史记录树应当展示多少分类
-            switch (WebTab.ThisPage.HistoryFlag)
+            if (WebTab.ThisPage.HistoryFlag.HasFlag(HistoryTreeCategoryFlag.Today))
             {
-                case HistoryTreeFlag.All:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("今天", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("昨天", string.Empty),
-                        HasUnrealizedChildren = true
-                    });
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("更早", string.Empty),
-                        HasUnrealizedChildren = true
-                    });
-                    break;
-                case HistoryTreeFlag.TodayEarlier:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("今天", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("更早", string.Empty),
-                        HasUnrealizedChildren = true
-                    });
-                    break;
-                case HistoryTreeFlag.TodayYesterday:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("今天", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("昨天", string.Empty),
-                        HasUnrealizedChildren = true
-                    });
-                    break;
-                case HistoryTreeFlag.YesterdayEarlier:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("昨天", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("更早", string.Empty),
-                        HasUnrealizedChildren = true
-                    });
-                    break;
-                case HistoryTreeFlag.Today:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("今天", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    break;
-                case HistoryTreeFlag.Yesterday:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("昨天", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    break;
-                case HistoryTreeFlag.Earlier:
-                    HistoryTree.RootNodes.Add(new TreeViewNode
-                    {
-                        Content = new WebSiteItem("更早", string.Empty),
-                        HasUnrealizedChildren = true,
-                        IsExpanded = true
-                    });
-                    break;
-                default:
-                    break;
+                HistoryTree.RootNodes.Add(new TreeViewNode
+                {
+                    Content = new WebSiteItem("今天", string.Empty),
+                    HasUnrealizedChildren = true,
+                    IsExpanded = true
+                });
+            }
+
+            if (WebTab.ThisPage.HistoryFlag.HasFlag(HistoryTreeCategoryFlag.Yesterday))
+            {
+                HistoryTree.RootNodes.Add(new TreeViewNode
+                {
+                    Content = new WebSiteItem("昨天", string.Empty),
+                    HasUnrealizedChildren = true
+                });
+            }
+
+            if (WebTab.ThisPage.HistoryFlag.HasFlag(HistoryTreeCategoryFlag.Earlier))
+            {
+                HistoryTree.RootNodes.Add(new TreeViewNode
+                {
+                    Content = new WebSiteItem("更早", string.Empty),
+                    HasUnrealizedChildren = true
+                });
             }
 
             //遍历HistoryCollection集合以向历史记录树中对应分类添加子对象
@@ -159,7 +101,7 @@ namespace SmartLens
                     var TreeNode = from Item in HistoryTree.RootNodes
                                    where (Item.Content as WebSiteItem).Subject == "昨天"
                                    select Item;
-                    TreeNode.First().Children.Add(new TreeViewNode
+                    TreeNode.FirstOrDefault()?.Children.Add(new TreeViewNode
                     {
                         Content = HistoryItem.Value,
                         HasUnrealizedChildren = false,
@@ -172,7 +114,7 @@ namespace SmartLens
                     var TreeNode = from Item in HistoryTree.RootNodes
                                    where (Item.Content as WebSiteItem).Subject == "今天"
                                    select Item;
-                    TreeNode.First().Children.Add(new TreeViewNode
+                    TreeNode.FirstOrDefault()?.Children.Add(new TreeViewNode
                     {
                         Content = HistoryItem.Value,
                         HasUnrealizedChildren = false,
@@ -184,7 +126,7 @@ namespace SmartLens
                     var TreeNode = from Item in HistoryTree.RootNodes
                                    where (Item.Content as WebSiteItem).Subject == "更早"
                                    select Item;
-                    TreeNode.First().Children.Add(new TreeViewNode
+                    TreeNode.FirstOrDefault()?.Children.Add(new TreeViewNode
                     {
                         Content = HistoryItem.Value,
                         HasUnrealizedChildren = false,
@@ -202,6 +144,7 @@ namespace SmartLens
             //确定历史记录或收藏列表是否为空，若空则显示“无内容”提示标签
             FavEmptyTips.Visibility = WebTab.ThisPage.FavouriteCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             HistoryEmptyTips.Visibility = WebTab.ThisPage.HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            DownloadEmptyTips.Visibility = SmartLensDownloader.DownloadList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
             //其他标签页已执行清空历史记录时，当前标签页也必须删除历史记录树内的所有节点
             if (WebTab.ThisPage.HistoryCollection.Count == 0)
@@ -334,116 +277,12 @@ namespace SmartLens
                 InPrivate.Toggled += InPrivate_Toggled;
             }
 
-            SmartLensDownloader.GetInstance().DownloadList.CollectionChanged += DownloadList_CollectionChanged;
-
-            for (int i = 0; i < SmartLensDownloader.GetInstance().DownloadList.Count; i++)
-            {
-                DownloadOperator DownloadTask = SmartLensDownloader.GetInstance().DownloadList[i];
-
-                switch (DownloadTask.State)
-                {
-                    case DownloadState.Paused:
-                        {
-                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                            Percent.Visibility = Visibility.Collapsed;
-
-                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                            State.Visibility = Visibility.Visible;
-                            State.Text = "暂停下载";
-
-                            Button btn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                            btn.Content = "继续";
-                            break;
-                        }
-
-                    case DownloadState.Stopped:
-                        {
-                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                            Pausebtn.Visibility = Visibility.Collapsed;
-
-                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
-                            Stopbtn.Visibility = Visibility.Collapsed;
-
-                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-                            Progress.Visibility = Visibility.Collapsed;
-
-                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                            State.Visibility = Visibility.Visible;
-                            State.Text = "停止下载";
-
-                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                            Percent.Visibility = Visibility.Collapsed;
-                            break;
-                        }
-
-                    case DownloadState.Downloading:
-                        {
-                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                            Pausebtn.Visibility = Visibility.Visible;
-
-                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
-                            Stopbtn.Visibility = Visibility.Visible;
-
-                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-                            Progress.Visibility = Visibility.Visible;
-
-                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                            State.Visibility = Visibility.Collapsed;
-
-                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                            Percent.Visibility = Visibility.Visible;
-                            break;
-                        }
-                }
-
-                switch (DownloadTask.DownloadResult)
-                {
-                    case DownloadResult.Error:
-                        {
-                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                            Pausebtn.Visibility = Visibility.Collapsed;
-
-                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
-                            Stopbtn.Visibility = Visibility.Collapsed;
-
-                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-                            Progress.Visibility = Visibility.Collapsed;
-
-                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                            State.Visibility = Visibility.Visible;
-                            State.Text = "下载出错";
-
-                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                            Percent.Visibility = Visibility.Collapsed;
-                            break;
-                        }
-
-                    case DownloadResult.Success:
-                        {
-                            Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                            Pausebtn.Visibility = Visibility.Collapsed;
-
-                            Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
-                            Stopbtn.Visibility = Visibility.Collapsed;
-
-                            ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-                            Progress.Visibility = Visibility.Collapsed;
-
-                            TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                            State.Visibility = Visibility.Visible;
-                            State.Text = "下载完成";
-
-                            StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                            Percent.Visibility = Visibility.Collapsed;
-                            break;
-                        }
-                }
-            }
+            SmartLensDownloader.DownloadList.CollectionChanged += DownloadList_CollectionChanged;
         }
 
         private void DownloadList_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            DownloadEmptyTips.Visibility = SmartLensDownloader.GetInstance().DownloadList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            DownloadEmptyTips.Visibility = SmartLensDownloader.DownloadList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private async void InPrivate_Toggled(object sender, RoutedEventArgs e)
@@ -539,11 +378,14 @@ namespace SmartLens
                 DownloadNotification.Dismiss();
                 DownloadControl.IsPaneOpen = true;
 
-                SmartLensDownloader Downloader = SmartLensDownloader.GetInstance();
-                DownloadOperator Operation = await Downloader.CreateNewDownloadTask(Refer, FileName);
+                DownloadOperator Operation = await SmartLensDownloader.CreateNewDownloadTask(Refer, FileName);
                 Operation.DownloadSucceed += Operation_DownloadSucceed;
                 Operation.DownloadErrorDetected += Operation_DownloadErrorDetected;
+                Operation.DownloadTaskCancel += Operation_DownloadTaskCancel;
+
                 Operation.StartDownload();
+
+                await SQLite.GetInstance().SetDownloadHistoryAsync(Operation);
             };
             stackPanel.Children.Add(SaveConfirmButton);
 
@@ -566,58 +408,43 @@ namespace SmartLens
             return GridControl;
         }
 
-        private void Operation_DownloadErrorDetected(object sender, DownloadOperator e)
+        private async void Operation_DownloadTaskCancel(object sender, DownloadOperator e)
         {
-            for (int i = 0; i < SmartLensDownloader.GetInstance().DownloadList.Count; i++)
-            {
-                DownloadOperator DownloadTask = SmartLensDownloader.GetInstance().DownloadList[i];
+            await SQLite.GetInstance().UpdateDownloadHistoryAsync(e);
 
-                if (DownloadTask == e)
-                {
-                    Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                    Pausebtn.Visibility = Visibility.Collapsed;
+            ToastNotificationManager.CreateToastNotifier().Show(e.GenerateToastNotification(ToastNotificationCategory.TaskCancel));
 
-                    Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
-                    Stopbtn.Visibility = Visibility.Collapsed;
-
-                    ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-                    Progress.Visibility = Visibility.Collapsed;
-
-                    TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                    State.Visibility = Visibility.Visible;
-                    State.Text = "下载出错";
-
-                    StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                    Percent.Visibility = Visibility.Collapsed;
-                }
-            }
+            e.DownloadSucceed -= Operation_DownloadSucceed;
+            e.DownloadErrorDetected -= Operation_DownloadErrorDetected;
+            e.DownloadTaskCancel -= Operation_DownloadTaskCancel;
         }
 
-        private void Operation_DownloadSucceed(object sender, DownloadOperator e)
+        private async void Operation_DownloadErrorDetected(object sender, DownloadOperator e)
         {
-            for (int i = 0; i < SmartLensDownloader.GetInstance().DownloadList.Count; i++)
-            {
-                DownloadOperator DownloadTask = SmartLensDownloader.GetInstance().DownloadList[i];
+            await SQLite.GetInstance().UpdateDownloadHistoryAsync(e);
 
-                if (DownloadTask == e)
-                {
-                    Button Pausebtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-                    Pausebtn.Visibility = Visibility.Collapsed;
+            ListViewItem Item = DownloadList.ContainerFromItem(e) as ListViewItem;
+            Item.ContentTemplate = DownloadErrorTemplate;
 
-                    Button Stopbtn = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("StopDownloadButton") as Button;
-                    Stopbtn.Visibility = Visibility.Collapsed;
+            ToastNotificationManager.CreateToastNotifier().Show(e.GenerateToastNotification(ToastNotificationCategory.Error));
 
-                    ProgressBar Progress = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-                    Progress.Visibility = Visibility.Collapsed;
+            e.DownloadSucceed -= Operation_DownloadSucceed;
+            e.DownloadErrorDetected -= Operation_DownloadErrorDetected;
+            e.DownloadTaskCancel -= Operation_DownloadTaskCancel;
+        }
 
-                    TextBlock State = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                    State.Visibility = Visibility.Visible;
-                    State.Text = "下载完成";
+        private async void Operation_DownloadSucceed(object sender, DownloadOperator e)
+        {
+            await SQLite.GetInstance().UpdateDownloadHistoryAsync(e);
 
-                    StackPanel Percent = ((DownloadList.ContainerFromIndex(i) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                    Percent.Visibility = Visibility.Collapsed;
-                }
-            }
+            ListViewItem Item = DownloadList.ContainerFromItem(e) as ListViewItem;
+            Item.ContentTemplate = DownloadCompleteTemplate;
+
+            ToastNotificationManager.CreateToastNotifier().Show(e.GenerateToastNotification(ToastNotificationCategory.Succeed));
+
+            e.DownloadSucceed -= Operation_DownloadSucceed;
+            e.DownloadErrorDetected -= Operation_DownloadErrorDetected;
+            e.DownloadTaskCancel -= Operation_DownloadTaskCancel;
         }
 
         private async void WebBrowser_NavigationFailed(object sender, WebViewNavigationFailedEventArgs e)
@@ -680,24 +507,24 @@ namespace SmartLens
                 if (AutoSuggest.Text != "about:blank" && WebBrowser.DocumentTitle != "")
                 {
                     var HistoryItems = from Item in WebTab.ThisPage.HistoryCollection
-                                       let DominName = AutoSuggest.Text.StartsWith("https://") ? AutoSuggest.Text.Substring(8) : AutoSuggest.Text.StartsWith("http://") ? AutoSuggest.Text.Substring(7) : AutoSuggest.Text.StartsWith("ftp://") ? AutoSuggest.Text.Substring(6) : null
-                                       where Item.Value.DominName == DominName && Item.Key == DateTime.Today
+                                       where Item.Value.WebSite == AutoSuggest.Text && Item.Key == DateTime.Today
                                        select Item;
-                    var HistoryItem = HistoryItems.FirstOrDefault();
-
-                    if (!HistoryItem.Key.Equals(default))
+                    for (int i = 0; i < HistoryItems.Count(); i++)
                     {
-                        foreach (var (RootNode, InnerNode) in from RootNode in HistoryTree.RootNodes
-                                                              where (RootNode.Content as WebSiteItem).Subject == "今天"
-                                                              from InnerNode in RootNode.Children
-                                                              where (InnerNode.Content as WebSiteItem) == HistoryItem.Value
-                                                              select (RootNode, InnerNode))
+                        var HistoryItem = HistoryItems.ElementAt(i);
+                        if (!HistoryItem.Key.Equals(default))
                         {
-                            RootNode.Children.Remove(InnerNode);
-                            SQLite.GetInstance().DeleteWebHistory(HistoryItem);
-                            break;
+                            foreach (var (RootNode, InnerNode) in from RootNode in HistoryTree.RootNodes
+                                                                  where (RootNode.Content as WebSiteItem).Subject == "今天"
+                                                                  from InnerNode in RootNode.Children
+                                                                  where (InnerNode.Content as WebSiteItem).WebSite == HistoryItem.Value.WebSite
+                                                                  select (RootNode, InnerNode))
+                            {
+                                RootNode.Children.Remove(InnerNode);
+                                WebTab.ThisPage.HistoryCollection.Remove(HistoryItem);
+                                SQLite.GetInstance().DeleteWebHistory(HistoryItem);
+                            }
                         }
-                        WebTab.ThisPage.HistoryCollection.Remove(HistoryItem);
                     }
 
                     WebTab.ThisPage.HistoryCollection.Insert(0, new KeyValuePair<DateTime, WebSiteItem>(DateTime.Today, new WebSiteItem(WebBrowser.DocumentTitle, AutoSuggest.Text)));
@@ -882,24 +709,24 @@ namespace SmartLens
                     if (AutoSuggest.Text != "about:blank" && WebBrowser.DocumentTitle != "")
                     {
                         var HistoryItems = from Item in WebTab.ThisPage.HistoryCollection
-                                           let DominName = AutoSuggest.Text.StartsWith("https://") ? AutoSuggest.Text.Substring(8) : AutoSuggest.Text.StartsWith("http://") ? AutoSuggest.Text.Substring(7) : AutoSuggest.Text.StartsWith("ftp://") ? AutoSuggest.Text.Substring(6) : null
-                                           where Item.Value.DominName == DominName && Item.Key == DateTime.Today
+                                           where Item.Value.WebSite == AutoSuggest.Text && Item.Key == DateTime.Today
                                            select Item;
-                        var HistoryItem = HistoryItems.FirstOrDefault();
-
-                        if (!HistoryItem.Key.Equals(default))
+                        for (int i = 0; i < HistoryItems.Count(); i++)
                         {
-                            foreach (var (RootNode, InnerNode) in from RootNode in HistoryTree.RootNodes
-                                                                  where (RootNode.Content as WebSiteItem).Subject == "今天"
-                                                                  from InnerNode in RootNode.Children
-                                                                  where (InnerNode.Content as WebSiteItem) == HistoryItem.Value
-                                                                  select (RootNode, InnerNode))
+                            var HistoryItem = HistoryItems.ElementAt(i);
+                            if (!HistoryItem.Key.Equals(default))
                             {
-                                RootNode.Children.Remove(InnerNode);
-                                SQLite.GetInstance().DeleteWebHistory(HistoryItem);
-                                break;
+                                foreach (var (RootNode, InnerNode) in from RootNode in HistoryTree.RootNodes
+                                                                      where (RootNode.Content as WebSiteItem).Subject == "今天"
+                                                                      from InnerNode in RootNode.Children
+                                                                      where (InnerNode.Content as WebSiteItem).WebSite == HistoryItem.Value.WebSite
+                                                                      select (RootNode, InnerNode))
+                                {
+                                    RootNode.Children.Remove(InnerNode);
+                                    WebTab.ThisPage.HistoryCollection.Remove(HistoryItem);
+                                    SQLite.GetInstance().DeleteWebHistory(HistoryItem);
+                                }
                             }
-                            WebTab.ThisPage.HistoryCollection.Remove(HistoryItem);
                         }
 
                         WebTab.ThisPage.HistoryCollection.Insert(0, new KeyValuePair<DateTime, WebSiteItem>(DateTime.Today, new WebSiteItem(WebBrowser.DocumentTitle, AutoSuggest.Text)));
@@ -1105,7 +932,7 @@ namespace SmartLens
             }
             ThisTab = null;
             InPrivate.Toggled -= InPrivate_Toggled;
-            SmartLensDownloader.GetInstance().DownloadList.CollectionChanged -= DownloadList_CollectionChanged;
+            SmartLensDownloader.DownloadList.CollectionChanged -= DownloadList_CollectionChanged;
         }
 
         private void FavoutiteListButton_Click(object sender, RoutedEventArgs e)
@@ -1389,26 +1216,17 @@ namespace SmartLens
 
             if (btn.Content.ToString() == "暂停")
             {
-                StackPanel Percent = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                Percent.Visibility = Visibility.Collapsed;
+                ListViewItem Item = DownloadList.ContainerFromItem(DownloadList.SelectedItem) as ListViewItem;
+                Item.ContentTemplate = DownloadPauseTemplate;
 
-                TextBlock State = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                State.Visibility = Visibility.Visible;
-                State.Text = "暂停下载";
-
-                btn.Content = "继续";
-                SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex].PauseDownload();
+                SmartLensDownloader.DownloadList[DownloadList.SelectedIndex].PauseDownload();
             }
             else
             {
-                StackPanel Percent = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-                Percent.Visibility = Visibility.Visible;
+                ListViewItem Item = DownloadList.ContainerFromItem(DownloadList.SelectedItem) as ListViewItem;
+                Item.ContentTemplate = DownloadingTemplate;
 
-                TextBlock State = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-                State.Visibility = Visibility.Collapsed;
-
-                btn.Content = "暂停";
-                SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex].ResumeDownload();
+                SmartLensDownloader.DownloadList[DownloadList.SelectedIndex].ResumeDownload();
             }
         }
 
@@ -1416,25 +1234,11 @@ namespace SmartLens
         {
             DownloadList.SelectedItem = ((Button)sender).DataContext;
 
-            Button Pausebtn = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PauseDownloadButton") as Button;
-            Pausebtn.Visibility = Visibility.Collapsed;
+            ListViewItem Item = DownloadList.ContainerFromItem(DownloadList.SelectedItem) as ListViewItem;
+            Item.ContentTemplate = DownloadCancelTemplate;
 
-            ((Button)sender).Visibility = Visibility.Collapsed;
-
-            ProgressBar Progress = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadProgress") as ProgressBar;
-            Progress.Visibility = Visibility.Collapsed;
-
-            TextBlock State = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("DownloadState") as TextBlock;
-            State.Visibility = Visibility.Visible;
-            State.Text = "停止下载";
-
-            StackPanel Percent = ((DownloadList.ContainerFromIndex(DownloadList.SelectedIndex) as ListViewItem).ContentTemplateRoot as FrameworkElement).FindName("PercentDisplay") as StackPanel;
-            Percent.Visibility = Visibility.Collapsed;
-
-            var Operation = SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex];
+            var Operation = SmartLensDownloader.DownloadList[DownloadList.SelectedIndex];
             Operation.StopDownload();
-            Operation.DownloadSucceed -= Operation_DownloadSucceed;
-            Operation.DownloadErrorDetected -= Operation_DownloadErrorDetected;
         }
 
         private async void SetDownloadPathButton_Click(object sender, RoutedEventArgs e)
@@ -1465,22 +1269,19 @@ namespace SmartLens
             ((SymbolIcon)sender).Foreground = new SolidColorBrush(Colors.White);
         }
 
-        private void CloseDownloadItemButton_PointerPressed(object sender, PointerRoutedEventArgs e)
+        private async void CloseDownloadItemButton_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             DownloadList.SelectedItem = ((SymbolIcon)sender).DataContext;
 
-            var Operation = SmartLensDownloader.GetInstance().DownloadList[DownloadList.SelectedIndex];
+            var Operation = SmartLensDownloader.DownloadList[DownloadList.SelectedIndex];
             if (Operation.State == DownloadState.Downloading || Operation.State == DownloadState.Paused)
             {
                 Operation.StopDownload();
             }
 
-            SmartLensDownloader.GetInstance().DownloadList.RemoveAt(DownloadList.SelectedIndex);
+            SmartLensDownloader.DownloadList.RemoveAt(DownloadList.SelectedIndex);
 
-            if (SmartLensDownloader.GetInstance().DownloadList.Count == 0)
-            {
-                DownloadEmptyTips.Visibility = Visibility.Visible;
-            }
+            await SQLite.GetInstance().DeleteDownloadHistoryAsync(Operation);
         }
 
     }

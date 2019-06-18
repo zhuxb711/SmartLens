@@ -69,7 +69,7 @@ namespace SmartLens
             viewTitleBar.ButtonBackgroundColor = Colors.Transparent;
             viewTitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
             viewTitleBar.ButtonForegroundColor = (Color)Resources["SystemBaseHighColor"];
-            
+
             OnLaunchOrOnActivate(e, true);
         }
 
@@ -77,7 +77,7 @@ namespace SmartLens
         {
             if (args is ToastNotificationActivatedEventArgs e)
             {
-                if (e.Argument == "Transcode" || e.Argument == "Update" || e.Argument == "Email")
+                if (e.Argument == "Transcode" || e.Argument == "Update" || e.Argument == "Email" || e.Argument == "DownloadNotification")
                 {
                     return;
                 }

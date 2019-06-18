@@ -11,6 +11,7 @@ using MimeKit.Text;
 using MimeKit.Tnef;
 using Newtonsoft.Json;
 using SmartLens.NetEase;
+using SmartLensDownloaderProvider;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -1179,7 +1180,8 @@ namespace SmartLens
                                Create Table If Not Exists WiFiRecord (SSID Text Not Null, Password Text Not Null, AutoConnect Text Not Null, Primary Key (SSID,Password,AutoConnect));
                                Create Table If Not Exists HashTable (FileName Text Not Null, HashValue Text Not Null, Primary Key (FileName,HashValue));
                                Create Table If Not Exists WebFavourite (Subject Text Not Null, WebSite Text Not Null, Primary Key (WebSite));
-                               Create Table If Not Exists WebHistory (Subject Text Not Null, WebSite Text Not Null, DateTime Text Not Null, Primary Key (Subject, WebSite, DateTime))";
+                               Create Table If Not Exists WebHistory (Subject Text Not Null, WebSite Text Not Null, DateTime Text Not Null, Primary Key (Subject, WebSite, DateTime));
+                               Create Table If Not Exists DownloadHistory (UniqueID Text Not Null, ActualName Text Not Null, Uri Text Not Null, State Text Not Null, Primary Key(UniqueID))";
             SqliteCommand CreateTable = new SqliteCommand(Command, OLEDB);
             _ = CreateTable.ExecuteNonQuery();
         }
@@ -1253,11 +1255,11 @@ namespace SmartLens
         public void DeleteWebHistory(KeyValuePair<DateTime, WebSiteItem> Info)
         {
             SqliteCommand Command = new SqliteCommand("Delete From WebHistory Where Subject=@Subject And WebSite=@WebSite And DateTime=@DateTime", OLEDB);
-            Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
-            Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
-            Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
+            _ = Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
+            _ = Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
+            _ = Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
 
-            Command.ExecuteNonQuery();
+            _ = Command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -1267,11 +1269,11 @@ namespace SmartLens
         public void SetWebHistoryList(KeyValuePair<DateTime, WebSiteItem> Info)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WebHistory Values (@Subject,@WebSite,@DateTime)", OLEDB);
-            Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
-            Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
-            Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
+            _ = Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
+            _ = Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
+            _ = Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
 
-            Command.ExecuteNonQuery();
+            _ = Command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -1282,8 +1284,8 @@ namespace SmartLens
         public async Task SetWebFavouriteListAsync(WebSiteItem Info)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WebFavourite Values (@Subject,@WebSite)", OLEDB);
-            Command.Parameters.AddWithValue("@Subject", Info.Subject);
-            Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+            _ = Command.Parameters.AddWithValue("@Subject", Info.Subject);
+            _ = Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
             _ = await Command.ExecuteNonQueryAsync();
         }
 
@@ -1295,7 +1297,68 @@ namespace SmartLens
         public async Task DeleteWebFavouriteListAsync(WebSiteItem Info)
         {
             SqliteCommand Command = new SqliteCommand("Delete From WebFavourite Where WebSite = @WebSite", OLEDB);
-            Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+            _ = Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// 异步获取下载列表记录
+        /// </summary>
+        /// <returns>无</returns>
+        public async Task GetDownloadHistoryAsync()
+        {
+            SqliteCommand Command = new SqliteCommand("Select * From DownloadHistory", OLEDB);
+            SqliteDataReader query = await Command.ExecuteReaderAsync();
+
+            for (int i = 0; query.Read(); i++)
+            {
+                DownloadState State = (DownloadState)Enum.Parse(typeof(DownloadState), query[3].ToString());
+                if (State == DownloadState.Downloading || State == DownloadState.Paused)
+                {
+                    State = DownloadState.Canceled;
+                }
+
+                SmartLensDownloader.DownloadList.Add(SmartLensDownloader.CreateDownloadOperatorFromDatabase(new Uri(query[2].ToString()), query[1].ToString(), State, query[0].ToString())); ;
+            }
+        }
+
+        /// <summary>
+        /// 更新下载列表状态
+        /// </summary>
+        /// <param name="Task"></param>
+        /// <returns></returns>
+        public async Task UpdateDownloadHistoryAsync(DownloadOperator Task)
+        {
+            SqliteCommand Command = new SqliteCommand("Update DownloadHistory Set State = @State Where UniqueID = @UniqueID", OLEDB);
+            _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
+            _ = Command.Parameters.AddWithValue("@State", Enum.GetName(typeof(DownloadState), Task.State));
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// 异步删除特定下载列表项
+        /// </summary>
+        /// <param name="Task">下载列表对象</param>
+        /// <returns></returns>
+        public async Task DeleteDownloadHistoryAsync(DownloadOperator Task)
+        {
+            SqliteCommand Command = new SqliteCommand("Delete From DownloadHistory Where UniqueID = @UniqueID", OLEDB);
+            _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
+            _ = await Command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// 异步插入特定下载列表项
+        /// </summary>
+        /// <param name="Task">下载列表项</param>
+        /// <returns></returns>
+        public async Task SetDownloadHistoryAsync(DownloadOperator Task)
+        {
+            SqliteCommand Command = new SqliteCommand("Insert Into DownloadHistory Values (@UniqueID,@ActualName,@Uri,@State)", OLEDB);
+            _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
+            _ = Command.Parameters.AddWithValue("@ActualName", Task.ActualFileName);
+            _ = Command.Parameters.AddWithValue("@Uri", Task.Address.AbsoluteUri);
+            _ = Command.Parameters.AddWithValue("@State", Enum.GetName(typeof(DownloadState), Task.State));
             _ = await Command.ExecuteNonQueryAsync();
         }
 
@@ -1421,13 +1484,13 @@ namespace SmartLens
         public async Task SetMusicDataAsync(string MusicName, string Artist, string Album, string Duration, string ImageURL, long SongID, long MVid)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into MusicList Values (@MusicName,@Artist,@Album,@Duration,@ImageURL,@SongID,@MVid)", OLEDB);
-            Command.Parameters.AddWithValue("@MusicName", MusicName);
-            Command.Parameters.AddWithValue("@Artist", Artist);
-            Command.Parameters.AddWithValue("@Album", Album);
-            Command.Parameters.AddWithValue("@Duration", Duration);
-            Command.Parameters.AddWithValue("@SongID", SongID);
-            Command.Parameters.AddWithValue("@ImageURL", ImageURL);
-            Command.Parameters.AddWithValue("@MVid", MVid);
+            _ = Command.Parameters.AddWithValue("@MusicName", MusicName);
+            _ = Command.Parameters.AddWithValue("@Artist", Artist);
+            _ = Command.Parameters.AddWithValue("@Album", Album);
+            _ = Command.Parameters.AddWithValue("@Duration", Duration);
+            _ = Command.Parameters.AddWithValue("@SongID", SongID);
+            _ = Command.Parameters.AddWithValue("@ImageURL", ImageURL);
+            _ = Command.Parameters.AddWithValue("@MVid", MVid);
             _ = await Command.ExecuteNonQueryAsync();
         }
 
@@ -1439,10 +1502,10 @@ namespace SmartLens
         public async Task DeleteMusicAsync(PlayList list)
         {
             SqliteCommand Command = new SqliteCommand("Delete From MusicList Where MusicName=@MusicName And Artist=@Artist And Album=@Album And Duration=@Duration", OLEDB);
-            Command.Parameters.AddWithValue("@MusicName", list.Music);
-            Command.Parameters.AddWithValue("@Artist", list.Artist);
-            Command.Parameters.AddWithValue("@Album", list.Album);
-            Command.Parameters.AddWithValue("@Duration", list.Duration);
+            _ = Command.Parameters.AddWithValue("@MusicName", list.Music);
+            _ = Command.Parameters.AddWithValue("@Artist", list.Artist);
+            _ = Command.Parameters.AddWithValue("@Album", list.Album);
+            _ = Command.Parameters.AddWithValue("@Duration", list.Duration);
             _ = await Command.ExecuteNonQueryAsync();
         }
 
@@ -1473,8 +1536,8 @@ namespace SmartLens
         public async Task UpdateWiFiDataAsync(string SSID, bool AutoConnect)
         {
             SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set AutoConnect = @AutoConnect Where SSID = @SSID", OLEDB);
-            Command.Parameters.AddWithValue("@SSID", SSID);
-            Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
+            _ = Command.Parameters.AddWithValue("@SSID", SSID);
+            _ = Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
 
             _ = await Command.ExecuteNonQueryAsync();
         }
@@ -1488,8 +1551,8 @@ namespace SmartLens
         public async Task UpdateWiFiDataAsync(string SSID, string Password)
         {
             SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set Password = @Password Where SSID = @SSID", OLEDB);
-            Command.Parameters.AddWithValue("@SSID", SSID);
-            Command.Parameters.AddWithValue("@Password", Password);
+            _ = Command.Parameters.AddWithValue("@SSID", SSID);
+            _ = Command.Parameters.AddWithValue("@Password", Password);
 
             _ = await Command.ExecuteNonQueryAsync();
         }
@@ -1504,9 +1567,9 @@ namespace SmartLens
         public async Task SetWiFiDataAsync(string SSID, string Password, bool AutoConnect)
         {
             SqliteCommand Command = new SqliteCommand("Insert Into WiFiRecord Values (@SSID , @Password , @AutoConnect)", OLEDB);
-            Command.Parameters.AddWithValue("@SSID", SSID);
-            Command.Parameters.AddWithValue("@Password", Password);
-            Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
+            _ = Command.Parameters.AddWithValue("@SSID", SSID);
+            _ = Command.Parameters.AddWithValue("@Password", Password);
+            _ = Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
 
             _ = await Command.ExecuteNonQueryAsync();
         }
@@ -1520,8 +1583,8 @@ namespace SmartLens
             {
                 OLEDB.Dispose();
                 OLEDB = null;
+                SQL = null;
             }
-            SQL = null;
             IsDisposed = true;
         }
 
@@ -3985,16 +4048,13 @@ namespace SmartLens
     /// <summary>
     /// 历史记录分类标题种类枚举
     /// </summary>
-    public enum HistoryTreeFlag
+    [Flags]
+    public enum HistoryTreeCategoryFlag
     {
-        All = 0,
-        TodayYesterday = 1,
-        TodayEarlier = 2,
-        YesterdayEarlier = 3,
-        Today = 4,
-        Yesterday = 5,
-        Earlier = 6,
-        None = 7
+        Today = 1,
+        Yesterday = 2,
+        Earlier = 4,
+        None = 8
     }
     #endregion
 
@@ -4398,6 +4458,42 @@ namespace SmartLens
             }
 
             return result;
+        }
+    }
+    #endregion
+
+    #region 下载列表模板选择器
+    public sealed class DownloadTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate DownloadingTemplate { get; set; }
+        public DataTemplate DownloadErrorTemplate { get; set; }
+        public DataTemplate DownloadCompleteTemplate { get; set; }
+        public DataTemplate DownloadCancelTemplate { get; set; }
+        public DataTemplate DownloadPauseTemplate { get; set; }
+
+        protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
+        {
+            if (item is DownloadOperator Operator)
+            {
+                switch (Operator.State)
+                {
+                    case DownloadState.AlreadyFinished:
+                        return DownloadCompleteTemplate;
+                    case DownloadState.Canceled:
+                        return DownloadCancelTemplate;
+                    case DownloadState.Downloading:
+                        return DownloadingTemplate;
+                    case DownloadState.Error:
+                        return DownloadErrorTemplate;
+                    case DownloadState.Paused:
+                        return DownloadPauseTemplate;
+                    default: return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
     }
     #endregion

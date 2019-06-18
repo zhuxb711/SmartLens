@@ -35,7 +35,14 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
+        <local:DownloadTemplateSelector x:Key="DownloadTemplateSelector" 
+                                        DownloadingTemplate="{StaticResource DownloadingTemplate}" 
+                                        DownloadErrorTemplate="{StaticResource DownloadErrorTemplate}" 
+                                        DownloadCompleteTemplate="{StaticResource DownloadCompleteTemplate}"
+                                        DownloadCancelTemplate="{StaticResource DownloadCancelTemplate}"
+                                        DownloadPauseTemplate="{StaticResource DownloadPauseTemplate}"/>
+
         <DataTemplate x:Key="Template">
             <StackPanel Orientation="Horizontal">
                 <Viewbox Visibility="{Binding Content.StarVisibility,Mode=OneTime}" VerticalAlignment="Center" Margin="0,0,5,0" Width="16">
@@ -68,6 +75,88 @@
                     </StackPanel>
                 </Grid>
             </UserControl>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DownloadingTemplate" x:Name="DownloadingTemplate" x:DataType="down:DownloadOperator">
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind ActualFileName}" TextTrimming="CharacterEllipsis" Width="262" FontSize="17"/>
+                    <TextBlock Margin="0,5,0,0" Text="{x:Bind Address.AbsoluteUri}" Width="262" TextTrimming="CharacterEllipsis" FontSize="15" Foreground="Gray"/>
+                    <ProgressBar Margin="0,5,0,0" Name="DownloadProgress" Value="{x:Bind Percentage,Mode=OneWay}" IsIndeterminate="False" Maximum="100" Minimum="0"/>
+                    <Grid Margin="0,5,0,0">
+                        <StackPanel Name="PercentDisplay" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind ByteReceived,Mode=OneWay}" FontSize="15"/>
+                            <TextBlock Text="/" Margin="5,0,0,0" FontSize="15"/>
+                            <TextBlock Text="{x:Bind TotalFileSize,Mode=OneWay}" Margin="5,0,0,0" FontSize="15"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="暂停" Name="PauseDownloadButton" Click="PauseDownloadButton_Click" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+                            <Button Margin="10,0,0,0" Name="StopDownloadButton" Click="StopDownloadButton_Click" Content="取消" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+                <Viewbox Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,0,0">
+                    <SymbolIcon Symbol="Cancel" Name="CloseDownloadItemButton" PointerExited="CloseDownloadItemButton_PointerExited" PointerEntered="CloseDownloadItemButton_PointerEntered" PointerPressed="CloseDownloadItemButton_PointerPressed"/>
+                </Viewbox>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DownloadErrorTemplate" x:Name="DownloadErrorTemplate" x:DataType="down:DownloadOperator">
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind ActualFileName}" TextTrimming="CharacterEllipsis" Width="262" FontSize="17"/>
+                    <TextBlock Margin="0,5,0,0" Text="{x:Bind Address.AbsoluteUri}" Width="262" TextTrimming="CharacterEllipsis" FontSize="15" Foreground="Gray"/>
+                    <TextBlock FontSize="15" Margin="0,5,0,0" Text="下载出错" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Viewbox Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,0,0">
+                    <SymbolIcon Symbol="Cancel" Name="CloseDownloadItemButton" PointerExited="CloseDownloadItemButton_PointerExited" PointerEntered="CloseDownloadItemButton_PointerEntered" PointerPressed="CloseDownloadItemButton_PointerPressed"/>
+                </Viewbox>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DownloadCompleteTemplate" x:Name="DownloadCompleteTemplate" x:DataType="down:DownloadOperator">
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind ActualFileName}" TextTrimming="CharacterEllipsis" Width="262" FontSize="17"/>
+                    <TextBlock Margin="0,5,0,0" Text="{x:Bind Address.AbsoluteUri}" Width="262" TextTrimming="CharacterEllipsis" FontSize="15" Foreground="Gray"/>
+                    <TextBlock FontSize="15" Margin="0,5,0,0" Text="下载完成" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Viewbox Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,0,0">
+                    <SymbolIcon Symbol="Cancel" Name="CloseDownloadItemButton" PointerExited="CloseDownloadItemButton_PointerExited" PointerEntered="CloseDownloadItemButton_PointerEntered" PointerPressed="CloseDownloadItemButton_PointerPressed"/>
+                </Viewbox>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DownloadCancelTemplate" x:Name="DownloadCancelTemplate" x:DataType="down:DownloadOperator">
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind ActualFileName}" TextTrimming="CharacterEllipsis" Width="262" FontSize="17"/>
+                    <TextBlock Margin="0,5,0,0" Text="{x:Bind Address.AbsoluteUri}" Width="262" TextTrimming="CharacterEllipsis" FontSize="15" Foreground="Gray"/>
+                    <TextBlock FontSize="15" Margin="0,5,0,0" Text="取消下载" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Viewbox Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,0,0">
+                    <SymbolIcon Symbol="Cancel" Name="CloseDownloadItemButton" PointerExited="CloseDownloadItemButton_PointerExited" PointerEntered="CloseDownloadItemButton_PointerEntered" PointerPressed="CloseDownloadItemButton_PointerPressed"/>
+                </Viewbox>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DownloadPauseTemplate" x:Name="DownloadPauseTemplate" x:DataType="down:DownloadOperator">
+            <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind ActualFileName}" TextTrimming="CharacterEllipsis" Width="262" FontSize="17"/>
+                    <TextBlock Margin="0,5,0,0" Text="{x:Bind Address.AbsoluteUri}" Width="262" TextTrimming="CharacterEllipsis" FontSize="15" Foreground="Gray"/>
+                    <Grid Margin="0,5,0,0">
+                        <TextBlock FontSize="15" Text="下载暂停" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="继续" Name="PauseDownloadButton" Click="PauseDownloadButton_Click" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+                            <Button Margin="10,0,0,0" Name="StopDownloadButton" Click="StopDownloadButton_Click" Content="取消" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+                <Viewbox Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,0,0">
+                    <SymbolIcon Symbol="Cancel" Name="CloseDownloadItemButton" PointerExited="CloseDownloadItemButton_PointerExited" PointerEntered="CloseDownloadItemButton_PointerEntered" PointerPressed="CloseDownloadItemButton_PointerPressed"/>
+                </Viewbox>
+            </StackPanel>
         </DataTemplate>
     </Page.Resources>
 
@@ -148,34 +237,7 @@
                 <Grid>
                     <StackPanel Orientation="Vertical" Margin="20,15,20,10">
                         <TextBlock Text="下载列表" FontSize="24"/>
-                        <ListView Margin="0,10,0,0" Name="DownloadList">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="down:DownloadOperator">
-                                    <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
-                                        <StackPanel Orientation="Vertical">
-                                            <TextBlock Text="{x:Bind ActualFileName}" TextTrimming="CharacterEllipsis" Width="262" FontSize="17"/>
-                                            <TextBlock Margin="0,5,0,0" Text="{x:Bind Address.AbsoluteUri}" Width="262" TextTrimming="CharacterEllipsis" FontSize="15" Foreground="Gray"/>
-                                            <ProgressBar Margin="0,5,0,0" Name="DownloadProgress" Value="{x:Bind Percentage,Mode=OneWay}" IsIndeterminate="False" Maximum="100" Minimum="0"/>
-                                            <Grid Margin="0,5,0,0">
-                                                <TextBlock FontSize="15" Name="DownloadState" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                                <StackPanel Name="PercentDisplay" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                    <TextBlock Text="{x:Bind ByteReceived,Mode=OneWay}" FontSize="15"/>
-                                                    <TextBlock Text="/" Margin="5,0,0,0" FontSize="15"/>
-                                                    <TextBlock Text="{x:Bind TotalFileSize,Mode=OneWay}" Margin="5,0,0,0" FontSize="15"/>
-                                                </StackPanel>
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                    <Button Content="暂停" Name="PauseDownloadButton" Click="PauseDownloadButton_Click" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
-                                                    <Button Margin="10,0,0,0" Name="StopDownloadButton" Click="StopDownloadButton_Click" Content="取消" Style="{ThemeResource ButtonRevealStyle}" Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </StackPanel>
-                                        <Viewbox Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,0,0">
-                                            <SymbolIcon Symbol="Cancel" Name="CloseDownloadItemButton" PointerExited="CloseDownloadItemButton_PointerExited" PointerEntered="CloseDownloadItemButton_PointerEntered" PointerPressed="CloseDownloadItemButton_PointerPressed"/>
-                                        </Viewbox>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                        <ListView Margin="0,10,0,0" Name="DownloadList" ItemTemplateSelector="{StaticResource DownloadTemplateSelector}"/>
                     </StackPanel>
                     <TextBlock Name="DownloadEmptyTips" Margin="10,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" Text="无内容" FontSize="24"/>
                 </Grid>

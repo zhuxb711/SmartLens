@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -7,10 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
+using Windows.UI.Notifications;
 
 namespace SmartLensDownloaderProvider
 {
-    public enum DownloadResult
+    internal enum DownloadResult
     {
         Success = 0,
         TaskCancel = 1,
@@ -21,11 +23,18 @@ namespace SmartLensDownloaderProvider
     public enum DownloadState
     {
         Downloading = 0,
-        Stopped = 1,
+        Canceled = 1,
         Paused = 2,
         Error = 3,
         None = 4,
         AlreadyFinished = 5
+    }
+
+    public enum ToastNotificationCategory
+    {
+        Succeed = 0,
+        Error = 1,
+        TaskCancel = 2
     }
 
     public sealed class DownloadOperator : INotifyPropertyChanged, IDisposable
@@ -33,8 +42,6 @@ namespace SmartLensDownloaderProvider
         internal Progress<(long, long)> Progress;
 
         public DownloadState State { get; private set; } = DownloadState.None;
-
-        public DownloadResult DownloadResult { get; private set; } = DownloadResult.Unknown;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -79,15 +86,15 @@ namespace SmartLensDownloaderProvider
 
         public Uri Address { get; private set; }
 
-        public StorageFile TempFile { get; private set; }
+        internal StorageFile TempFile;
 
-        internal CancellationTokenSource CancellationToken = new CancellationTokenSource();
+        public string UniqueID { get; private set; }
 
-        internal ManualResetEvent PauseSignal = new ManualResetEvent(true);
+        internal CancellationTokenSource CancellationToken;
+
+        internal ManualResetEvent PauseSignal;
 
         public string ActualFileName { get; private set; }
-
-        private SmartLensDownloader Downloader = SmartLensDownloader.CurrentInstance;
 
         private void OnPropertyChanged(string name)
         {
@@ -104,11 +111,6 @@ namespace SmartLensDownloaderProvider
 
         public async void StartDownload()
         {
-            if (Downloader == null)
-            {
-                throw new NullReferenceException("不存在SmartLensDownloader实例，无法执行此操作");
-            }
-
             switch (State)
             {
                 case DownloadState.Downloading:
@@ -117,7 +119,7 @@ namespace SmartLensDownloaderProvider
                     throw new InvalidOperationException("下载任务已完成，此任务已不可用");
                 case DownloadState.Error:
                     throw new InvalidOperationException("下载任务出现错误，此任务已不可用");
-                case DownloadState.Stopped:
+                case DownloadState.Canceled:
                     throw new InvalidOperationException("下载任务已取消，此任务已不可用");
                 case DownloadState.Paused:
                     throw new InvalidOperationException("请使用ResumeDownload恢复下载任务");
@@ -125,22 +127,22 @@ namespace SmartLensDownloaderProvider
 
             State = DownloadState.Downloading;
 
-            DownloadResult = await Downloader.DownloadFileAsync(this);
+            DownloadResult DownloadResult = await SmartLensDownloader.DownloadFileAsync(this);
             switch (DownloadResult)
             {
                 case DownloadResult.Error:
-                    DownloadErrorDetected?.Invoke(null, this);
                     State = DownloadState.Error;
+                    DownloadErrorDetected?.Invoke(null, this);
                     await TempFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                     break;
                 case DownloadResult.Success:
-                    DownloadSucceed?.Invoke(null, this);
                     State = DownloadState.AlreadyFinished;
+                    DownloadSucceed?.Invoke(null, this);
                     await TempFile.RenameAsync(ActualFileName, NameCollisionOption.GenerateUniqueName);
                     break;
                 case DownloadResult.TaskCancel:
+                    State = DownloadState.Canceled;
                     DownloadTaskCancel?.Invoke(null, this);
-                    State = DownloadState.Stopped;
                     await TempFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
                     break;
             }
@@ -150,36 +152,31 @@ namespace SmartLensDownloaderProvider
 
         public void StopDownload()
         {
-            if (Downloader == null)
-            {
-                throw new NullReferenceException("不存在SmartLensDownloader实例，无法执行此操作");
-            }
-
             switch (State)
             {
                 case DownloadState.Error:
                     throw new InvalidOperationException("下载任务出现错误，此任务已不可用");
-                case DownloadState.Stopped:
+                case DownloadState.Canceled:
                     throw new InvalidOperationException("下载任务已取消，此任务已不可用");
                 case DownloadState.AlreadyFinished:
                     throw new InvalidOperationException("下载任务已完成，此任务已不可用");
             }
 
-            State = DownloadState.Stopped;
+            if (State == DownloadState.Paused)
+            {
+                CancellationToken.Cancel();
+                PauseSignal.Set();
+            }
 
-            CancellationToken.Cancel();
+            State = DownloadState.Canceled;
+
         }
 
         public void PauseDownload()
         {
-            if (Downloader == null)
-            {
-                throw new NullReferenceException("不存在SmartLensDownloader实例，无法执行此操作");
-            }
-
             switch (State)
             {
-                case DownloadState.Stopped:
+                case DownloadState.Canceled:
                     throw new InvalidOperationException("下载任务已取消，此任务已不可用");
                 case DownloadState.Paused:
                     throw new InvalidOperationException("下载任务已暂停");
@@ -196,14 +193,9 @@ namespace SmartLensDownloaderProvider
 
         public void ResumeDownload()
         {
-            if (Downloader == null)
-            {
-                throw new NullReferenceException("不存在SmartLensDownloader实例，无法执行此操作");
-            }
-
             switch (State)
             {
-                case DownloadState.Stopped:
+                case DownloadState.Canceled:
                     throw new InvalidOperationException("下载任务已取消，此任务已不可用");
                 case DownloadState.Error:
                     throw new InvalidOperationException("下载任务出现错误，此任务已不可用");
@@ -218,14 +210,129 @@ namespace SmartLensDownloaderProvider
             PauseSignal.Set();
         }
 
-        internal DownloadOperator(Uri Address, StorageFile TempFile, string ActualFileName)
+        public ToastNotification GenerateToastNotification(ToastNotificationCategory Category)
+        {
+            switch (Category)
+            {
+                case ToastNotificationCategory.Succeed:
+                    var SucceedContent = new ToastContent()
+                    {
+                        Scenario = ToastScenario.Default,
+                        Launch = "DownloadNotification",
+                        Visual = new ToastVisual()
+                        {
+                            BindingGeneric = new ToastBindingGeneric()
+                            {
+                                Children =
+                                {
+                                    new AdaptiveText()
+                                    {
+                                        Text = "下载已完成"
+                                    },
+
+                                    new AdaptiveText()
+                                    {
+                                       Text = ActualFileName
+                                    },
+
+                                    new AdaptiveText()
+                                    {
+                                       Text = "已成功下载"
+                                    }
+                                }
+                            }
+                        },
+                    };
+                    return new ToastNotification(SucceedContent.GetXml());
+
+                case ToastNotificationCategory.Error:
+                    var ErrorContent = new ToastContent()
+                    {
+                        Scenario = ToastScenario.Default,
+                        Launch = "DownloadNotification",
+                        Visual = new ToastVisual()
+                        {
+                            BindingGeneric = new ToastBindingGeneric()
+                            {
+                                Children =
+                                {
+                                    new AdaptiveText()
+                                    {
+                                        Text = "下载出错"
+                                    },
+
+                                    new AdaptiveText()
+                                    {
+                                       Text = ActualFileName
+                                    },
+
+                                    new AdaptiveText()
+                                    {
+                                       Text = "无法下载"
+                                    }
+
+                                }
+                            }
+                        },
+                    };
+                    return new ToastNotification(ErrorContent.GetXml());
+
+                case ToastNotificationCategory.TaskCancel:
+                    var CancelContent = new ToastContent()
+                    {
+                        Scenario = ToastScenario.Default,
+                        Launch = "DownloadNotification",
+                        Visual = new ToastVisual()
+                        {
+                            BindingGeneric = new ToastBindingGeneric()
+                            {
+                                Children =
+                                {
+                                    new AdaptiveText()
+                                    {
+                                        Text = "下载已取消"
+                                    },
+
+                                    new AdaptiveText()
+                                    {
+                                       Text = ActualFileName
+                                    },
+
+                                    new AdaptiveText()
+                                    {
+                                       Text = "已取消下载"
+                                    }
+
+                                }
+                            }
+                        },
+                    };
+                    return new ToastNotification(CancelContent.GetXml());
+                default:
+                    return null;
+            }
+        }
+
+        internal DownloadOperator(Uri Address, StorageFile TempFile, string ActualFileName, string UniqueID)
         {
             this.Address = Address;
             this.TempFile = TempFile;
             this.ActualFileName = ActualFileName;
+            this.UniqueID = UniqueID;
+
+            CancellationToken = new CancellationTokenSource();
+            PauseSignal = new ManualResetEvent(true);
 
             Progress = new Progress<(long, long)>();
             Progress.ProgressChanged += Progress_ProgressChanged;
+        }
+
+        internal DownloadOperator(Uri Address, string ActualFileName, DownloadState State, string UniqueID)
+        {
+            this.Address = Address;
+            this.ActualFileName = ActualFileName;
+            this.State = State;
+            this.UniqueID = UniqueID;
         }
 
         private void Progress_ProgressChanged(object sender, (long, long) e)
@@ -246,7 +353,6 @@ namespace SmartLensDownloaderProvider
             PauseSignal?.Dispose();
             CancellationToken = null;
             PauseSignal = null;
-            Downloader = null;
         }
     }
 
@@ -254,16 +360,9 @@ namespace SmartLensDownloaderProvider
     {
         private SmartLensDownloader() { }
 
-        public ObservableCollection<DownloadOperator> DownloadList { get; private set; } = new ObservableCollection<DownloadOperator>();
+        public static ObservableCollection<DownloadOperator> DownloadList { get; private set; } = new ObservableCollection<DownloadOperator>();
 
-        internal static SmartLensDownloader CurrentInstance;
-
-        public static SmartLensDownloader GetInstance()
-        {
-            return CurrentInstance ?? (CurrentInstance = new SmartLensDownloader());
-        }
-
-        public async Task<DownloadOperator> CreateNewDownloadTask(Uri Address, string SaveFileName)
+        public static async Task<DownloadOperator> CreateNewDownloadTask(Uri Address, string SaveFileName)
         {
             if (Address == null || string.IsNullOrWhiteSpace(SaveFileName))
             {
@@ -274,8 +373,9 @@ namespace SmartLensDownloaderProvider
 
             if (SaveFolder != null)
             {
-                StorageFile TempFile = await SaveFolder.CreateFileAsync("SmartLens_DownloadFile_" + Guid.NewGuid().ToString("N"), CreationCollisionOption.GenerateUniqueName);
-                return new DownloadOperator(Address, TempFile, SaveFileName);
+                string UniqueID = Guid.NewGuid().ToString("N");
+                StorageFile TempFile = await SaveFolder.CreateFileAsync("SmartLens_DownloadFile_" + UniqueID, CreationCollisionOption.GenerateUniqueName);
+                return new DownloadOperator(Address, TempFile, SaveFileName, UniqueID);
             }
             else
             {
@@ -283,7 +383,12 @@ namespace SmartLensDownloaderProvider
             }
         }
 
-        internal Task<DownloadResult> DownloadFileAsync(DownloadOperator Operation)
+        public static DownloadOperator CreateDownloadOperatorFromDatabase(Uri Address, string ActualFileName, DownloadState State, string UniqueID)
+        {
+            return new DownloadOperator(Address, ActualFileName, State, UniqueID);
+        }
+
+        internal static Task<DownloadResult> DownloadFileAsync(DownloadOperator Operation)
         {
             DownloadList.Add(Operation);
 

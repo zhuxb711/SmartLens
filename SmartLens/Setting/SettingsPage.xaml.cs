@@ -170,7 +170,7 @@ namespace SmartLens
                 ScreenCaptureSwitch.IsOn = !Enable;
             }
 
-            if(ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] is bool EnableEmailProtection)
+            if (ApplicationData.Current.LocalSettings.Values["EmailProtectionMode"] is bool EnableEmailProtection)
             {
                 EmailProtectionSwitch.IsOn = EnableEmailProtection;
             }
@@ -744,7 +744,7 @@ namespace SmartLens
                 await ApplicationData.Current.ClearAsync();
                 ToastContent content = PopToast.GenerateToastContent();
                 ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(content.GetXml()));
-                CoreApplication.Exit();
+                Application.Current.Exit();
             }
         }
 
@@ -845,10 +845,10 @@ namespace SmartLens
                     {
                         Title = "警告",
                         Content = "    由于Windows Hello尚未设置，无法启用Windows Hello验证\r\r    请先设置Windows Hello后再试",
-                        PrimaryButtonText="前往",
+                        PrimaryButtonText = "前往",
                         CloseButtonText = "取消"
                     };
-                    dialog.PrimaryButtonClick += async(s, t) =>
+                    dialog.PrimaryButtonClick += async (s, t) =>
                     {
                         await Launcher.LaunchUriAsync(new Uri("ms-settings:signinoptions"));
                     };
@@ -863,7 +863,7 @@ namespace SmartLens
 
         private void WebDirectionSwitch_Toggled(object sender, RoutedEventArgs e)
         {
-            if(WebDirectionSwitch.IsOn)
+            if (WebDirectionSwitch.IsOn)
             {
                 ApplicationData.Current.LocalSettings.Values["UseInsideWebBrowser"] = true;
             }

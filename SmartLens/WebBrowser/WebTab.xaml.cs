@@ -1,8 +1,8 @@
 ﻿using Microsoft.Toolkit.Uwp.UI.Controls;
-using SmartLensDownloaderProvider;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -21,7 +21,7 @@ namespace SmartLens
         public ObservableCollection<WebSiteItem> FavouriteCollection;
         public Dictionary<string, WebSiteItem> FavouriteDictionary;
         public ObservableCollection<KeyValuePair<DateTime, WebSiteItem>> HistoryCollection;
-        public HistoryTreeFlag HistoryFlag;
+        public HistoryTreeCategoryFlag HistoryFlag;
         private WebPage CurrentWebPage;
         private bool IsClosing = false;
 
@@ -34,6 +34,8 @@ namespace SmartLens
 
         private async void OnFirstLoad()
         {
+            await SQLite.GetInstance().GetDownloadHistoryAsync();
+
             var FavList = await SQLite.GetInstance().GetWebFavouriteListAsync();
 
             if (FavList.Count > 0)
@@ -76,38 +78,38 @@ namespace SmartLens
 
                 if (ExistYesterday && ExistToday && ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.All;
+                    HistoryFlag = HistoryTreeCategoryFlag.Today | HistoryTreeCategoryFlag.Yesterday | HistoryTreeCategoryFlag.Earlier;
                 }
                 else if (!ExistYesterday && ExistToday && ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.TodayEarlier;
+                    HistoryFlag = HistoryTreeCategoryFlag.Today | HistoryTreeCategoryFlag.Earlier;
                 }
                 else if (ExistYesterday && !ExistToday && ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.YesterdayEarlier;
+                    HistoryFlag = HistoryTreeCategoryFlag.Yesterday | HistoryTreeCategoryFlag.Earlier;
                 }
                 else if (ExistYesterday && ExistToday && !ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.TodayYesterday;
+                    HistoryFlag = HistoryTreeCategoryFlag.Today | HistoryTreeCategoryFlag.Yesterday;
                 }
                 else if (!ExistYesterday && !ExistToday && ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.Earlier;
+                    HistoryFlag = HistoryTreeCategoryFlag.Earlier;
                 }
                 else if (!ExistYesterday && ExistToday && !ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.Today;
+                    HistoryFlag = HistoryTreeCategoryFlag.Today;
                 }
                 else if (ExistYesterday && !ExistToday && !ExistEarlier)
                 {
-                    HistoryFlag = HistoryTreeFlag.Yesterday;
+                    HistoryFlag = HistoryTreeCategoryFlag.Yesterday;
                 }
 
             }
             else
             {
                 HistoryCollection = new ObservableCollection<KeyValuePair<DateTime, WebSiteItem>>();
-                HistoryFlag = HistoryTreeFlag.None;
+                HistoryFlag = HistoryTreeCategoryFlag.None;
             }
 
             TabControl.ItemsSource = TabCollection;
@@ -123,50 +125,48 @@ namespace SmartLens
 
                 lock (SyncRootProvider.SyncRoot)
                 {
-                    switch (e.Action)
+                    if (e.Action == NotifyCollectionChangedAction.Add)
                     {
-                        case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                            var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
-                                           where (Item.Content as WebSiteItem).Subject == "今天"
-                                           select Item;
-                            if (TreeNode.Count() == 0)
+                        var TreeNode = from Item in CurrentWebPage.HistoryTree.RootNodes
+                                       where (Item.Content as WebSiteItem).Subject == "今天"
+                                       select Item;
+                        if (TreeNode.Count() == 0)
+                        {
+                            CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
                             {
-                                CurrentWebPage.HistoryTree.RootNodes.Insert(0, new TreeViewNode
+                                Content = new WebSiteItem("今天", string.Empty),
+                                HasUnrealizedChildren = true,
+                                IsExpanded = true
+                            });
+                            HistoryFlag = HistoryTreeCategoryFlag.Today;
+                            foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                            {
+                                CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
                                 {
-                                    Content = new WebSiteItem("今天", string.Empty),
-                                    HasUnrealizedChildren = true,
-                                    IsExpanded = true
+                                    Content = New.Value,
+                                    HasUnrealizedChildren = false,
+                                    IsExpanded = false
                                 });
-                                HistoryFlag = HistoryTreeFlag.Today;
-                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
-                                {
-                                    CurrentWebPage.HistoryTree.RootNodes[0].Children.Insert(0, new TreeViewNode
-                                    {
-                                        Content = New.Value,
-                                        HasUnrealizedChildren = false,
-                                        IsExpanded = false
-                                    });
 
-                                    SQLite.GetInstance().SetWebHistoryList(New);
-                                }
-
+                                SQLite.GetInstance().SetWebHistoryList(New);
                             }
-                            else
+
+                        }
+                        else
+                        {
+
+                            foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
                             {
-
-                                foreach (KeyValuePair<DateTime, WebSiteItem> New in e.NewItems)
+                                TreeNode.First().Children.Insert(0, new TreeViewNode
                                 {
-                                    TreeNode.First().Children.Insert(0, new TreeViewNode
-                                    {
-                                        Content = New.Value,
-                                        HasUnrealizedChildren = false,
-                                        IsExpanded = false
-                                    });
-                                    SQLite.GetInstance().SetWebHistoryList(New);
-                                }
-
+                                    Content = New.Value,
+                                    HasUnrealizedChildren = false,
+                                    IsExpanded = false
+                                });
+                                SQLite.GetInstance().SetWebHistoryList(New);
                             }
-                            break;
+
+                        }
                     }
                 }
             };

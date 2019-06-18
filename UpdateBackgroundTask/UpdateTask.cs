@@ -64,7 +64,6 @@ namespace UpdateBackgroundTask
                 },
             };
             ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
-
         }
 
         private async Task ComputeAndStorageHeshAsync()
