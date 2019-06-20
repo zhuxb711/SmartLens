@@ -17,12 +17,13 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
-    <PackageCertificateKeyFile>SmartLens_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>
+    </PackageCertificateKeyFile>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x64</AppxBundlePlatforms>
@@ -30,7 +31,7 @@
     <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <AppInstallerUri>https://smartlen.azurewebsites.net/</AppInstallerUri>
-    <PackageCertificateThumbprint>2ACF6DEE95C1F99189F22A7A6A54F8B141435E85</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>084776593CCB730AD98C67CA18E3E1818E081153</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -179,9 +180,6 @@
     <Compile Include="About\ChangeLog.xaml.cs">
       <DependentUpon>ChangeLog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Cosmetics\Cosmetics.xaml.cs">
-      <DependentUpon>Cosmetics.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Music\Lrc.xaml.cs">
       <DependentUpon>Lrc.xaml</DependentUpon>
     </Compile>
@@ -258,6 +256,7 @@
     <Content Include="GitHubIntroImage\step5.png" />
     <Content Include="GitHubIntroImage\step6.png" />
     <Content Include="GitHubIntroImage\step7.png" />
+    <None Include="Package.StoreAssociation.xml" />
     <Content Include="Weather\WeatherIcon\中雨.png" />
     <Content Include="Weather\WeatherIcon\中雪.png" />
     <Content Include="Weather\WeatherIcon\冻雨.png" />
@@ -309,14 +308,6 @@
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-400.png" />
     <Content Include="About\ChangeLog.txt" />
-    <Content Include="Cosmetics\LipLogo\CHANEL.png" />
-    <Content Include="Cosmetics\LipLogo\Dior.jpg" />
-    <Content Include="Cosmetics\LipLogo\GIVENCHY.jpeg" />
-    <Content Include="Cosmetics\LipLogo\LANCOME.jpg" />
-    <Content Include="Cosmetics\LipLogo\M.A.C.png" />
-    <Content Include="Cosmetics\shape_predictor_68_face_landmarks.dat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Weather\CityCode.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -419,10 +410,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="About\ChangeLog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Cosmetics\Cosmetics.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -610,17 +597,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CosmeticsEffect\CosmeticsEffect.csproj">
-      <Project>{51479eb4-54aa-4ab5-adee-ce6174f51f50}</Project>
-      <Name>CosmeticsEffect</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MediaProcessingBackgroundTask\MediaProcessingBackgroundTask.csproj">
       <Project>{4f46f9dd-1bab-4291-8ca7-3a7bae6d2536}</Project>
       <Name>MediaProcessingBackgroundTask</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenCVBridge\OpenCVBridge.vcxproj">
-      <Project>{dcf8f794-eeef-413b-b74d-a9fc69872783}</Project>
-      <Name>OpenCVBridge</Name>
     </ProjectReference>
     <ProjectReference Include="..\SmartLensDownloaderProvider\SmartLensDownloaderProvider.csproj">
       <Project>{7c789ba6-8210-4ee6-9b10-fa16ddf790c2}</Project>

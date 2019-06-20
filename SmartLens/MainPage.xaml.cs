@@ -77,7 +77,6 @@ namespace SmartLens
                 {typeof(MusicPage), "音乐"},
                 {typeof(VoiceRec), "语音识别"},
                 {typeof(WebTab), "网页浏览"},
-                {typeof(Cosmetics),"智能美妆" },
                 {typeof(About),"关于" },
                 {typeof(ChangeLog),"关于" },
                 {typeof(USBControl),"USB管理" },
@@ -142,7 +141,6 @@ namespace SmartLens
                     case "音乐": NavFrame.Navigate(typeof(MusicPage)); break;
                     case "语音识别": NavFrame.Navigate(typeof(VoiceRec)); break;
                     case "网页浏览": NavFrame.Navigate(typeof(WebTab)); break;
-                    case "智能美妆": NavFrame.Navigate(typeof(Cosmetics)); break;
                     case "关于": NavFrame.Navigate(typeof(About)); break;
                     case "USB管理": NavFrame.Navigate(typeof(USBControl)); break;
                     case "邮件": NavFrame.Navigate(typeof(EmailPage)); break;
