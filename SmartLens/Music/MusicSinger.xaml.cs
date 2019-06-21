@@ -374,7 +374,7 @@ namespace SmartLens
             var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((int)HotSongCollection[HotSongList.SelectedIndex].MVid);
             await Task.Delay(500);
             LoadingControl.IsLoading = false;
-            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
+            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
 
         private async void MVGridView_ItemClick(object sender, ItemClickEventArgs e)
@@ -383,7 +383,7 @@ namespace SmartLens
             var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((e.ClickedItem as SingerMV).MovieID);
             await Task.Delay(500);
             LoadingControl.IsLoading = false;
-            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
+            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
 
         private async void HotSongList_DoubleTapped(object sender, Windows.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
@@ -431,7 +431,7 @@ namespace SmartLens
             Image image = ((GridViewControl.ContainerFromItem(e.ClickedItem) as GridViewItem).ContentTemplateRoot as FrameworkElement).FindName("AlbumImage") as Image;
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ToAlbumAnimation", image).Configuration = new BasicConnectedAnimationConfiguration();
 
-            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicAlbum), Result, new SuppressNavigationTransitionInfo());
+            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicAlbum), Result, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
     }
 }

@@ -55,7 +55,7 @@ namespace SmartLens
                 Call.BorderBrush = new SolidColorBrush(Colors.Gray);
             }
 
-            Nav.Navigate(typeof(EmailStartupTwo), new EmailLoginData(EmailAddress, CallName, Password), new DrillInNavigationTransitionInfo());
+            Nav.Navigate(typeof(EmailStartupTwo), new EmailLoginData(EmailAddress, CallName, Password), new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

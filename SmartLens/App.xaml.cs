@@ -1,4 +1,5 @@
-﻿using Windows.ApplicationModel;
+﻿using System.Diagnostics;
+using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
@@ -7,6 +8,7 @@ using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
@@ -83,6 +85,32 @@ namespace SmartLens
                 }
             }
             OnLaunchOrOnActivate(args);
+        }
+
+        protected override void OnFileActivated(FileActivatedEventArgs args)
+        {
+            if (args.Verb == "USBActivate")
+            {
+                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+                var viewTitleBar = ApplicationView.GetForCurrentView().TitleBar;
+                viewTitleBar.ButtonBackgroundColor = Colors.Transparent;
+                viewTitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                viewTitleBar.ButtonForegroundColor = (Color)Resources["SystemBaseHighColor"];
+
+                if (Window.Current.Content is Frame)
+                {
+                    MainPage.ThisPage.NavFrame.Navigate(typeof(USBControl), null, new DrillInNavigationTransitionInfo());
+                    MainPage.ThisPage.NavigationView.SelectedItem = MainPage.ThisPage.NavigationView.MenuItems[5] as NavigationViewItemBase;
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values["USBActivateRequest"] = true;
+                    var rootFrame = new Frame();
+                    Window.Current.Content = rootFrame;
+                    rootFrame.Navigate(typeof(MainPage));
+                }
+                Window.Current.Activate();
+            }
         }
 
         private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)

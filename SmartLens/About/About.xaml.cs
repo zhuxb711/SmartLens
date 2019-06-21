@@ -21,7 +21,7 @@ namespace SmartLens
         private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
         {
             IsEnterChangeLog = true;
-            MainPage.ThisPage.NavFrame.Navigate(typeof(ChangeLog), new DrillInNavigationTransitionInfo());
+            MainPage.ThisPage.NavFrame.Navigate(typeof(ChangeLog), null, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
 
         private async void HyperlinkButton_Click_1(object sender, RoutedEventArgs e)

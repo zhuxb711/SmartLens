@@ -298,7 +298,7 @@ namespace SmartLens
             var Result = await NeteaseMusicAPI.GetInstance().GetMVAsync((int)AlbumCollection[AlbumList.SelectedIndex].MVid);
             LoadingControl.IsLoading = false;
             await Task.Delay(500);
-            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
+            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
     }
 }

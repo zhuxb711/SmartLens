@@ -325,7 +325,7 @@ namespace SmartLens
 
                 ConnectedAnimationService.GetForCurrentView().DefaultDuration = TimeSpan.FromMilliseconds(400);
 
-                MusicNav.Navigate(typeof(MusicSinger), Result, new DrillInNavigationTransitionInfo());
+                MusicNav.Navigate(typeof(MusicSinger), Result, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
             }
         }
 
@@ -336,7 +336,7 @@ namespace SmartLens
             var Result = await NetEaseMusic.GetMVAsync((int)SingleMusicList[SingleMusicControl.SelectedIndex].MVid);
             LoadingControl.IsLoading = false;
             await Task.Delay(500);
-            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new DrillInNavigationTransitionInfo());
+            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicMV), Result.Data, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
 
         private async void SingleMusicControl_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -379,7 +379,7 @@ namespace SmartLens
 
             ConnectedAnimationService.GetForCurrentView().DefaultDuration = TimeSpan.FromMilliseconds(500);
 
-            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicAlbum), Result, new SuppressNavigationTransitionInfo());
+            MusicPage.ThisPage.MusicNav.Navigate(typeof(MusicAlbum), Result, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
         }
     }
 }

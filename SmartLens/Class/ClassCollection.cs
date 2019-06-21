@@ -4142,7 +4142,7 @@ namespace SmartLens
                 throw new ArgumentNullException("TrackFolder");
             }
 
-            TrackerMode = TrackerMode.TraceFile;
+            TrackerMode = TrackerMode.TraceFolder;
 
             _ = Initialize(TrackFolder);
         }
@@ -4289,6 +4289,46 @@ namespace SmartLens
         {
             await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
+                IReadOnlyList<StorageFolder> USBDevice = await (TrackNode.Content as StorageFolder).GetFoldersAsync();
+
+                if (USBDevice.Count > TrackNode.Children.Count)
+                {
+                    if (TrackNode.Children.FirstOrDefault()?.Content is EmptyDeviceDisplay)
+                    {
+                        TrackNode.Children.Clear();
+                    }
+
+                    List<StorageFolder> AddDeviceList = Except(USBDevice, TrackNode.Children);
+                    foreach (var Device in AddDeviceList)
+                    {
+                        TrackNode.Children.Add(new TreeViewNode
+                        {
+                            Content = Device,
+                            HasUnrealizedChildren = (await Device.GetFoldersAsync()).Count != 0
+                        });
+                    }
+                }
+                else if (USBDevice.Count < TrackNode.Children.Count && !(TrackNode.Children.FirstOrDefault().Content is EmptyDeviceDisplay))
+                {
+                    List<StorageFolder> DeleteDeviceList = Except(TrackNode.Children, USBDevice);
+                    foreach (var Device in DeleteDeviceList)
+                    {
+                        foreach (var CurrentDevice in TrackNode.Children)
+                        {
+                            if ((CurrentDevice.Content as StorageFolder).FolderRelativeId == Device.FolderRelativeId)
+                            {
+                                TrackNode.Children.Remove(CurrentDevice);
+                            }
+                        }
+                    }
+
+                    if (TrackNode.Children.Count == 0)
+                    {
+                        TrackNode.Children.Add(new TreeViewNode { Content = new EmptyDeviceDisplay() });
+                        return;
+                    }
+                }
+
                 foreach (var DeviceNode in TrackNode.Children)
                 {
                     await FolderChangeAnalysis(DeviceNode);

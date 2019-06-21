@@ -7,11 +7,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Background;
-using Windows.ApplicationModel.Core;
 using Windows.Security.Credentials;
 using Windows.Storage;
 using Windows.System;
-using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -84,9 +82,17 @@ namespace SmartLens
                 {typeof(CodeScanner),"QR识别" }
             };
 
-            NavigationViewItemBase MenuItem = NavigationView.MenuItems.FirstOrDefault() as NavigationViewItemBase;
-            NavigationView.SelectedItem = MenuItem;
-            NavFrame.Navigate(typeof(HomePage), NavFrame);
+            if (ApplicationData.Current.LocalSettings.Values["USBActivateRequest"] is bool IsUSB && IsUSB)
+            {
+                ApplicationData.Current.LocalSettings.Values["USBActivateRequest"] = null;
+                NavigationView.SelectedItem = NavigationView.MenuItems[5] as NavigationViewItemBase;
+                NavFrame.Navigate(typeof(USBControl), NavFrame);
+            }
+            else
+            {
+                NavigationView.SelectedItem = NavigationView.MenuItems.FirstOrDefault() as NavigationViewItemBase;
+                NavFrame.Navigate(typeof(HomePage), NavFrame);
+            }
 
             await CheckUpdate();
         }
