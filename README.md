@@ -1,62 +1,51 @@
 # SmartLens
-This is a project for exploring UWP platform
+This is an extra branch for SmartLens
 
-Simple Demo for what I interest
+This branch will submit to Microsoft Store
 
-Design Fully by Ruofan
-
-Only support Chinese now.
-
-For more update record, please view About Page inside this Program.
-
-if you want to get this program you can find at:
-
-https://smartlen.azurewebsites.net/
-
-You might need to import certificate like this
-"SmartLens_4.5.5.0_x64.cer"
-before you install SmartLens
-
-Known issue: UWP Radio.RequestAccessAsync() API bug, SmartLens could not control radio module  
-
-<br></br>
-# SmartLens环境要求
-### Windows 10 1809 (10.0.17763.0) 或以上版本
-### 计算机架构：仅X64  
-<br></br>
-
-# SmartLens安装教程
-### 浏览器访问：https://smartlen.azurewebsites.net/
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step1.png)
+if you want to get this program fully, see master branch
  
-<br></br>
-### 方法一：单击左侧“发布服务器证书”，进入后将此处网址复制至迅雷下载，后缀为.cer
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step2.png)
-### 方法二：右键单击目标另存为，此处可能识别为HTM文件，直接保存下载，下载完毕后将文件后缀改为.cer
-<br></br>
-### 将证书文件成功下载后，双击此文件运行如下图，点击安装证书
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step3.png)
- 
-<br></br>
-### 存储选中“本地计算机”
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step4.png)
- 
-<br></br>
-### 将选项改为“将所有证书都放入下列存储”，然后点击浏览
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step5.png)
- 
-<br></br>
-### 在弹出窗口中选择“受信任的根证书颁发机构”，点击确定
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step6.png)
- 
-<br></br>
-### 点击下一步直至完成
- ![image](https://github.com/zhuxb711/SmartLens/blob/master/SmartLens/GitHubIntroImage/step7.png)
-
-<br></br>
-## 导入完成后，返回 https://smartlen.azurewebsites.net/
-### 单击获取应用，按照系统引导即可完成安装
-
-  
+# UWP 应用隐私策略
+前注  本声明通用于Ruofan所发布的所有 UWP 应用，下文简称“应用”。
 
  
+
+1、免责声明
+您在使用应用过程中，请遵守《中华人民共和国宪法》、《中华人民共和国网络安全法》、《中华人民共和国知识产权法》，以及相关法律法规的各项规定。严禁将应用用于任何非法用途，一切因用户（主观或客观上）使用不当所带来的法律问题，开发者一概不负责。
+
+2、网络访问
+App 访问网络仅仅用于获取所需数据，不会上传任何用户文件与数据。如需要使用第三方分享平台（如微博、微信等）发布信息，应用所收集的内容只用于传递给第三方平台 API 使用。应用不包含任何捆绑插件，也不会后台下载任何附加的安装包。
+
+3、本地数据访问
+应用可能会访问您设备上的本地文件（如打开或保存）或其他存储器上的文件（如移动硬盘、闪存卡等），但应用不会收集这些本地数据，也不会上传至任何网络中。在访问您设备上的文件时，应用会提示您做出选择，只有获得您的同意，应用才会读写这些文件。
+
+4、无干扰内容
+应用不会向您发送任何无意义的通知，不存在任何第三方的推广信息，不会在后台收集任何用户信息。
+
+5、用户名与密码
+如果您要登录第三方平台（如微博，下称“该平台”），应用会引导你转到该平台的登录授权页面，用户名与密码的输入过程皆由您自行完成，随即提交到该平台进行登录，应用不会收集您所输入的任何内容。如果应用需要存储位于设备本地的用户名与密码，应用会对密码进行相关算法加密后，再存储至与应用关联的内部数据区域中，应用不会上传这些数据，也不会将其传送给其他应用。
+
+6、访问传感器
+当应用需要完成某些特定功能时，可能会读取您的设备上的传感器数据（比如地理位置信息、重力加速器读数等），应用仅使用这些数据来完成特定功能，不会分享或出售给任何个体或组织。
+
+7、多媒体设备
+有些功能的应用需要访问您设备上的多媒体设备（比如摄像头、麦克风等），应用不会收集任何设备制造厂商信息，也不会记录任何设备使用过程中产生的个人信息。
+
+8、第三方组件声明
+为了完成特定功能，应用可能会调用第三方扩展组件（以下简称“组件”）。与组件关联的隐私策略的最终解析权归组件提供者所有。
+
+9、数字墨迹与语音识别
+对于您所输入的墨迹，以及书写内容的识别结果，应用仅用于完成功能需求，不会进行网络传输，您随时可以通过操作系统的应用管理功能清空数据，应用不会做任何备份与保留。如果应用提供与 Cortana（小娜）集成或辅助输入功能，需要您输入语音信息进行识别，整个识别过程皆由系统 API 完成，应用不会保留任何记录。
+
+10、变更说明
+本隐私策略一旦发生变更，会在该页面及时更新，恕不另行通知。本策略的最终解析权归开发者所有。
+
+11、接受本策略
+当您从 Windows 应用商店安装并使用应用，即表明您已同意该策略的各项声明。
+
+ 
+
+ 
+
+Ruofan
+2019 年 6 月                               
