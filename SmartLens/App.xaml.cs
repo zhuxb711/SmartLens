@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Windows.ApplicationModel;
+﻿using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
@@ -79,9 +78,16 @@ namespace SmartLens
         {
             if (args is ToastNotificationActivatedEventArgs e)
             {
-                if (e.Argument == "Transcode" || e.Argument == "Update" || e.Argument == "Email" || e.Argument == "DownloadNotification")
+                switch (e.Argument)
                 {
-                    return;
+                    case "Transcode":
+                    case "Update":
+                    case "Email":
+                    case "DownloadNotification":
+                    case "Updating":
+                    case "UpdateFinished":
+                    case "UpdateError":
+                        return;
                 }
             }
             OnLaunchOrOnActivate(args);

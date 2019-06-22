@@ -1,15 +1,14 @@
-﻿using HtmlAgilityPack;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Windows.ApplicationModel;
 using Windows.ApplicationModel.Background;
 using Windows.Security.Credentials;
+using Windows.Services.Store;
 using Windows.Storage;
 using Windows.System;
+using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -25,6 +24,9 @@ namespace SmartLens
         private ApplicationTrigger ProcessingTrigger;
         private BackgroundTaskRegistration TaskRegistration;
         private Dictionary<Type, string> PageDictionary;
+        private StoreContext Context;
+        private IReadOnlyList<StorePackageUpdate> Updates;
+
 
         public MainPage()
         {
@@ -48,6 +50,74 @@ namespace SmartLens
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                _ = await StorageFolder.GetFolderFromPathAsync("C:\\");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                ContentDialog Dialog = new ContentDialog
+                {
+                    Title = "提示",
+                    Content = "请开启此应用的文件系统访问权限以正常工作\r\r然后重新启动该应用",
+                    PrimaryButtonText = "导航至权限页",
+                    CloseButtonText = "关闭应用"
+                };
+                switch (await Dialog.ShowAsync())
+                {
+                    case ContentDialogResult.Primary:
+                        await Launcher.LaunchUriAsync(new Uri("ms-settings:appsfeatures-app"));
+                        ToastContent Content = new ToastContent()
+                        {
+                            Scenario = ToastScenario.Reminder,
+
+                            Visual = new ToastVisual()
+                            {
+                                BindingGeneric = new ToastBindingGeneric()
+                                {
+                                    Children =
+                                    {
+                                        new AdaptiveText()
+                                        {
+                                            Text = "正在等待用户完成操作..."
+                                        },
+
+                                        new AdaptiveText()
+                                        {
+                                            Text = "请开启文件系统权限"
+                                        },
+
+                                        new AdaptiveText()
+                                        {
+                                            Text = "随后点击下方的立即启动"
+                                        }
+                                    }
+                                }
+                            },
+
+                            Actions = new ToastActionsCustom
+                            {
+                                Buttons =
+                                {
+                                    new ToastButton("立即启动","Restart")
+                                    {
+                                        ActivationType =ToastActivationType.Foreground
+                                    },
+                                    new ToastButtonDismiss("稍后")
+                                }
+                            }
+                        };
+                        ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
+                        Application.Current.Exit();
+                        break;
+                    default:
+                        Application.Current.Exit();
+                        break;
+                }
+                return;
+            }
+
+
             var View = ApplicationView.GetForCurrentView();
             if (ApplicationData.Current.LocalSettings.Values["EnableScreenCapture"] is bool Enable)
             {
@@ -94,44 +164,162 @@ namespace SmartLens
                 NavFrame.Navigate(typeof(HomePage), NavFrame);
             }
 
-            await CheckUpdate();
+            await CheckAndInstallUpdate();
         }
 
-        private async Task CheckUpdate()
+        private async Task CheckAndInstallUpdate()
         {
-            string WebURL = "https://smartlen.azurewebsites.net/";
-            HtmlWeb WebHtml = new HtmlWeb();
-            try
+            Context = StoreContext.GetDefault();
+            Updates = await Context.GetAppAndOptionalStorePackageUpdatesAsync();
+
+            if (Updates.Count > 0)
             {
-                HtmlDocument HTMLDocument = await WebHtml.LoadFromWebAsync(WebURL);
-                HtmlNode VersionNode = HTMLDocument.DocumentNode.SelectSingleNode("//div[@class='app-version lg mb-24']");
-
-                if (VersionNode == null)
+                ContentDialog dialog = new ContentDialog
                 {
-                    return;
-                }
-
-                Regex RegexExpression = new Regex(@"(\d+)");
-                MatchCollection NewestVersion = RegexExpression.Matches(VersionNode.InnerText);
-
-                if (ushort.Parse(NewestVersion[0].Value) > Package.Current.Id.Version.Major
-                    || ushort.Parse(NewestVersion[1].Value) > Package.Current.Id.Version.Minor
-                    || ushort.Parse(NewestVersion[2].Value) > Package.Current.Id.Version.Build)
+                    Title = "更新可用",
+                    Content = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\rSmartLens的最新更新将修补诸多的小问题，并提供有意思的小功能\rSmartLens具备自动更新的功能，稍后将自动更新\r⇱或⇲\r您也可以访问Microsoft Store手动更新哦~~~~",
+                    CloseButtonText = "稍后提示",
+                    PrimaryButtonText = "立即下载"
+                };
+                dialog.PrimaryButtonClick += async (s, e) =>
                 {
-                    ContentDialog dialog = new ContentDialog
+                    SendUpdatableToastWithProgress();
+
+                    Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
                     {
-                        Title = "更新可用",
-                        Content = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\r\rSmartLens的最新更新将修补诸多的小问题，并提供有意思的小功能\r\rSmartLens具备自动更新的功能，稍后将自动更新\r⇱或⇲\r您也可以访问\rhttps://smartlen.azurewebsites.net/手动更新哦~~~~",
-                        CloseButtonText = "知道了"
-                    };
-                    await dialog.ShowAsync();
-                }
-            }
-            catch (HttpRequestException)
-            {
-                return;
+                        string Tag = "SmartLens-Updating";
+
+                        var data = new NotificationData
+                        {
+                            SequenceNumber = 0
+                        };
+                        data.Values["ProgressValue"] = (Status.TotalDownloadProgress * 100).ToString();
+
+                        ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
+                    });
+
+                    StorePackageUpdateResult DownloadResult = await Context.RequestDownloadStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+
+                    if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
+                    {
+                        ShowCompleteNotification();
+
+                        var InstallResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates);
+                        if (InstallResult.OverallState != StorePackageUpdateState.Completed)
+                        {
+                            ShowErrorNotification();
+                        }
+                    }
+                    else
+                    {
+                        ShowErrorNotification();
+                    }
+                };
+                await dialog.ShowAsync();
             }
         }
+
+        private void ShowErrorNotification()
+        {
+            var Content = new ToastContent()
+            {
+                Scenario = ToastScenario.Default,
+                Launch = "UpdateError",
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "更新失败"
+                            },
+
+                            new AdaptiveText()
+                            {
+                                Text = "SmartLens无法更新至最新版"
+                            }
+                        }
+                    }
+                },
+            };
+            ToastNotificationManager.History.Clear();
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
+        }
+
+        private void ShowCompleteNotification()
+        {
+            var Content = new ToastContent()
+            {
+                Scenario = ToastScenario.Default,
+                Launch = "UpdateFinished",
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "更新已成功完成"
+                            },
+
+                            new AdaptiveText()
+                            {
+                                Text = "SmartLens已更新至最新版"
+                            }
+                        }
+                    }
+                },
+            };
+            ToastNotificationManager.History.Clear();
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
+
+        }
+
+        private void SendUpdatableToastWithProgress()
+        {
+            string Tag = "SmartLens-Updating";
+
+            var content = new ToastContent()
+            {
+                Launch = "Updating",
+                Scenario = ToastScenario.Reminder,
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "正在为SmartLens下载更新，请稍候..."
+                            },
+
+                            new AdaptiveProgressBar()
+                            {
+                                Value = new BindableProgressBarValue("ProgressValue"),
+                                Status = new BindableString("ProgressStatus")
+                            }
+                        }
+                    }
+                }
+            };
+
+            var Toast = new ToastNotification(content.GetXml())
+            {
+                Tag = Tag,
+                Data = new NotificationData()
+            };
+            Toast.Data.Values["ProgressValue"] = "0";
+            Toast.Data.Values["ProgressStatus"] = "正在下载...";
+            Toast.Data.SequenceNumber = 0;
+
+            ToastNotificationManager.History.Clear();
+            ToastNotificationManager.CreateToastNotifier().Show(Toast);
+        }
+
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {

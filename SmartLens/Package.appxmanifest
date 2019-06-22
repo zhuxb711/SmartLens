@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" xmlns:iot="http://schemas.microsoft.com/appx/manifest/iot/windows10" IgnorableNamespaces="uap mp uap3 iot">
-  <Identity Name="36186RuoFan.SmartLens" Publisher="CN=4FF1CB23-04BD-4F9C-A86A-B4A43196FE02" Version="5.0.4.0" />
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" 
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" 
+         xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" 
+         xmlns:iot="http://schemas.microsoft.com/appx/manifest/iot/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap mp uap3 iot rescap">
+  <Identity Name="36186RuoFan.SmartLens" Publisher="CN=4FF1CB23-04BD-4F9C-A86A-B4A43196FE02" Version="5.0.6.0" />
   <mp:PhoneIdentity PhoneProductId="bd7f8172-611e-4a32-94c6-0ccf1c34d913" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>SmartLens</DisplayName>
@@ -24,33 +30,6 @@
         </uap:InitialRotationPreference>
       </uap:VisualElements>
       <Extensions>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="txt">
-            <uap:SupportedFileTypes>
-              <uap:FileType>.txt</uap:FileType>
-              <uap:FileType>.jpeg</uap:FileType>
-              <uap:FileType>.zip</uap:FileType>
-              <uap:FileType>.png</uap:FileType>
-              <uap:FileType>.mkv</uap:FileType>
-              <uap:FileType>.mp4</uap:FileType>
-              <uap:FileType>.mp3</uap:FileType>
-              <uap:FileType>.flac</uap:FileType>
-              <uap:FileType>.jpg</uap:FileType>
-              <uap:FileType>.docx</uap:FileType>
-              <uap:FileType>.sle</uap:FileType>
-              <uap:FileType>.xlsx</uap:FileType>
-              <uap:FileType>.pptx</uap:FileType>
-              <uap:FileType>.bmp</uap:FileType>
-              <uap:FileType>.pdf</uap:FileType>
-              <uap:FileType>.mov</uap:FileType>
-              <uap:FileType>.m4a</uap:FileType>
-              <uap:FileType>.avi</uap:FileType>
-              <uap:FileType>.wma</uap:FileType>
-              <uap:FileType>.wmv</uap:FileType>
-              <uap:FileType>.alac</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
         <Extension Category="windows.backgroundTasks" EntryPoint="MediaProcessingBackgroundTask.MediaProcessingTask">
           <BackgroundTasks>
             <uap:Task Type="mediaProcessing"/>
@@ -61,10 +40,16 @@
             <Task Type="general"/>
           </BackgroundTasks>
         </Extension>
+        <uap:Extension Category="windows.autoPlayContent">
+          <uap:AutoPlayContent>
+            <uap:LaunchAction Verb="USBArrival" ActionDisplayName="USB管理" ContentEvent="StorageOnArrival"/>
+          </uap:AutoPlayContent>
+        </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
   <Capabilities>
+    <rescap:Capability Name="broadFileSystemAccess" />
     <iot:Capability Name="systemManagement" />
     <uap:Capability Name="removableStorage" />
     <uap3:Capability Name="backgroundMediaPlayback" />

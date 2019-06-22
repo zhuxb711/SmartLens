@@ -2251,7 +2251,7 @@ namespace SmartLens
     #region USB设备为空时的文件目录树显示类
     public sealed class EmptyDeviceDisplay
     {
-        public string DisplayName { get; set; }
+        public string DisplayName { get => "无USB设备接入"; }
     }
     #endregion
 
@@ -4291,13 +4291,13 @@ namespace SmartLens
             {
                 IReadOnlyList<StorageFolder> USBDevice = await (TrackNode.Content as StorageFolder).GetFoldersAsync();
 
+                if (TrackNode.Children.FirstOrDefault()?.Content is EmptyDeviceDisplay && USBDevice.Count > 0)
+                {
+                    TrackNode.Children.Clear();
+                }
+
                 if (USBDevice.Count > TrackNode.Children.Count)
                 {
-                    if (TrackNode.Children.FirstOrDefault()?.Content is EmptyDeviceDisplay)
-                    {
-                        TrackNode.Children.Clear();
-                    }
-
                     List<StorageFolder> AddDeviceList = Except(USBDevice, TrackNode.Children);
                     foreach (var Device in AddDeviceList)
                     {
@@ -4329,9 +4329,12 @@ namespace SmartLens
                     }
                 }
 
-                foreach (var DeviceNode in TrackNode.Children)
+                if (!(TrackNode.Children.FirstOrDefault().Content is EmptyDeviceDisplay))
                 {
-                    await FolderChangeAnalysis(DeviceNode);
+                    foreach (var DeviceNode in TrackNode.Children)
+                    {
+                        await FolderChangeAnalysis(DeviceNode);
+                    }
                 }
             });
         }

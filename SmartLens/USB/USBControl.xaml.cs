@@ -140,7 +140,7 @@ namespace SmartLens
                 await FillTreeNode(RemovableNode);
                 if (RemovableNode.Children.Count == 0)
                 {
-                    RemovableNode.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay() { DisplayName = "无USB设备接入" } });
+                    RemovableNode.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay() });
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace SmartLens
             {
                 if (args.Node.Children.Count == 0)
                 {
-                    args.Node.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay() { DisplayName = "无USB设备接入" } });
+                    args.Node.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay()});
                 }
             }
         }
