@@ -253,7 +253,7 @@ namespace SmartLens
                     }
                     else
                     {
-                        FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 }));
+                        FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png"))));
                     }
                 }
             }

@@ -198,21 +198,43 @@ namespace SmartLens
                         ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
                     });
 
-                    StorePackageUpdateResult DownloadResult = await Context.RequestDownloadStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
-
-                    if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
+                    if (Context.CanSilentlyDownloadStorePackageUpdates)
                     {
-                        ShowCompleteNotification();
+                        StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadStorePackageUpdatesAsync(Updates);
 
-                        var InstallResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates);
-                        if (InstallResult.OverallState != StorePackageUpdateState.Completed)
+                        if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
+                        {
+                            ShowCompleteNotification();
+
+                            var InstallResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates);
+                            if (InstallResult.OverallState != StorePackageUpdateState.Completed)
+                            {
+                                ShowErrorNotification();
+                            }
+                        }
+                        else
                         {
                             ShowErrorNotification();
                         }
                     }
                     else
                     {
-                        ShowErrorNotification();
+                        StorePackageUpdateResult DownloadResult = await Context.RequestDownloadStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+
+                        if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
+                        {
+                            ShowCompleteNotification();
+
+                            var InstallResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates);
+                            if (InstallResult.OverallState != StorePackageUpdateState.Completed)
+                            {
+                                ShowErrorNotification();
+                            }
+                        }
+                        else
+                        {
+                            ShowErrorNotification();
+                        }
                     }
                 };
                 await dialog.ShowAsync();

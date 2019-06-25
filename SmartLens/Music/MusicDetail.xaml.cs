@@ -26,7 +26,7 @@ namespace SmartLens
             MediaPlayList.FavouriteSongList.CurrentItemChanged += MediaList_CurrentItemChanged;
             MediaPlayList.SingerHotSongList.CurrentItemChanged += SingerHotSongList_CurrentItemChanged;
             MediaPlayList.AlbumSongList.CurrentItemChanged += AlbumSongList_CurrentItemChanged;
-            BackBlurTicker.Interval = TimeSpan.FromMilliseconds(25);
+            BackBlurTicker.Interval = TimeSpan.FromMilliseconds(20);
             BackBlurTicker.Tick += BackBlurTicker_Tick;
             RollTicker.Interval = TimeSpan.FromMilliseconds(1000);
             RollTicker.Tick += RollTicker_Tick;
@@ -414,8 +414,8 @@ namespace SmartLens
         //背景虚化计时器执行函数
         private void BackBlurTicker_Tick(object sender, object e)
         {
-            BackBlurBrush.Amount += 0.5;
-            if (BackBlurBrush.Amount >= 15)
+            BackBlurBrush.Amount += 0.1;
+            if (BackBlurBrush.Amount >= 5)
             {
                 BackBlurTicker.Stop();
             }

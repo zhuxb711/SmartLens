@@ -36,7 +36,7 @@
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="local:RemovableDeviceFile">
                     <StackPanel Width="250" Padding="12" Orientation="Horizontal" AllowDrop="True">
-                        <Image IsHitTestVisible="False" VerticalAlignment="Center" Source="{x:Bind Thumbnail}" Margin="0,5,5,0" Height="60" Width="60"/>
+                        <Image IsHitTestVisible="False" VerticalAlignment="Center" Stretch="Uniform" Source="{x:Bind Thumbnail}" Margin="0,5,5,0" Height="60" Width="60"/>
                         <StackPanel AllowDrop="True" Orientation="Vertical">
                             <TextBlock IsHitTestVisible="False" Text="{x:Bind DisplayName,Mode=OneWay}" FontSize="17" Width="180" TextTrimming="CharacterEllipsis"/>
                             <TextBlock IsHitTestVisible="False" Text="{x:Bind DisplayType}" FontSize="15" Foreground="Gray"/>

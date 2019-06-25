@@ -220,6 +220,7 @@ namespace SmartLens
             {
                 return null;
             }
+
             BitmapImage bitmapImage = new BitmapImage
             {
                 DecodePixelHeight = 60,
@@ -318,7 +319,7 @@ namespace SmartLens
                     }
                     else
                     {
-                        RemovableDeviceFile File = new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")) { DecodePixelHeight = 60, DecodePixelWidth = 60 });
+                        RemovableDeviceFile File = new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")));
                         USBFilePresenter.ThisPage.FileCollection.Add(File);
                     }
                 }
