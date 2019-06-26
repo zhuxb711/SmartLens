@@ -202,38 +202,18 @@ namespace SmartLens
 
                     if (Context.CanSilentlyDownloadStorePackageUpdates)
                     {
-                        StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+                        StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
 
-                        if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
-                        {
-                            ShowCompleteNotification();
-
-                            var InstallResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates);
-                            if (InstallResult.OverallState != StorePackageUpdateState.Completed)
-                            {
-                                ShowErrorNotification();
-                            }
-                        }
-                        else
+                        if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
                         {
                             ShowErrorNotification();
                         }
                     }
                     else
                     {
-                        StorePackageUpdateResult DownloadResult = await Context.RequestDownloadStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+                        StorePackageUpdateResult DownloadResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
 
-                        if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
-                        {
-                            ShowCompleteNotification();
-
-                            var InstallResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates);
-                            if (InstallResult.OverallState != StorePackageUpdateState.Completed)
-                            {
-                                ShowErrorNotification();
-                            }
-                        }
-                        else
+                        if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
                         {
                             ShowErrorNotification();
                         }
@@ -269,36 +249,6 @@ namespace SmartLens
             };
             ToastNotificationManager.History.Clear();
             ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
-        }
-
-        private void ShowCompleteNotification()
-        {
-            var Content = new ToastContent()
-            {
-                Scenario = ToastScenario.Default,
-                Launch = "UpdateFinished",
-                Visual = new ToastVisual()
-                {
-                    BindingGeneric = new ToastBindingGeneric()
-                    {
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = "更新已成功完成"
-                            },
-
-                            new AdaptiveText()
-                            {
-                                Text = "SmartLens已更新至最新版"
-                            }
-                        }
-                    }
-                },
-            };
-            ToastNotificationManager.History.Clear();
-            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(Content.GetXml()));
-
         }
 
         private void SendUpdatableToastWithProgress()

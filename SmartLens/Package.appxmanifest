@@ -6,7 +6,7 @@
          xmlns:iot="http://schemas.microsoft.com/appx/manifest/iot/windows10"
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
          IgnorableNamespaces="uap mp uap3 iot rescap">
-  <Identity Name="36186RuoFan.SmartLens" Publisher="CN=4FF1CB23-04BD-4F9C-A86A-B4A43196FE02" Version="5.1.0.0" />
+  <Identity Name="36186RuoFan.SmartLens" Publisher="CN=4FF1CB23-04BD-4F9C-A86A-B4A43196FE02" Version="5.1.1.0" />
   <mp:PhoneIdentity PhoneProductId="bd7f8172-611e-4a32-94c6-0ccf1c34d913" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>SmartLens</DisplayName>
