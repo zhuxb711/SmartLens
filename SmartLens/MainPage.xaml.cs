@@ -181,26 +181,28 @@ namespace SmartLens
                     CloseButtonText = "稍后提示",
                     PrimaryButtonText = "立即下载"
                 };
-                dialog.PrimaryButtonClick += async (s, e) =>
+                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
                 {
                     SendUpdatableToastWithProgress();
 
                     Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
                     {
+                        string Value = (Status.TotalDownloadProgress * 100).ToString();
                         string Tag = "SmartLens-Updating";
 
                         var data = new NotificationData
                         {
                             SequenceNumber = 0
                         };
-                        data.Values["ProgressValue"] = (Status.TotalDownloadProgress * 100).ToString();
+                        data.Values["ProgressValue"] = Value;
+                        data.Values["ProgressString"] = Value + "%";
 
                         ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
                     });
 
                     if (Context.CanSilentlyDownloadStorePackageUpdates)
                     {
-                        StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadStorePackageUpdatesAsync(Updates);
+                        StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
 
                         if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
                         {
@@ -236,8 +238,7 @@ namespace SmartLens
                             ShowErrorNotification();
                         }
                     }
-                };
-                await dialog.ShowAsync();
+                }
             }
         }
 
@@ -316,13 +317,15 @@ namespace SmartLens
                         {
                             new AdaptiveText()
                             {
-                                Text = "正在为SmartLens下载更新，请稍候..."
+                                Text = "SmartLens更新下载中..."
                             },
 
                             new AdaptiveProgressBar()
                             {
+                                Title = "正在更新",
                                 Value = new BindableProgressBarValue("ProgressValue"),
-                                Status = new BindableString("ProgressStatus")
+                                Status = new BindableString("ProgressStatus"),
+                                ValueStringOverride = new BindableString("ProgressString")
                             }
                         }
                     }
@@ -336,6 +339,7 @@ namespace SmartLens
             };
             Toast.Data.Values["ProgressValue"] = "0";
             Toast.Data.Values["ProgressStatus"] = "正在下载...";
+            Toast.Data.Values["ProgressString"] = "0%";
             Toast.Data.SequenceNumber = 0;
 
             ToastNotificationManager.History.Clear();

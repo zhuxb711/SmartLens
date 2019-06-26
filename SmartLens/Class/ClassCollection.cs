@@ -4275,13 +4275,16 @@ namespace SmartLens
             }
             else
             {
-                List<IStorageItem> DeleteFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
-                List<IStorageItem> AddFileList = new List<IStorageItem>(Except(FileList, USBFilePresenter.ThisPage.FileCollection));
-
-                await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                if (USBFilePresenter.ThisPage.FileCollection.Count != 0)
                 {
-                    Renamed?.Invoke(this, new FileSystemRenameSet(DeleteFileList, AddFileList));
-                });
+                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
+                    List<IStorageItem> AddFileList = new List<IStorageItem>(Except(FileList, USBFilePresenter.ThisPage.FileCollection));
+
+                    await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        Renamed?.Invoke(this, new FileSystemRenameSet(DeleteFileList, AddFileList));
+                    });
+                }
             }
         }
 
@@ -4537,6 +4540,33 @@ namespace SmartLens
             {
                 return null;
             }
+        }
+    }
+    #endregion
+
+    #region 文件夹图标状态更改转换器
+    public sealed class FolderStateConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (!(value is bool))
+            {
+                return null;
+            }
+
+            if ((bool)value)
+            {
+                return "\xE838";
+            }
+            else
+            {
+                return "\xED41";
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
     #endregion

@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:local="using:SmartLens"
     NavigationCacheMode="Required"
     mc:Ignorable="d"
     Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
@@ -33,9 +34,13 @@
             </Setter>
         </Style>
 
+        <local:FolderStateConverter x:Key="StateConverter" />
+
         <DataTemplate x:Key="Template">
-            <StackPanel Height="44" Orientation="Horizontal">
-                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xED41;" Margin="0,5,5,0" Name="Icon"/>
+            <StackPanel Height="40" Orientation="Horizontal">
+                <Viewbox Height="30" VerticalAlignment="Center">
+                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{Binding IsExpanded,Mode=OneWay,Converter={StaticResource StateConverter}}" Margin="0,5,5,0" Name="Icon"/>
+                </Viewbox>
                 <TextBlock Text="{Binding Content.DisplayName,Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" FontSize="18"/>
             </StackPanel>
         </DataTemplate>

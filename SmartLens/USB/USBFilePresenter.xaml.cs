@@ -41,12 +41,17 @@ namespace SmartLens
             InitializeComponent();
             ThisPage = this;
             GridViewControl.ItemsSource = FileCollection;
+            FileCollection.CollectionChanged += FileCollection_CollectionChanged;
 
             //必须注册这个东西才能使用中文解码
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             ZipStrings.CodePage = 936;
         }
 
+        private void FileCollection_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            HasFile.Visibility = FileCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {

@@ -1707,7 +1707,7 @@
 >>#####适配Microsoft Store更新机制
 
 *****
-#SmartLens 5.0.8版更新说明
+#SmartLens 5.1.0版更新说明
 
 >####针对音乐模块的改进
 
@@ -1717,11 +1717,27 @@
 
 >>#####新增静默下载更新的功能，该功能仅在开启商店应用自动更新且未处于流量计费的网络时可用
 
+>>#####更新了更新下载时的Toast通知界面
+
 >####针对USB模块的改进
 
 >>#####未能获取到缩略图的文件将使用新的默认图标代替
 
 >>#####解决了默认图标过于肥胖的问题
+
+>>#####新增文件夹目录树展开和收起时不同的文件夹图标
+
+>>#####现在允许删除文件目录树中的含有文件的文件夹
+
+>>#####解决了文件追踪系统中的一些错误
+
+>>#####解决了当删除文件夹后右侧文件显示虽然已经清楚但是不显示无文件提示的问题
+
+>>#####内部统一无文件提示的出现逻辑
+
+>####其他改进
+
+>>#####日志文件删除了一些过时的文档参考，新增了一些新的文档参考
 
 *****
 *****
@@ -1769,8 +1785,6 @@
 
 >>#####[地图和位置](https://docs.microsoft.com/en-us/windows/uwp/maps-and-location/)
 
->>#####[Loading Control](https://docs.microsoft.com/zh-cn/windows/communitytoolkit/controls/loading)
-
 >>#####[天气API](https://www.sojson.com/api/weather.html)
 
 >>#####[JSON解析](https://www.newtonsoft.com/json)
@@ -1782,6 +1796,8 @@
 >>#####[Web视图](https://docs.microsoft.com/zh-cn/windows/uwp/design/controls-and-patterns/web-view)
 
 >>#####[Tab视图](https://docs.microsoft.com/zh-cn/windows/communitytoolkit/controls/tabview)
+
+>>#####[SplitView](https://docs.microsoft.com/zh-cn/windows/uwp/design/controls-and-patterns/split-view)
 
 *****
 *****
@@ -1810,8 +1826,6 @@
 >>#####[自定义识别约束](https://docs.microsoft.com/zh-cn/windows/uwp/design/input/define-custom-recognition-constraints)
 
 >>#####[LUIS自然语言理解](https://docs.microsoft.com/zh-cn/azure/cognitive-services/luis/what-is-luis)
-
->>#####[Baidu AI](https://ai.baidu.com/docs#/ASR-Online-Csharp-SDK/top)
 
 *****
 *****
@@ -1857,3 +1871,7 @@
 >>#####[.Net Native编译概述](https://docs.microsoft.com/zh-cn/dotnet/framework/net-native/)
 
 >>#####[Windows 10 UWP应用生命周期](https://docs.microsoft.com/zh-cn/windows/uwp/launch-resume/app-lifecycle)
+
+>>#####[Windows Hello](https://docs.microsoft.com/zh-cn/windows/uwp/security/microsoft-passport)
+
+>>#####[后台多进程任务概述](https://docs.microsoft.com/zh-cn/windows/uwp/launch-resume/support-your-app-with-background-tasks)

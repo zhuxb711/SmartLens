@@ -75,14 +75,6 @@ namespace SmartLens
                     zipFile.Close();
                 }
             }
-            if (FileCollection.Count == 0)
-            {
-                HasFile.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                HasFile.Visibility = Visibility.Collapsed;
-            }
         }
 
         /// <summary>
@@ -159,8 +151,6 @@ namespace SmartLens
             OriginFile.SizeUpdateRequested(await GetSizeAsync(OriginFile.File));
             await Task.Delay(500);
             LoadingActivation(false);
-
-            HasFile.Visibility = FileCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         /// <summary>

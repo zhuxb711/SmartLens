@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Search;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -80,6 +78,10 @@ namespace SmartLens
                                         where (SubNode.Content as StorageFolder).FolderRelativeId == OldFolder.FolderRelativeId
                                         select SubNode)
                 {
+                    if (FolderTree.SelectedNodes.FirstOrDefault() == SubNode)
+                    {
+                        USBFilePresenter.ThisPage.FileCollection.Clear();
+                    }
                     e.ParentNode.Children.Remove(SubNode);
                 }
             }
@@ -108,7 +110,7 @@ namespace SmartLens
                 FileTracker = null;
             }
 
-            if(FolderTracker!=null)
+            if (FolderTracker != null)
             {
                 FolderTracker.Created -= FolderTracker_Created;
                 FolderTracker.Deleted -= FolderTracker_Deleted;
@@ -203,7 +205,7 @@ namespace SmartLens
             {
                 if (args.Node.Children.Count == 0)
                 {
-                    args.Node.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay()});
+                    args.Node.Children.Add(new TreeViewNode() { Content = new EmptyDeviceDisplay() });
                 }
             }
         }
@@ -297,8 +299,6 @@ namespace SmartLens
                 FileTracker.Created += FileTracker_Created;
                 FileTracker.Deleted += FileTracker_Deleted;
                 FileTracker.Renamed += FileTracker_Renamed;
-
-                USBFilePresenter.ThisPage.HasFile.Visibility = FileList.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
                 foreach (var file in FileList)
                 {
@@ -405,23 +405,50 @@ namespace SmartLens
             {
                 return;
             }
-            try
+
+            ContentDialog contentDialog = new ContentDialog
             {
-                await (CurrentNode.Content as StorageFolder).DeleteAsync(StorageDeleteOption.PermanentDelete);
-            }
-            catch (Exception)
+                Title = "警告",
+                Content = "    此操作将永久删除该文件内的所有内容\r\r    是否继续？",
+                PrimaryButtonText = "继续",
+                CloseButtonText = "取消"
+            };
+            if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
-                ContentDialog contentDialog = new ContentDialog
+                try
                 {
-                    Title = "错误",
-                    Content = "仅支持删除空文件夹\r请先删除文件夹内文件",
-                    CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
-                };
-                await contentDialog.ShowAsync();
-                return;
+                    StorageFolder Folder = CurrentNode.Content as StorageFolder;
+                    await DeleteAllSubFilesAndFolders(Folder);
+                    await Folder.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                }
+                catch (Exception)
+                {
+                    ContentDialog Dialog = new ContentDialog
+                    {
+                        Title = "错误",
+                        Content = "删除文件时出现错误",
+                        CloseButtonText = "确定"
+                    };
+                    _ = await Dialog.ShowAsync();
+                    return;
+                }
             }
-            CurrentNode.Parent.Children.Remove(CurrentNode);
+        }
+
+        private async Task DeleteAllSubFilesAndFolders(StorageFolder Folder)
+        {
+            IReadOnlyList<IStorageItem> ItemList = await Folder.GetItemsAsync();
+            foreach (var Item in ItemList)
+            {
+                if (Item is StorageFolder folder)
+                {
+                    await DeleteAllSubFilesAndFolders(folder);
+                }
+                else
+                {
+                    await Item.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                }
+            }
         }
 
         private void FileTree_Collapsed(TreeView sender, TreeViewCollapsedEventArgs args)
@@ -466,23 +493,13 @@ namespace SmartLens
                 }
 
                 await Folder.RenameAsync(renameDialog.DesireName, NameCollisionOption.GenerateUniqueName);
-
-                var ChildCollection = CurrentNode.Parent.Children;
-                int index = CurrentNode.Parent.Children.IndexOf(CurrentNode);
-                ChildCollection.Insert(index, new TreeViewNode() { Content = Folder, HasUnrealizedChildren = CurrentNode.HasChildren });
-                ChildCollection.Remove(CurrentNode);
             }
         }
 
         private async void CreateFolder_Click(object sender, RoutedEventArgs e)
         {
             var CurrentFolder = (CurrentNode.Content as StorageFolder);
-            var NewFolder = await CurrentFolder.CreateFolderAsync("新建文件夹", CreationCollisionOption.GenerateUniqueName);
-            CurrentNode.Children.Add(new TreeViewNode
-            {
-                Content = NewFolder,
-                HasUnrealizedChildren = false
-            });
+            _ = await CurrentFolder.CreateFolderAsync("新建文件夹", CreationCollisionOption.GenerateUniqueName);
         }
     }
 }
