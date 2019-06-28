@@ -89,7 +89,7 @@ namespace SmartLens
 
         protected override void OnFileActivated(FileActivatedEventArgs args)
         {
-            if (args.Verb == "USBActivate")
+            if (args.Verb == "USBArrival")
             {
                 CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
                 var viewTitleBar = ApplicationView.GetForCurrentView().TitleBar;

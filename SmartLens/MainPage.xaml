@@ -9,8 +9,16 @@
     Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="33"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border x:Name="TitleBar" Background="{ThemeResource SystemControlAltLowAcrylicElementBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBlock Text="SmartLens" Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </Border>
         <NavigationView 
             IsSettingsVisible="True" 
+            Grid.Row="1"
             x:Name="NavigationView" 
             AlwaysShowHeader="False" 
             x:FieldModifier="Public"
@@ -67,14 +75,7 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.Content>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="10*"/>
-                        <RowDefinition Height="550*"/>
-                    </Grid.RowDefinitions>
-                    <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" Grid.Row="1"/>
-                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="Title" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"/>
-                </Grid>
+                <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"/>
             </NavigationView.Content>
         </NavigationView>
     </Grid>

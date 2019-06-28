@@ -9,8 +9,8 @@
     Title="AES加密"
     CloseButtonText="取消"
     PrimaryButtonText="确定"
-    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+    
     <Grid>
         <StackPanel Orientation="Vertical">
             <TextBlock FontSize="18" Height="30" Name="FileName" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>

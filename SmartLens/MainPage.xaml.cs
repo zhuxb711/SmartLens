@@ -31,7 +31,7 @@ namespace SmartLens
         public MainPage()
         {
             InitializeComponent();
-            Window.Current.SetTitleBar(Title);
+            Window.Current.SetTitleBar(TitleBar);
             ThisPage = this;
             Loaded += MainPage_Loaded;
         }
@@ -187,15 +187,14 @@ namespace SmartLens
 
                     Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
                     {
-                        string Value = (Status.TotalDownloadProgress * 100).ToString();
                         string Tag = "SmartLens-Updating";
 
                         var data = new NotificationData
                         {
                             SequenceNumber = 0
                         };
-                        data.Values["ProgressValue"] = Value;
-                        data.Values["ProgressString"] = Value + "%";
+                        data.Values["ProgressValue"] = Status.TotalDownloadProgress.ToString();
+                        data.Values["ProgressString"] = (Status.TotalDownloadProgress * 100).ToString() + "%";
 
                         ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
                     });

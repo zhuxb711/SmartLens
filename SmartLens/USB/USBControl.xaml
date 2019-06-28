@@ -47,9 +47,9 @@
     </Page.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="20"/>
-            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <Frame Grid.Column="2" Name="Nav" x:FieldModifier="Public"/>
         <TreeView Name="FolderTree" 

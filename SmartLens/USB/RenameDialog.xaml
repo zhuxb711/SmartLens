@@ -9,9 +9,8 @@
     Title="重命名"
     CloseButtonText="取消"
     PrimaryButtonText="确定"
-    PrimaryButtonClick="ContentDialog_PrimaryButtonClick" 
-    Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
-
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+    
     <Grid>
         <StackPanel Orientation="Vertical">
             <TextBox  Name="Text" TextChanging="Text_TextChanging" FontSize="18" Width="300"/>

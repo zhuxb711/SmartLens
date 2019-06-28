@@ -1,5 +1,4 @@
 ﻿using Bluetooth.Core.Services;
-using Bluetooth.Services.Obex;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,7 +11,6 @@ using Windows.Foundation;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace SmartLens
 {
@@ -199,20 +197,20 @@ namespace SmartLens
 
         private async void BluetoothWatcher_Added(DeviceWatcher sender, DeviceInformation args)
         {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,() =>
-            {
-                lock (SyncRootProvider.SyncRoot)
-                {
-                    try
-                    {
-                        if (BluetoothDeviceCollection != null)
-                        {
-                            BluetoothDeviceCollection.Add(new BluetoothList(args));
-                        }
-                    }
-                    catch (Exception) { }
-                }
-            });
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+             {
+                 lock (SyncRootProvider.SyncRoot)
+                 {
+                     try
+                     {
+                         if (BluetoothDeviceCollection != null)
+                         {
+                             BluetoothDeviceCollection.Add(new BluetoothList(args));
+                         }
+                     }
+                     catch (Exception) { }
+                 }
+             });
         }
 
         /// <summary>
