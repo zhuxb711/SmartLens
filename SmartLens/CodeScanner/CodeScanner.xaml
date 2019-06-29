@@ -36,7 +36,7 @@
             </controls:Loading.Background>
             <StackPanel Orientation="Horizontal" Padding="12">
                 <Grid Margin="0,0,8,0">
-                    <ProgressRing Name="Pro" IsActive="True" Foreground="White" Height="30" Width="30"/>
+                    <ProgressRing Name="Pro" IsActive="True" Foreground="White" Height="25" Width="25"/>
                 </Grid>
                 <TextBlock Name="ProText" Text="正在初始化..." FontSize="25" Foreground="White" VerticalAlignment="Center" />
             </StackPanel>

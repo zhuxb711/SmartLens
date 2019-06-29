@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Search;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -1127,7 +1128,7 @@ namespace SmartLens
             }
         }
 
-        private void GridViewControl_DoubleTapped(object sender, Windows.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+        private async void GridViewControl_DoubleTapped(object sender, Windows.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
         {
             if ((e.OriginalSource as FrameworkElement)?.DataContext is RemovableDeviceFile ReFile)
             {
@@ -1157,6 +1158,19 @@ namespace SmartLens
                         break;
                     case ".pdf":
                         Nav.Navigate(typeof(USBPdfReader), ReFile.File, new DrillInNavigationTransitionInfo());
+                        break;
+                    default:
+                        ContentDialog dialog = new ContentDialog
+                        {
+                            Title = "提示",
+                            Content = "  USB文件管理器无法打开此文件\r\r  但可以使用其他应用程序打开",
+                            PrimaryButtonText = "默认应用打开",
+                            CloseButtonText = "取消"
+                        };
+                        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                        {
+                            await Launcher.LaunchFileAsync(ReFile.File);
+                        }
                         break;
                 }
             }

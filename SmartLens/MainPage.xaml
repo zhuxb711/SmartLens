@@ -27,7 +27,6 @@
             IsBackEnabled="True" 
             Loaded="NavigationView_Loaded" 
             BackRequested="NavigationView_BackRequested"
-            Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
             PaneDisplayMode="LeftCompact">
             <NavigationView.MenuItems>
                 <NavigationViewItemHeader Content="首页"/>
@@ -75,7 +74,7 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.Content>
-                <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"/>
+                <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public"/>
             </NavigationView.Content>
         </NavigationView>
     </Grid>

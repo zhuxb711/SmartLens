@@ -259,7 +259,7 @@
             </controls:Loading.Background>
             <StackPanel Orientation="Horizontal" Padding="12">
                 <Grid Margin="0,0,15,0">
-                    <ProgressRing x:Name="ProRing" IsActive="True" Foreground="White" Height="30" Width="30" />
+                    <ProgressRing x:Name="ProRing" IsActive="True" Foreground="White" Height="25" Width="25" />
                 </Grid>
                 <StackPanel>
                     <TextBlock FontSize="25" Name="LoadingText" Foreground="White" VerticalAlignment="Center" TextAlignment="Center"/>
