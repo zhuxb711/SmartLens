@@ -172,7 +172,6 @@ namespace SmartLens
                     await contentDialog.ShowAsync();
                 }
 
-                await RefreshFileDisplay();
                 await Task.Delay(500);
                 LoadingActivation(false);
                 Paste.IsEnabled = false;
@@ -211,68 +210,10 @@ namespace SmartLens
                     LoadingActivation(false);
                     await contentDialog.ShowAsync();
                 }
-                await RefreshFileDisplay();
                 await Task.Delay(500);
                 LoadingActivation(false);
             }
             Paste.IsEnabled = false;
-        }
-
-        /// <summary>
-        /// 异步刷新并检查是否有新文件出现
-        /// </summary>
-        public async Task RefreshFileDisplay()
-        {
-            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null)
-            {
-                FolderDepth = FolderDepth.Shallow,
-                IndexerOption = IndexerOption.UseIndexerWhenAvailable
-            };
-
-            Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
-            Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
-
-            StorageFileQueryResult QueryResult = USBControl.ThisPage.CurrentFolder.CreateFileQueryWithOptions(Options);
-
-            var FileList = await QueryResult.GetFilesAsync();
-
-            foreach (var file in FileList)
-            {
-                int i = 0;
-                for (; i < FileCollection.Count; i++)
-                {
-                    if (FileCollection[i].Name == file.Name)
-                    {
-                        break;
-                    }
-                }
-                if (i == FileCollection.Count)
-                {
-                    IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
-                    ulong PropertiesSize = (ulong)PropertyResults["System.Size"];
-                    string Size = GetSizeDescription(PropertiesSize);
-
-                    var Thumbnail = await GetThumbnailAsync(file);
-                    if (Thumbnail != null)
-                    {
-                        FileCollection.Add(new RemovableDeviceFile(Size, file, Thumbnail));
-                    }
-                    else
-                    {
-                        FileCollection.Add(new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png"))));
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 从文件大小获取标准描述
-        /// </summary>
-        /// <param name="PropertiesSize">文件大小</param>
-        /// <returns></returns>
-        private string GetSizeDescription(ulong PropertiesSize)
-        {
-            return PropertiesSize / 1024f < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576f >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
         }
 
         private void Cut_Click(object sender, RoutedEventArgs e)
@@ -316,14 +257,6 @@ namespace SmartLens
                 {
                     var file = (item as RemovableDeviceFile).File;
                     await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
-                    for (int i = 0; i < FileCollection.Count; i++)
-                    {
-                        if (FileCollection[i].RelativeId == file.FolderRelativeId)
-                        {
-                            FileCollection.RemoveAt(i);
-                            i--;
-                        }
-                    }
                 }
                 await Task.Delay(500);
                 LoadingActivation(false);
@@ -340,6 +273,11 @@ namespace SmartLens
         {
             if (IsLoading)
             {
+                if(HasFile.Visibility==Visibility.Visible)
+                {
+                    HasFile.Visibility = Visibility.Collapsed;
+                }
+
                 if (EnableProgressDisplay)
                 {
                     ProRing.Visibility = Visibility.Collapsed;
@@ -397,17 +335,6 @@ namespace SmartLens
                     return;
                 }
                 await file.RenameAsync(dialog.DesireName, NameCollisionOption.GenerateUniqueName);
-            }
-            else
-            {
-                return;
-            }
-            for (int i = 0; i < FileCollection.Count; i++)
-            {
-                if (FileCollection[i].Name == dialog.DesireName)
-                {
-                    FileCollection[i].NameUpdateRequested();
-                }
             }
         }
 
@@ -666,14 +593,6 @@ namespace SmartLens
                 if (IsDeleteRequest)
                 {
                     await SelectedFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
-                    for (int i = 0; i < FileCollection.Count; i++)
-                    {
-                        if (FileCollection[i].RelativeId == SelectedFile.FolderRelativeId)
-                        {
-                            FileCollection.RemoveAt(i);
-                            break;
-                        }
-                    }
                 }
 
                 DecryptByteBuffer = null;
@@ -682,7 +601,6 @@ namespace SmartLens
 
             await Task.Delay(500);
             LoadingActivation(false);
-            await RefreshFileDisplay();
         }
 
         private async void BluetoothShare_Click(object sender, RoutedEventArgs e)
@@ -861,7 +779,6 @@ namespace SmartLens
                     {
                         await CreateZipAsync(FileList, dialog.FileName, (int)dialog.Level);
                     }
-                    await RefreshFileDisplay();
                 }
                 else
                 {

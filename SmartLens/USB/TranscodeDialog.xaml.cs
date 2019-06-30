@@ -277,7 +277,7 @@ namespace SmartLens
             sender.Unregister(false);
             if (ApplicationData.Current.LocalSettings.Values["MediaTranscodeStatus"] is string ExcuteStatus)
             {
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     if (ExcuteStatus == "Success")
                     {
@@ -287,7 +287,6 @@ namespace SmartLens
                     {
                         USBControl.ThisPage.Notification.Show("转码失败:" + ExcuteStatus, 10000);
                     }
-                    await USBFilePresenter.ThisPage.RefreshFileDisplay();
                 });
             }
         }

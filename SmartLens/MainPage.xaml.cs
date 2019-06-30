@@ -174,15 +174,11 @@ namespace SmartLens
 
             if (Updates.Count > 0)
             {
-                ContentDialog dialog = new ContentDialog
+                TeachTip.Subtitle = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\rSmartLens的最新更新将修补诸多的问题\r您也可以访问Microsoft Store手动更新哦~~~~";
+                TeachTip.ActionButtonClick += async(s, e) =>
                 {
-                    Title = "更新可用",
-                    Content = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\rSmartLens的最新更新将修补诸多的小问题，并提供有意思的小功能\rSmartLens具备自动更新的功能，稍后将自动更新\r⇱或⇲\r您也可以访问Microsoft Store手动更新哦~~~~",
-                    CloseButtonText = "稍后提示",
-                    PrimaryButtonText = "立即下载"
-                };
-                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-                {
+                    s.IsOpen = false;
+
                     SendUpdatableToastWithProgress();
 
                     Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
@@ -217,7 +213,9 @@ namespace SmartLens
                             ShowErrorNotification();
                         }
                     }
-                }
+                };
+
+                TeachTip.IsOpen = true;
             }
         }
 

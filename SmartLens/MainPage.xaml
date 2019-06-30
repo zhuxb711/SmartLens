@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     FontFamily="Segoe UI"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
 
     <Grid>
@@ -77,5 +78,14 @@
                 <Frame x:Name="NavFrame" Navigating="NavFrame_Navigating" Navigated="NavFrame_Navigated" x:FieldModifier="Public"/>
             </NavigationView.Content>
         </NavigationView>
+        <controls:TeachingTip 
+            x:Name="TeachTip"      
+            Grid.Row="1"
+	        Title="更新可用"
+	        PreferredPlacement="Bottom"                                              
+	        IsLightDismissEnabled="True"
+	        ActionButtonContent="即刻更新"
+	        CloseButtonContent="稍后提示">
+        </controls:TeachingTip>
     </Grid>
 </Page>
