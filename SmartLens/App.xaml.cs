@@ -65,26 +65,32 @@ namespace SmartLens
         /// <param name="e">有关启动请求和过程的详细信息。</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            OnLaunchOrOnActivate(e, true);
+            OnLaunchOrOnActivate(e);
         }
 
         protected override void OnActivated(IActivatedEventArgs args)
         {
-            if (args is ToastNotificationActivatedEventArgs e)
+            if (Window.Current.Content != null)
             {
-                switch (e.Argument)
+                if (args is ToastNotificationActivatedEventArgs e)
                 {
-                    case "Transcode":
-                    case "Update":
-                    case "Email":
-                    case "DownloadNotification":
-                    case "Updating":
-                    case "UpdateFinished":
-                    case "UpdateError":
-                        return;
+                    switch (e.Argument)
+                    {
+                        case "Transcode":
+                        case "Update":
+                        case "Email":
+                        case "DownloadNotification":
+                        case "Updating":
+                        case "UpdateFinished":
+                        case "UpdateError":
+                            return;
+                    }
                 }
             }
-            OnLaunchOrOnActivate(args);
+            else
+            {
+                OnLaunchOrOnActivate(args);
+            }
         }
 
         protected override void OnFileActivated(FileActivatedEventArgs args)
@@ -113,8 +119,10 @@ namespace SmartLens
             }
         }
 
-        private void OnLaunchOrOnActivate(IActivatedEventArgs m, bool IsLaunch = false)
+        private void OnLaunchOrOnActivate(IActivatedEventArgs args)
         {
+            ToastNotificationManager.History.Clear();
+
             if (ApplicationData.Current.LocalSettings.Values["CurrentVersion"] is string Version)
             {
                 if (Version != Package.Current.Id.Version.Major.ToString() + Package.Current.Id.Version.Minor.ToString() + Package.Current.Id.Version.Build.ToString())
@@ -130,18 +138,8 @@ namespace SmartLens
                     {
                         if (IsEnable)
                         {
-                            if (IsLaunch)
-                            {
-                                var args = m as LaunchActivatedEventArgs;
-                                ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
-                                Window.Current.Content = extendedSplash;
-                            }
-                            else
-                            {
-                                ToastNotificationManager.History.Clear();
-                                ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
-                                Window.Current.Content = extendedSplash;
-                            }
+                            ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                            Window.Current.Content = extendedSplash;
                         }
                         else
                         {
@@ -153,18 +151,8 @@ namespace SmartLens
                     else
                     {
                         ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
-                        if (IsLaunch)
-                        {
-                            var args = m as LaunchActivatedEventArgs;
-                            ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
-                            Window.Current.Content = extendedSplash;
-                        }
-                        else
-                        {
-                            ToastNotificationManager.History.Clear();
-                            ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
-                            Window.Current.Content = extendedSplash;
-                        }
+                        ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                        Window.Current.Content = extendedSplash;
                     }
 
                 }
@@ -176,18 +164,8 @@ namespace SmartLens
                 {
                     if (IsEnable)
                     {
-                        if (IsLaunch)
-                        {
-                            var args = m as LaunchActivatedEventArgs;
-                            ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
-                            Window.Current.Content = extendedSplash;
-                        }
-                        else
-                        {
-                            ToastNotificationManager.History.Clear();
-                            ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
-                            Window.Current.Content = extendedSplash;
-                        }
+                        ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                        Window.Current.Content = extendedSplash;
                     }
                     else
                     {
@@ -199,18 +177,8 @@ namespace SmartLens
                 else
                 {
                     ApplicationData.Current.LocalSettings.Values["EnableIntegrityCheck"] = true;
-                    if (IsLaunch)
-                    {
-                        var args = m as LaunchActivatedEventArgs;
-                        ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
-                        Window.Current.Content = extendedSplash;
-                    }
-                    else
-                    {
-                        ToastNotificationManager.History.Clear();
-                        ExtendedSplash extendedSplash = new ExtendedSplash(m.SplashScreen);
-                        Window.Current.Content = extendedSplash;
-                    }
+                    ExtendedSplash extendedSplash = new ExtendedSplash(args.SplashScreen);
+                    Window.Current.Content = extendedSplash;
                 }
 
             }
