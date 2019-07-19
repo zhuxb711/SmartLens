@@ -2085,7 +2085,15 @@ namespace SmartLens
         {
             this.Size = Size;
             this.File = File;
-            this.Thumbnail = Thumbnail;
+
+            if (Thumbnail == null)
+            {
+                this.Thumbnail = new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png"));
+            }
+            else
+            {
+                this.Thumbnail = Thumbnail;
+            }
         }
 
         private void OnPropertyChanged(string name)
@@ -4112,6 +4120,7 @@ namespace SmartLens
         private StorageFolderQueryResult FolderQuery;
         private StorageFileQueryResult FileQuery;
         private TreeViewNode TrackNode;
+        private static bool IsProcessing = false;
         public TrackerMode TrackerMode { get; }
         public event EventHandler<FileSystemChangeSet> Deleted;
         public event EventHandler<FileSystemRenameSet> Renamed;
@@ -4239,16 +4248,29 @@ namespace SmartLens
             }
         }
 
-
         private async void FileQuery_ContentsChanged(IStorageQueryResultBase sender, object args)
         {
+            lock (SyncRootProvider.SyncRoot)
+            {
+                if (IsProcessing)
+                {
+                    return;
+                }
+                IsProcessing = true;
+            }
+
             IReadOnlyList<StorageFile> FileList = await sender.Folder.GetFilesAsync();
 
             if (FileList.Count != USBFilePresenter.ThisPage.FileCollection.Count)
             {
                 if (FileList.Count > USBFilePresenter.ThisPage.FileCollection.Count)
                 {
-                    List<IStorageItem> AddFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
+                    List<IStorageItem> AddFileList = new List<IStorageItem>(await ExceptAsync(USBFilePresenter.ThisPage.FileCollection, FileList));
+                    if (AddFileList.Count == 0)
+                    {
+                        IsProcessing = false;
+                        return;
+                    }
 
                     await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -4257,7 +4279,12 @@ namespace SmartLens
                 }
                 else
                 {
-                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
+                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(await ExceptAsync(USBFilePresenter.ThisPage.FileCollection, FileList));
+                    if (DeleteFileList.Count == 0)
+                    {
+                        IsProcessing = false;
+                        return;
+                    }
 
                     await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -4269,8 +4296,19 @@ namespace SmartLens
             {
                 if (USBFilePresenter.ThisPage.FileCollection.Count != 0)
                 {
-                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(Except(USBFilePresenter.ThisPage.FileCollection, FileList));
-                    List<IStorageItem> AddFileList = new List<IStorageItem>(Except(FileList, USBFilePresenter.ThisPage.FileCollection));
+                    List<IStorageItem> DeleteFileList = new List<IStorageItem>(await ExceptAsync(USBFilePresenter.ThisPage.FileCollection, FileList));
+                    if (DeleteFileList.Count == 0)
+                    {
+                        IsProcessing = false;
+                        return;
+                    }
+
+                    List<IStorageItem> AddFileList = new List<IStorageItem>(await ExceptAsync(FileList, USBFilePresenter.ThisPage.FileCollection));
+                    if (AddFileList.Count == 0)
+                    {
+                        IsProcessing = false;
+                        return;
+                    }
 
                     await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -4278,10 +4316,21 @@ namespace SmartLens
                     });
                 }
             }
+
+            IsProcessing = false;
         }
 
         private async void FolderQuery_ContentsChanged(IStorageQueryResultBase sender, object args)
         {
+            lock (SyncRootProvider.SyncRoot)
+            {
+                if (IsProcessing)
+                {
+                    return;
+                }
+                IsProcessing = true;
+            }
+
             await CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 IReadOnlyList<StorageFolder> USBDevice = await (TrackNode.Content as StorageFolder).GetFoldersAsync();
@@ -4320,6 +4369,7 @@ namespace SmartLens
                     if (TrackNode.Children.Count == 0)
                     {
                         TrackNode.Children.Add(new TreeViewNode { Content = new EmptyDeviceDisplay() });
+                        IsProcessing = false;
                         return;
                     }
                 }
@@ -4332,6 +4382,8 @@ namespace SmartLens
                     }
                 }
             });
+
+            IsProcessing = false;
         }
 
         public void Dispose()
@@ -4351,44 +4403,26 @@ namespace SmartLens
 
         private List<StorageFolder> Except(IEnumerable<TreeViewNode> list1, IEnumerable<StorageFolder> list2)
         {
-            List<StorageFolder> FolderList = new List<StorageFolder>(list1.Count());
-            foreach (var Node in list1)
-            {
-                FolderList.Add(Node.Content as StorageFolder);
-            }
-
+            IEnumerable<StorageFolder> FolderList = list1.Select(x => x.Content as StorageFolder);
             return Except(list2, FolderList);
         }
 
         private List<StorageFolder> Except(IEnumerable<StorageFolder> list2, IEnumerable<TreeViewNode> list1)
         {
-            List<StorageFolder> FolderList = new List<StorageFolder>(list1.Count());
-            foreach (var Node in list1)
-            {
-                FolderList.Add(Node.Content as StorageFolder);
-            }
-
+            IEnumerable<StorageFolder> FolderList = list1.Select(x => x.Content as StorageFolder);
             return Except(FolderList, list2);
         }
 
-        private List<StorageFile> Except(IEnumerable<RemovableDeviceFile> list1, IEnumerable<StorageFile> list2)
+        private async Task<List<StorageFile>> ExceptAsync(IEnumerable<RemovableDeviceFile> list1, IEnumerable<StorageFile> list2)
         {
-            List<StorageFile> FileList = new List<StorageFile>(list1.Count());
-            foreach (var DeviceFile in list1)
-            {
-                FileList.Add(DeviceFile.File);
-            }
-            return Except(list2, FileList);
+            IEnumerable<StorageFile> FileList = list1.Select(x => x.File);
+            return await ExceptAsync(list2, FileList);
         }
 
-        private List<StorageFile> Except(IEnumerable<StorageFile> list2, IEnumerable<RemovableDeviceFile> list1)
+        private async Task<List<StorageFile>> ExceptAsync(IEnumerable<StorageFile> list2, IEnumerable<RemovableDeviceFile> list1)
         {
-            List<StorageFile> FileList = new List<StorageFile>(list1.Count());
-            foreach (var DeviceFile in list1)
-            {
-                FileList.Add(DeviceFile.File);
-            }
-            return Except(FileList, list2);
+            IEnumerable<StorageFile> FileList = list1.Select(x => x.File);
+            return await ExceptAsync(FileList, list2);
         }
 
 
@@ -4407,95 +4441,42 @@ namespace SmartLens
                 return new List<StorageFolder>();
             }
 
-            List<StorageFolder> result = new List<StorageFolder>();
-
             if (list1.Count() > list2.Count())
             {
-                foreach (var NewFolder in list1)
-                {
-                    foreach (var _ in from SubFolder in list2
-                                      where SubFolder.FolderRelativeId == NewFolder.FolderRelativeId
-                                      select new { })
-                    {
-                        goto FLAG;
-                    }
-
-                    result.Add(NewFolder);
-
-                FLAG: continue;
-                }
+                return list1.Where(x => list2.All(y => x.FolderRelativeId != y.FolderRelativeId)).ToList();
             }
             else
             {
-                foreach (var NewFolder in list2)
-                {
-                    foreach (var _ in from SubFolder in list1
-                                      where SubFolder.FolderRelativeId == NewFolder.FolderRelativeId
-                                      select new { })
-                    {
-                        goto FLAG;
-                    }
-
-                    result.Add(NewFolder);
-
-                FLAG: continue;
-                }
+                return list2.Where(x => list1.All(y => x.FolderRelativeId != y.FolderRelativeId)).ToList();
             }
-
-            return result;
         }
 
-        private List<StorageFile> Except(IEnumerable<StorageFile> list1, IEnumerable<StorageFile> list2)
+        private Task<List<StorageFile>> ExceptAsync(IEnumerable<StorageFile> list1, IEnumerable<StorageFile> list2)
         {
-            if (list1.Count() == 0 && list2.Count() != 0)
+            return Task.Run(() =>
             {
-                return list2.ToList();
-            }
-            if (list1.Count() != 0 && list2.Count() == 0)
-            {
-                return list1.ToList();
-            }
-            if (list1.Count() == 0 && list2.Count() == 0)
-            {
-                return null;
-            }
-
-            List<StorageFile> result = new List<StorageFile>();
-
-            if (list1.Count() > list2.Count())
-            {
-                foreach (var NewFile in list1)
+                if (list1.Count() == 0 && list2.Count() != 0)
                 {
-                    foreach (var _ in from SubFolder in list2
-                                      where SubFolder.FolderRelativeId == NewFile.FolderRelativeId
-                                      select new { })
-                    {
-                        goto FLAG;
-                    }
-
-                    result.Add(NewFile);
-
-                FLAG: continue;
+                    return list2.ToList();
                 }
-            }
-            else
-            {
-                foreach (var NewFile in list2)
+                if (list1.Count() != 0 && list2.Count() == 0)
                 {
-                    foreach (var _ in from SubFolder in list1
-                                      where SubFolder.FolderRelativeId == NewFile.FolderRelativeId
-                                      select new { })
-                    {
-                        goto FLAG;
-                    }
-
-                    result.Add(NewFile);
-
-                FLAG: continue;
+                    return list1.ToList();
                 }
-            }
+                if (list1.Count() == 0 && list2.Count() == 0)
+                {
+                    return new List<StorageFile>();
+                }
 
-            return result;
+                if (list1.Count() > list2.Count())
+                {
+                    return list1.Where(x => list2.All(y => x.FolderRelativeId != y.FolderRelativeId)).ToList();
+                }
+                else
+                {
+                    return list2.Where(x => list1.All(y => x.FolderRelativeId != y.FolderRelativeId)).ToList();
+                }
+            });
         }
     }
     #endregion

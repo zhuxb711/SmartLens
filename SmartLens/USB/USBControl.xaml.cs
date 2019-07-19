@@ -312,16 +312,8 @@ namespace SmartLens
                     string Size = GetSizeDescription(PropertiesSize);
 
                     BitmapImage Thumbnail = await GetThumbnailAsync(file);
-                    if (Thumbnail != null)
-                    {
-                        RemovableDeviceFile File = new RemovableDeviceFile(Size, file, Thumbnail);
-                        USBFilePresenter.ThisPage.FileCollection.Add(File);
-                    }
-                    else
-                    {
-                        RemovableDeviceFile File = new RemovableDeviceFile(Size, file, new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png")));
-                        USBFilePresenter.ThisPage.FileCollection.Add(File);
-                    }
+
+                    USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, file, Thumbnail));
                 }
             }
 
@@ -385,6 +377,7 @@ namespace SmartLens
                 string Size = GetSizeDescription((await ExceptFile.GetBasicPropertiesAsync()).Size);
 
                 BitmapImage Thumbnail = await GetThumbnailAsync(ExceptFile);
+
                 USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(Size, ExceptFile, Thumbnail));
             }
         }
@@ -462,7 +455,7 @@ namespace SmartLens
             if ((CurrentNode = (e.OriginalSource as FrameworkElement)?.DataContext as TreeViewNode) != null)
             {
                 CreateFolder.IsEnabled = FolderTree.RootNodes[0] != CurrentNode;
-                if(FolderTree.RootNodes[0].Children.Contains(CurrentNode))
+                if (FolderTree.RootNodes[0].Children.Contains(CurrentNode))
                 {
                     FolderDelete.IsEnabled = false;
                     FolderRename.IsEnabled = false;

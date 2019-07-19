@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
-using Windows.Storage.Search;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -147,6 +146,16 @@ namespace SmartLens
                     {
                         await CutFile.MoveAsync(USBControl.ThisPage.CurrentFolder, CutFile.Name, NameCollisionOption.GenerateUniqueName);
                     }
+                    catch (FileNotFoundException)
+                    {
+                        ContentDialog Dialog = new ContentDialog
+                        {
+                            Title = "错误",
+                            Content = "因源文件已删除，无法剪切到指定位置",
+                            CloseButtonText = "确定"
+                        };
+                        _ = await Dialog.ShowAsync();
+                    }
                     catch (System.Runtime.InteropServices.COMException)
                     {
                         //收集但不立刻报告错误
@@ -165,8 +174,7 @@ namespace SmartLens
                     {
                         Title = "错误",
                         Content = "因设备剩余空间大小不足\r以下文件无法剪切：\r" + ErrorFileList,
-                        CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        CloseButtonText = "确定"
                     };
                     LoadingActivation(false);
                     await contentDialog.ShowAsync();
@@ -188,11 +196,22 @@ namespace SmartLens
                     {
                         await CopyedFile.CopyAsync(USBControl.ThisPage.CurrentFolder, CopyedFile.Name, NameCollisionOption.GenerateUniqueName);
                     }
+                    catch (FileNotFoundException)
+                    {
+                        ContentDialog Dialog = new ContentDialog
+                        {
+                            Title = "错误",
+                            Content = "因源文件已删除，无法复制到指定位置",
+                            CloseButtonText = "确定"
+                        };
+                        _ = await Dialog.ShowAsync();
+                    }
                     catch (System.Runtime.InteropServices.COMException)
                     {
                         ErrorCollection.Enqueue(CopyedFile.Name);
                     }
                 }
+
                 if (ErrorCollection.Count != 0)
                 {
                     string ErrorFileList = "";
@@ -204,11 +223,10 @@ namespace SmartLens
                     {
                         Title = "错误",
                         Content = "因设备剩余空间大小不足\r以下文件无法复制：\r\r" + ErrorFileList,
-                        CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        CloseButtonText = "确定"
                     };
                     LoadingActivation(false);
-                    await contentDialog.ShowAsync();
+                    _ = await contentDialog.ShowAsync();
                 }
                 await Task.Delay(500);
                 LoadingActivation(false);
@@ -273,7 +291,7 @@ namespace SmartLens
         {
             if (IsLoading)
             {
-                if(HasFile.Visibility==Visibility.Visible)
+                if (HasFile.Visibility == Visibility.Visible)
                 {
                     HasFile.Visibility = Visibility.Collapsed;
                 }
