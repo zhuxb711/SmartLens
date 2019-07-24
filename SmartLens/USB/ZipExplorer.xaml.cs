@@ -148,22 +148,9 @@ namespace SmartLens
                 }
             }
 
-            OriginFile.SizeUpdateRequested(await GetSizeAsync(OriginFile.File));
+            await OriginFile.SizeUpdateRequested();
             await Task.Delay(500);
             LoadingActivation(false);
-        }
-
-        /// <summary>
-        /// 从文件获取文件大小的描述
-        /// </summary>
-        /// <param name="file">文件</param>
-        /// <returns></returns>
-        public async Task<string> GetSizeAsync(StorageFile file)
-        {
-            BasicProperties Properties = await file.GetBasicPropertiesAsync();
-            return Properties.Size / 1024f < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
-            (Properties.Size / 1048576f >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
-            Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
         }
 
         private async void Test_Click(object sender, RoutedEventArgs e)
@@ -328,6 +315,11 @@ namespace SmartLens
                     zipFile.Close();
                 }
             }
+
+            USBControl.ThisPage.FileTracker?.ResumeDetection();
+            USBControl.ThisPage.FolderTracker?.ResumeDetection();
+
+            await Task.Delay(1000);
             LoadingActivation(false);
         }
     }

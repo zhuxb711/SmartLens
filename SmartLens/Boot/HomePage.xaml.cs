@@ -52,7 +52,7 @@ namespace SmartLens
             //将获取到的GPS位置发送至百度地图逆地址解析服务
             float lat = (float)Position.Coordinate.Point.Position.Latitude;
             float lon = (float)Position.Coordinate.Point.Position.Longitude;
-            string URL = "http://api.map.baidu.com/geocoder/v2/?location=" + lat + "," + lon + "&output=json&ak=qrTMQKoNdBj3H6N7ZTdIbRnbBOQjcDGQ";
+            string URL = "http://api.map.baidu.com/reverse_geocoding/v3/?ak=qrTMQKoNdBj3H6N7ZTdIbRnbBOQjcDGQ&output=json&coordtype=wgs84ll&location=" + lat + "," + lon;
             string Result = await GetWebResponseAsync(URL);
 
             if (Result != "")
@@ -93,23 +93,22 @@ namespace SmartLens
         /// <returns>网络服务器返回的信息</returns>
         private async Task<string> GetWebResponseAsync(string url)
         {
-            string strBuff = "";
+            string strBuff = string.Empty;
             Uri HttpURL = new Uri(url);
-            HttpWebRequest httpReq = (HttpWebRequest)WebRequest.Create(HttpURL);
+            WebRequest httpReq = WebRequest.Create(HttpURL);
             try
             {
-                HttpWebResponse httpResp = (HttpWebResponse)await httpReq.GetResponseAsync();
+                WebResponse httpResp = await httpReq.GetResponseAsync();
                 Stream respStream = httpResp.GetResponseStream();
                 StreamReader respStreamReader = new StreamReader(respStream, Encoding.UTF8);
                 strBuff = await respStreamReader.ReadToEndAsync();
             }
-            catch (Exception)
+            catch (WebException)
             {
                 WeatherCtr.Error(ErrorReason.NetWork);
             }
             return strBuff;
         }
-
 
         /// <summary>
         /// 从JSON字符串获取城市和街道信息
@@ -156,7 +155,7 @@ namespace SmartLens
                                 let CityName = Token.Last
                                 where CityName.First.ToString() == City
                                 select CityName.Previous.First.ToString()).FirstOrDefault();
-                if(string.IsNullOrEmpty(CityCode))
+                if (string.IsNullOrEmpty(CityCode))
                 {
                     return null;
                 }

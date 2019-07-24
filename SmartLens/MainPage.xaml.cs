@@ -169,54 +169,58 @@ namespace SmartLens
 
         private async Task CheckAndInstallUpdate()
         {
-            Context = StoreContext.GetDefault();
-            Updates = await Context.GetAppAndOptionalStorePackageUpdatesAsync();
-
-            if (Updates.Count > 0)
+            try
             {
-                TeachTip.Subtitle = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\rSmartLens的最新更新将修补诸多的问题\r您也可以访问Microsoft Store手动更新哦~~~~";
-                TeachTip.ActionButtonClick += async(s, e) =>
+                Context = StoreContext.GetDefault();
+                Updates = await Context.GetAppAndOptionalStorePackageUpdatesAsync();
+
+                if (Updates.Count > 0)
                 {
-                    s.IsOpen = false;
-
-                    SendUpdatableToastWithProgress();
-
-                    Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
+                    TeachTip.Subtitle = "SmartLens有新的更新啦😊😁（￣︶￣）↗　\rSmartLens的最新更新将修补诸多的问题\r您也可以访问Microsoft Store手动更新哦~~~~";
+                    TeachTip.ActionButtonClick += async (s, e) =>
                     {
-                        string Tag = "SmartLens-Updating";
+                        s.IsOpen = false;
 
-                        var data = new NotificationData
+                        SendUpdatableToastWithProgress();
+
+                        Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
                         {
-                            SequenceNumber = 0
-                        };
-                        data.Values["ProgressValue"] = (Status.PackageDownloadProgress * 1.25).ToString("0.##");
-                        data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress * 125).ToString() + "%";
+                            string Tag = "SmartLens-Updating";
 
-                        ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
-                    });
+                            var data = new NotificationData
+                            {
+                                SequenceNumber = 0
+                            };
+                            data.Values["ProgressValue"] = (Status.PackageDownloadProgress * 1.25).ToString("0.##");
+                            data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress * 125).ToString() + "%";
 
-                    if (Context.CanSilentlyDownloadStorePackageUpdates)
-                    {
-                        StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+                            ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
+                        });
 
-                        if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
+                        if (Context.CanSilentlyDownloadStorePackageUpdates)
                         {
-                            ShowErrorNotification();
+                            StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+
+                            if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
+                            {
+                                ShowErrorNotification();
+                            }
                         }
-                    }
-                    else
-                    {
-                        StorePackageUpdateResult DownloadResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
-
-                        if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
+                        else
                         {
-                            ShowErrorNotification();
-                        }
-                    }
-                };
+                            StorePackageUpdateResult DownloadResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
 
-                TeachTip.IsOpen = true;
+                            if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
+                            {
+                                ShowErrorNotification();
+                            }
+                        }
+                    };
+
+                    TeachTip.IsOpen = true;
+                }
             }
+            catch (Exception) { }
         }
 
         private void ShowErrorNotification()

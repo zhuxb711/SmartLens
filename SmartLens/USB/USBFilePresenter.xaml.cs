@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Search;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -26,6 +27,7 @@ namespace SmartLens
         public ObservableCollection<RemovableDeviceFile> FileCollection = new ObservableCollection<RemovableDeviceFile>();
         public static USBFilePresenter ThisPage { get; private set; }
         public List<GridViewItem> ZipCollection = new List<GridViewItem>();
+        public TreeViewNode DisplayNode;
         Queue<StorageFile> CopyedQueue;
         Queue<StorageFile> CutQueue;
         AutoResetEvent AESControl;
@@ -50,7 +52,10 @@ namespace SmartLens
 
         private void FileCollection_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            HasFile.Visibility = FileCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            {
+                HasFile.Visibility = FileCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -81,18 +86,13 @@ namespace SmartLens
             Ticker = null;
         }
 
-        /// <summary>
-        /// 从StorageFile获取该文件的大小，并转换为易读的描述
-        /// </summary>
-        /// <param name="file">文件</param>
-        /// <returns></returns>
-        public async Task<string> GetSizeAsync(StorageFile file)
+        public string GetSizeDescription(ulong PropertiesSize)
         {
-            BasicProperties Properties = await file.GetBasicPropertiesAsync();
-            return Properties.Size / 1024f < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
-            (Properties.Size / 1048576f >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
-            Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
+            return PropertiesSize / 1024f < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" :
+            (PropertiesSize / 1048576f >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" :
+            Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
         }
+
 
         /// <summary>
         /// 关闭右键菜单并将GridView从多选模式恢复到单选模式
@@ -105,12 +105,46 @@ namespace SmartLens
                 GridViewControl.SelectionMode = ListViewSelectionMode.Single;
             }
         }
+
         private void MulSelection_Click(object sender, RoutedEventArgs e)
         {
             CommandsFlyout.Hide();
             GridViewControl.SelectionMode = GridViewControl.SelectionMode != ListViewSelectionMode.Multiple
                 ? ListViewSelectionMode.Multiple
                 : ListViewSelectionMode.Single;
+        }
+
+        /// <summary>
+        /// 异步刷新并检查是否有新文件出现
+        /// </summary>
+        public async Task RefreshFileDisplay()
+        {
+            USBControl.ThisPage.FileTracker?.PauseDetection();
+            USBControl.ThisPage.FolderTracker?.PauseDetection();
+
+            QueryOptions Options = new QueryOptions(CommonFileQuery.DefaultQuery, null)
+            {
+                FolderDepth = FolderDepth.Shallow,
+                IndexerOption = IndexerOption.UseIndexerWhenAvailable
+            };
+
+            Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
+            Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
+
+            StorageFileQueryResult QueryResult = USBControl.ThisPage.CurrentFolder.CreateFileQueryWithOptions(Options);
+
+            var FileList = await QueryResult.GetFilesAsync();
+            foreach (StorageFile file in FileList.Where(file => FileCollection.All((File) => File.RelativeId != file.FolderRelativeId)).Select(file => file))
+            {
+                IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
+                ulong PropertiesSize = (ulong)PropertyResults["System.Size"];
+                string Size = GetSizeDescription(PropertiesSize);
+                var Thumbnail = await GetThumbnailAsync(file);
+                FileCollection.Add(new RemovableDeviceFile(file, Thumbnail, Size));
+            }
+
+            USBControl.ThisPage.FileTracker?.ResumeDetection();
+            USBControl.ThisPage.FolderTracker?.ResumeDetection();
         }
 
         private void Copy_Click(object sender, RoutedEventArgs e)
@@ -180,13 +214,13 @@ namespace SmartLens
                     await contentDialog.ShowAsync();
                 }
 
+                await RefreshFileDisplay();
                 await Task.Delay(500);
                 LoadingActivation(false);
                 Paste.IsEnabled = false;
             }
             else if (CopyedQueue.Count != 0)
             {
-
                 LoadingActivation(true, "正在复制");
                 Queue<string> ErrorCollection = new Queue<string>();
                 while (CopyedQueue.Count != 0)
@@ -228,6 +262,8 @@ namespace SmartLens
                     LoadingActivation(false);
                     _ = await contentDialog.ShowAsync();
                 }
+
+                await RefreshFileDisplay();
                 await Task.Delay(500);
                 LoadingActivation(false);
             }
@@ -271,11 +307,28 @@ namespace SmartLens
             if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 LoadingActivation(true, "正在删除");
+
+                USBControl.ThisPage.FileTracker?.PauseDetection();
+                USBControl.ThisPage.FolderTracker?.PauseDetection();
+
                 foreach (var item in FileList)
                 {
                     var file = (item as RemovableDeviceFile).File;
                     await file.DeleteAsync(StorageDeleteOption.PermanentDelete);
+
+                    for (int i = 0; i < FileCollection.Count; i++)
+                    {
+                        if (FileCollection[i].RelativeId == file.FolderRelativeId)
+                        {
+                            FileCollection.RemoveAt(i);
+                            break;
+                        }
+                    }
                 }
+
+                USBControl.ThisPage.FileTracker?.ResumeDetection();
+                USBControl.ThisPage.FolderTracker?.ResumeDetection();
+
                 await Task.Delay(500);
                 LoadingActivation(false);
             }
@@ -352,7 +405,21 @@ namespace SmartLens
                     await content.ShowAsync();
                     return;
                 }
+
+                USBControl.ThisPage.FileTracker?.PauseDetection();
+                USBControl.ThisPage.FolderTracker?.PauseDetection();
+
                 await file.RenameAsync(dialog.DesireName, NameCollisionOption.GenerateUniqueName);
+
+                foreach (var File in from RemovableDeviceFile File in FileCollection
+                                     where File.Name == dialog.DesireName
+                                     select File)
+                {
+                    File.NameUpdateRequested();
+                }
+
+                USBControl.ThisPage.FileTracker?.ResumeDetection();
+                USBControl.ThisPage.FolderTracker?.ResumeDetection();
             }
         }
 
@@ -371,27 +438,22 @@ namespace SmartLens
         {
             var FileList = new List<object>(GridViewControl.SelectedItems);
             Restore();
-            string CheckSame = ".sle";
-            int CheckCount = 0;
-            for (int i = 0; i < FileList.Count; i++)
-            {
-                if (((RemovableDeviceFile)FileList[i]).File.FileType == CheckSame)
-                {
-                    CheckCount++;
-                }
-            }
-            if (CheckCount != FileList.Count && CheckCount != 0)
+
+            if (FileList.Any((File) => ((RemovableDeviceFile)File).Type != ".sle") && FileList.Any((File) => ((RemovableDeviceFile)File).Type == ".sle"))
             {
                 ContentDialog dialog = new ContentDialog
                 {
                     Title = "错误",
-                    Content = "  同时加密或解密多个文件时，.sle文件不能与其他文件混杂\r\r  允许的组合如下：\r\r      • 全部为.sle文件\r\r      • 全部为非.sln文件",
+                    Content = "  同时加密或解密多个文件时，.sle文件不能与其他文件混杂\r\r  允许的组合如下：\r\r      • 全部为.sle文件\r\r      • 全部为非.sle文件",
                     CloseButtonText = "确定",
                     Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;
             }
+
+            USBControl.ThisPage.FileTracker?.PauseDetection();
+            USBControl.ThisPage.FolderTracker?.PauseDetection();
 
             foreach (var SelectedFile in from RemovableDeviceFile AESFile in FileList select AESFile.File)
             {
@@ -611,12 +673,22 @@ namespace SmartLens
                 if (IsDeleteRequest)
                 {
                     await SelectedFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
+
+                    for (int i = 0; i < FileCollection.Count; i++)
+                    {
+                        if (FileCollection[i].RelativeId == SelectedFile.FolderRelativeId)
+                        {
+                            FileCollection.RemoveAt(i);
+                            break;
+                        }
+                    }
                 }
 
                 DecryptByteBuffer = null;
                 EncryptByteBuffer = null;
             }
 
+            await RefreshFileDisplay();
             await Task.Delay(500);
             LoadingActivation(false);
         }
@@ -672,7 +744,7 @@ namespace SmartLens
                     AES.IsEnabled = true;
                     AES.Label = "AES加密";
                     foreach (var _ in from RemovableDeviceFile item in e.AddedItems
-                                      where item.File.FileType == ".sle"
+                                      where item.Type == ".sle"
                                       select new { })
                     {
                         AES.Label = "AES解密";
@@ -770,17 +842,15 @@ namespace SmartLens
             List<object> FileList = new List<object>(GridViewControl.SelectedItems);
             Restore();
 
-            int CheckCount = 0;
-            for (int i = 0; i < FileList.Count; i++)
+            if (FileList.All((File) => ((RemovableDeviceFile)File).Type == ".zip"))
             {
-                if (((RemovableDeviceFile)FileList[i]).File.FileType == ".zip")
-                {
-                    CheckCount++;
-                }
-            }
-            if (CheckCount == FileList.Count)
-            {
+                USBControl.ThisPage.FileTracker?.PauseDetection();
+                USBControl.ThisPage.FolderTracker?.PauseDetection();
+
                 await UnZipAsync(FileList);
+
+                USBControl.ThisPage.FileTracker?.ResumeDetection();
+                USBControl.ThisPage.FolderTracker?.ResumeDetection();
             }
             else
             {
@@ -789,6 +859,10 @@ namespace SmartLens
                 if ((await dialog.ShowAsync()) == ContentDialogResult.Primary)
                 {
                     LoadingActivation(true, "正在压缩", true);
+
+                    USBControl.ThisPage.FileTracker?.PauseDetection();
+                    USBControl.ThisPage.FolderTracker?.PauseDetection();
+
                     if (dialog.IsCryptionEnable)
                     {
                         await CreateZipAsync(FileList, dialog.FileName, (int)dialog.Level, true, dialog.Key, dialog.Password);
@@ -797,12 +871,15 @@ namespace SmartLens
                     {
                         await CreateZipAsync(FileList, dialog.FileName, (int)dialog.Level);
                     }
+                    await RefreshFileDisplay();
                 }
                 else
                 {
                     return;
                 }
             }
+
+            await Task.Delay(1000);
             LoadingActivation(false);
         }
 
@@ -1155,6 +1232,10 @@ namespace SmartLens
         public async Task AddFileToZipAsync(RemovableDeviceFile file)
         {
             LoadingActivation(true, "正在执行添加操作");
+
+            USBControl.ThisPage.FileTracker?.PauseDetection();
+            USBControl.ThisPage.FolderTracker?.PauseDetection();
+
             using (var ZipFileStream = (await file.File.OpenAsync(FileAccessMode.ReadWrite)).AsStream())
             {
                 ZipFile zipFile = new ZipFile(ZipFileStream);
@@ -1185,7 +1266,10 @@ namespace SmartLens
                 }
             }
 
-            file.SizeUpdateRequested(await GetSizeAsync(file.File));
+            await file.SizeUpdateRequested();
+
+            USBControl.ThisPage.FileTracker?.ResumeDetection();
+            USBControl.ThisPage.FolderTracker?.ResumeDetection();
 
             await Task.Delay(500);
             LoadingActivation(false);

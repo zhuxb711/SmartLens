@@ -35,6 +35,7 @@ using Windows.Media.MediaProperties;
 using Windows.Media.Playback;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
 using Windows.UI;
@@ -2081,7 +2082,7 @@ namespace SmartLens
         /// <param name="Size">文件大小</param>
         /// <param name="File">文件StorageFile对象</param>
         /// <param name="Thumbnail">文件缩略图</param>
-        public RemovableDeviceFile(string Size, StorageFile File, BitmapImage Thumbnail)
+        public RemovableDeviceFile(StorageFile File, BitmapImage Thumbnail, string Size)
         {
             this.Size = Size;
             this.File = File;
@@ -2108,22 +2109,28 @@ namespace SmartLens
         /// 更新文件以及文件大小，并通知UI界面
         /// </summary>
         /// <param name="File"></param>
-        /// <param name="FileSize"></param>
-        public void FileUpdateRequested(StorageFile File, string FileSize)
+        public async Task FileUpdateRequested(StorageFile File)
         {
             this.File = File;
+            Size = await File.GetSizeDescriptionAsync();
             OnPropertyChanged("DisplayName");
-            Size = FileSize;
             OnPropertyChanged("Size");
+        }
+
+        /// <summary>
+        /// 更新文件名称，并通知UI界面
+        /// </summary>
+        public void NameUpdateRequested()
+        {
+            OnPropertyChanged("DisplayName");
         }
 
         /// <summary>
         /// 更新文件大小，并通知UI界面
         /// </summary>
-        /// <param name="Size"></param>
-        public void SizeUpdateRequested(string Size)
+        public async Task SizeUpdateRequested()
         {
-            this.Size = Size;
+            Size = await File.GetSizeDescriptionAsync();
             OnPropertyChanged("Size");
         }
 
@@ -3703,6 +3710,14 @@ namespace SmartLens
     #region 扩展方法类
     public static class ExtentionMethodClass
     {
+        public static async Task<string> GetSizeDescriptionAsync(this StorageFile file)
+        {
+            BasicProperties Properties = await file.GetBasicPropertiesAsync();
+            return Properties.Size / 1024f < 1024 ? Math.Round(Properties.Size / 1024f, 2).ToString() + " KB" :
+            (Properties.Size / 1048576f >= 1024 ? Math.Round(Properties.Size / 1073741824f, 2).ToString() + " GB" :
+            Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
+        }
+
         public static IReadOnlyList<T[]> SplitToArray<T>(this List<T> list, int GroupNum)
         {
             if (GroupNum == 0)
@@ -4121,6 +4136,7 @@ namespace SmartLens
         private StorageFileQueryResult FileQuery;
         private TreeViewNode TrackNode;
         private static bool IsProcessing = false;
+        private bool IsResuming = false;
         public TrackerMode TrackerMode { get; }
         public event EventHandler<FileSystemChangeSet> Deleted;
         public event EventHandler<FileSystemRenameSet> Renamed;
@@ -4189,6 +4205,46 @@ namespace SmartLens
             }
         }
 
+        public void PauseDetection()
+        {
+            if (TrackerMode == TrackerMode.TraceFolder)
+            {
+                FolderQuery.ContentsChanged -= FolderQuery_ContentsChanged;
+            }
+            else
+            {
+                FileQuery.ContentsChanged -= FileQuery_ContentsChanged;
+            }
+        }
+
+        public async void ResumeDetection()
+        {
+            if(IsResuming)
+            {
+                return;
+            }
+            IsResuming = true;
+
+            await Task.Delay(1000);
+
+            if (TrackerMode == TrackerMode.TraceFolder)
+            {
+                if (FolderQuery != null)
+                {
+                    FolderQuery.ContentsChanged += FolderQuery_ContentsChanged;
+                }
+            }
+            else
+            {
+                if (FileQuery != null)
+                {
+                    FileQuery.ContentsChanged += FileQuery_ContentsChanged;
+                }
+            }
+
+            IsResuming = false;
+        }
+
         private async Task FolderChangeAnalysis(TreeViewNode ParentNode)
         {
             var Folder = ParentNode.Content as StorageFolder;
@@ -4201,11 +4257,7 @@ namespace SmartLens
                     return;
                 }
 
-                List<StorageFolder> SubFolders = new List<StorageFolder>(ParentNode.Children.Count);
-                foreach (var SubNode in ParentNode.Children)
-                {
-                    SubFolders.Add(SubNode.Content as StorageFolder);
-                }
+                List<StorageFolder> SubFolders = new List<StorageFolder>(ParentNode.Children.Select((SubNode) => SubNode.Content as StorageFolder));
 
                 if (FolderList.Count > ParentNode.Children.Count)
                 {
