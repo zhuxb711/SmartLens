@@ -4225,7 +4225,7 @@ namespace SmartLens
             }
             IsResuming = true;
 
-            await Task.Delay(1000);
+            await Task.Delay(2000);
 
             if (TrackerMode == TrackerMode.TraceFolder)
             {

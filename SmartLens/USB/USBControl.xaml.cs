@@ -33,19 +33,42 @@ namespace SmartLens
             InitializeComponent();
             ThisPage = this;
             InitializeTreeView();
-            Loaded += USBControl_Loaded;
-        }
-
-        private void USBControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            CancelToken = new CancellationTokenSource();
-            Locker = new AutoResetEvent(false);
             Nav.Navigate(typeof(USBFilePresenter), Nav, new DrillInNavigationTransitionInfo());
 
             FolderTracker = new FileSystemTracker(FolderTree.RootNodes.FirstOrDefault());
             FolderTracker.Created += FolderTracker_Created;
             FolderTracker.Deleted += FolderTracker_Deleted;
             FolderTracker.Renamed += FolderTracker_Renamed;
+
+            Application.Current.Suspending += Current_Suspending;
+            Loaded += USBControl_Loaded;
+        }
+
+        private void Current_Suspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
+        {
+            if (FileTracker != null)
+            {
+                FileTracker.Created -= FileTracker_Created;
+                FileTracker.Deleted -= FileTracker_Deleted;
+                FileTracker.Renamed -= FileTracker_Renamed;
+                FileTracker.Dispose();
+                FileTracker = null;
+            }
+
+            if (FolderTracker != null)
+            {
+                FolderTracker.Created -= FolderTracker_Created;
+                FolderTracker.Deleted -= FolderTracker_Deleted;
+                FolderTracker.Renamed -= FolderTracker_Renamed;
+                FolderTracker.Dispose();
+                FolderTracker = null;
+            }
+        }
+
+        private void USBControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            CancelToken = new CancellationTokenSource();
+            Locker = new AutoResetEvent(false);
         }
 
         private async void FolderTracker_Renamed(object sender, FileSystemRenameSet e)
@@ -102,24 +125,6 @@ namespace SmartLens
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            if (FileTracker != null)
-            {
-                FileTracker.Created -= FileTracker_Created;
-                FileTracker.Deleted -= FileTracker_Deleted;
-                FileTracker.Renamed -= FileTracker_Renamed;
-                FileTracker.Dispose();
-                FileTracker = null;
-            }
-
-            if (FolderTracker != null)
-            {
-                FolderTracker.Created -= FolderTracker_Created;
-                FolderTracker.Deleted -= FolderTracker_Deleted;
-                FolderTracker.Renamed -= FolderTracker_Renamed;
-                FolderTracker.Dispose();
-                FolderTracker = null;
-            }
-
             Locker.Dispose();
             CancelToken.Dispose();
         }
@@ -425,9 +430,6 @@ namespace SmartLens
                     TreeViewNode ParentNode = CurrentNode.Parent;
                     ParentNode.Children.Remove(CurrentNode);
                     CurrentNode = ParentNode;
-
-                    FileTracker?.ResumeDetection();
-                    FolderTracker?.ResumeDetection();
                 }
                 catch (Exception)
                 {
@@ -438,6 +440,11 @@ namespace SmartLens
                         CloseButtonText = "确定"
                     };
                     _ = await Dialog.ShowAsync();
+                }
+                finally
+                {
+                    FileTracker?.ResumeDetection();
+                    FolderTracker?.ResumeDetection();
                 }
             }
         }
@@ -576,6 +583,7 @@ namespace SmartLens
                     HasUnrealizedChildren = false
                 });
             }
+            CurrentNode.IsExpanded = true;
 
             FileTracker?.ResumeDetection();
             FolderTracker?.ResumeDetection();

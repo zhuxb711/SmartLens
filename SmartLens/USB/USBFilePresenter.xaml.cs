@@ -992,11 +992,16 @@ namespace SmartLens
                     goto JUMP;
                 }
 
-                USBControl.ThisPage.CurrentNode.Children.Add(new TreeViewNode
+                if (USBControl.ThisPage.CurrentNode.IsExpanded || !USBControl.ThisPage.CurrentNode.HasChildren)
                 {
-                    Content = await USBControl.ThisPage.CurrentFolder.GetFolderAsync(NewFolder.Name),
-                    HasUnrealizedChildren = false
-                });
+                    USBControl.ThisPage.CurrentNode.Children.Add(new TreeViewNode
+                    {
+                        Content = await USBControl.ThisPage.CurrentFolder.GetFolderAsync(NewFolder.Name),
+                        HasUnrealizedChildren = false
+                    });
+                }
+                USBControl.ThisPage.CurrentNode.IsExpanded = true;
+
             JUMP: continue;
             }
         }
