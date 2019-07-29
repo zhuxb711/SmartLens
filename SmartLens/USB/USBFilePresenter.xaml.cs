@@ -86,14 +86,6 @@ namespace SmartLens
             Ticker = null;
         }
 
-        public string GetSizeDescription(ulong PropertiesSize)
-        {
-            return PropertiesSize / 1024f < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" :
-            (PropertiesSize / 1048576f >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" :
-            Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
-        }
-
-
         /// <summary>
         /// 关闭右键菜单并将GridView从多选模式恢复到单选模式
         /// </summary>
@@ -129,18 +121,13 @@ namespace SmartLens
             };
 
             Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
-            Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
 
             StorageFileQueryResult QueryResult = USBControl.ThisPage.CurrentFolder.CreateFileQueryWithOptions(Options);
 
             var FileList = await QueryResult.GetFilesAsync();
             foreach (StorageFile file in FileList.Where(file => FileCollection.All((File) => File.RelativeId != file.FolderRelativeId)).Select(file => file))
             {
-                IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
-                ulong PropertiesSize = (ulong)PropertyResults["System.Size"];
-                string Size = GetSizeDescription(PropertiesSize);
-                var Thumbnail = await GetThumbnailAsync(file);
-                FileCollection.Add(new RemovableDeviceFile(file, Thumbnail, Size));
+                FileCollection.Add(new RemovableDeviceFile(file));
             }
 
             USBControl.ThisPage.FileTracker?.ResumeDetection();
@@ -730,8 +717,6 @@ namespace SmartLens
                     Copy.IsEnabled = false;
                     Cut.IsEnabled = false;
                     Rename.IsEnabled = false;
-                    AES.IsEnabled = false;
-                    Delete.IsEnabled = false;
                     Transcode.IsEnabled = false;
                     return;
                 }
@@ -740,7 +725,7 @@ namespace SmartLens
                     Copy.IsEnabled = true;
                     Cut.IsEnabled = true;
                     Rename.IsEnabled = true;
-                    Delete.IsEnabled = true;
+
                     AES.IsEnabled = true;
                     AES.Label = "AES加密";
                     foreach (var _ in from RemovableDeviceFile item in e.AddedItems
@@ -785,27 +770,6 @@ namespace SmartLens
             }
         }
 
-        /// <summary>
-        /// 获得指定文件的缩略图图像
-        /// </summary>
-        /// <param name="file">文件</param>
-        /// <returns>缩略图图像</returns>
-        public async Task<BitmapImage> GetThumbnailAsync(StorageFile file)
-        {
-            var Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView);
-            if (Thumbnail == null)
-            {
-                return null;
-            }
-            BitmapImage bitmapImage = new BitmapImage
-            {
-                DecodePixelHeight = 60,
-                DecodePixelWidth = 60
-            };
-            await bitmapImage.SetSourceAsync(Thumbnail);
-            return bitmapImage;
-        }
-
         private void GridViewControl_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
         {
             if (GridViewControl.SelectedItems.Count <= 1)
@@ -832,7 +796,7 @@ namespace SmartLens
             }
             else
             {
-                AttributeDialog Dialog = new AttributeDialog((SelectedGroup[0] as RemovableDeviceFile).File);
+                AttributeDialog Dialog = new AttributeDialog((SelectedGroup.FirstOrDefault() as RemovableDeviceFile).File);
                 await Dialog.ShowAsync();
             }
         }

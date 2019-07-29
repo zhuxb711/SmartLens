@@ -4,15 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Windows.Foundation;
 using Windows.Security.Credentials;
 using Windows.Services.Store;
 using Windows.Storage;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
@@ -180,37 +183,70 @@ namespace SmartLens
                     TeachTip.ActionButtonClick += async (s, e) =>
                     {
                         s.IsOpen = false;
-
                         SendUpdatableToastWithProgress();
-
-                        Progress<StorePackageUpdateStatus> UpdateProgress = new Progress<StorePackageUpdateStatus>((Status) =>
-                        {
-                            string Tag = "SmartLens-Updating";
-
-                            var data = new NotificationData
-                            {
-                                SequenceNumber = 0
-                            };
-                            data.Values["ProgressValue"] = (Status.PackageDownloadProgress * 1.25).ToString("0.##");
-                            data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress * 125).ToString() + "%";
-
-                            ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
-                        });
 
                         if (Context.CanSilentlyDownloadStorePackageUpdates)
                         {
-                            StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+                            IAsyncOperationWithProgress<StorePackageUpdateResult, StorePackageUpdateStatus> DownloadOperation = Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates);
 
-                            if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
+                            DownloadOperation.Progress += ((Info, Status) =>
+                            {
+                                if (Status.PackageDownloadProgress > 1.0)
+                                {
+                                    return;
+                                }
+
+                                string Tag = "USB-Updating";
+                                var data = new NotificationData
+                                {
+                                    SequenceNumber = 0
+                                };
+                                data.Values["ProgressValue"] = Status.PackageDownloadProgress.ToString("0.##");
+                                data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress).ToString() + "%";
+
+                                ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
+                            });
+
+                            StorePackageUpdateResult DownloadResult = await DownloadOperation.AsTask();
+
+                            if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
+                            {
+                                _ = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask();
+                            }
+                            else
                             {
                                 ShowErrorNotification();
                             }
                         }
                         else
                         {
-                            StorePackageUpdateResult DownloadResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(UpdateProgress);
+                            IAsyncOperationWithProgress<StorePackageUpdateResult, StorePackageUpdateStatus> DownloadOperation = Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates);
 
-                            if (DownloadResult.OverallState != StorePackageUpdateState.Completed)
+                            DownloadOperation.Progress += ((Info, Status) =>
+                            {
+                                if (Status.PackageDownloadProgress > 1.0)
+                                {
+                                    return;
+                                }
+
+                                string Tag = "USB-Updating";
+                                var data = new NotificationData
+                                {
+                                    SequenceNumber = 0
+                                };
+                                data.Values["ProgressValue"] = Status.PackageDownloadProgress.ToString("0.##");
+                                data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress).ToString() + "%";
+
+                                ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
+                            });
+
+                            StorePackageUpdateResult DownloadResult = await DownloadOperation.AsTask();
+
+                            if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
+                            {
+                                _ = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask();
+                            }
+                            else
                             {
                                 ShowErrorNotification();
                             }

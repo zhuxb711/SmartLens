@@ -216,28 +216,6 @@ namespace SmartLens
             }
         }
 
-        /// <summary>
-        /// 获得指定文件的缩略图图像
-        /// </summary>
-        /// <param name="file">文件</param>
-        /// <returns>缩略图图像</returns>
-        public async Task<BitmapImage> GetThumbnailAsync(StorageFile file)
-        {
-            var Thumbnail = await file.GetThumbnailAsync(ThumbnailMode.ListView);
-            if (Thumbnail == null)
-            {
-                return null;
-            }
-
-            BitmapImage bitmapImage = new BitmapImage
-            {
-                DecodePixelHeight = 60,
-                DecodePixelWidth = 60
-            };
-            await bitmapImage.SetSourceAsync(Thumbnail);
-            return bitmapImage;
-        }
-
         private async void FileTree_ItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
             /*
@@ -287,7 +265,6 @@ namespace SmartLens
                 };
 
                 Options.SetThumbnailPrefetch(ThumbnailMode.ListView, 60, ThumbnailOptions.ResizeThumbnail);
-                Options.SetPropertyPrefetch(PropertyPrefetchOptions.BasicProperties, new string[] { "System.Size" });
 
                 var FileQuery = folder.CreateFileQueryWithOptions(Options);
 
@@ -315,14 +292,7 @@ namespace SmartLens
                     {
                         goto FLAG;
                     }
-
-                    IDictionary<string, object> PropertyResults = await file.Properties.RetrievePropertiesAsync(new string[] { "System.Size" });
-                    ulong PropertiesSize = Convert.ToUInt64(PropertyResults["System.Size"]);
-                    string Size = GetSizeDescription(PropertiesSize);
-
-                    BitmapImage Thumbnail = await GetThumbnailAsync(file);
-
-                    USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(file, Thumbnail, Size));
+                    USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(file));
                 }
             }
 
@@ -339,7 +309,7 @@ namespace SmartLens
             }
         }
 
-        private async void FileTracker_Renamed(object sender, FileSystemRenameSet e)
+        private void FileTracker_Renamed(object sender, FileSystemRenameSet e)
         {
             for (int i = 0; i < e.ToDeleteFileList.Count; i++)
             {
@@ -355,8 +325,7 @@ namespace SmartLens
 
             foreach (StorageFile ExceptFile in e.ToAddFileList)
             {
-                BitmapImage Thumbnail = await GetThumbnailAsync(ExceptFile);
-                USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(ExceptFile, Thumbnail, await ExceptFile.GetSizeDescriptionAsync()));
+                USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(ExceptFile));
             }
         }
 
@@ -376,24 +345,12 @@ namespace SmartLens
             }
         }
 
-        private async void FileTracker_Created(object sender, FileSystemChangeSet e)
+        private void FileTracker_Created(object sender, FileSystemChangeSet e)
         {
             foreach (StorageFile ExceptFile in e.StorageItems)
             {
-                BitmapImage Thumbnail = await GetThumbnailAsync(ExceptFile);
-
-                USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(ExceptFile, Thumbnail, await ExceptFile.GetSizeDescriptionAsync()));
+                USBFilePresenter.ThisPage.FileCollection.Add(new RemovableDeviceFile(ExceptFile));
             }
-        }
-
-        /// <summary>
-        /// 从文件大小获取标准描述
-        /// </summary>
-        /// <param name="PropertiesSize">文件大小</param>
-        /// <returns></returns>
-        private string GetSizeDescription(ulong PropertiesSize)
-        {
-            return PropertiesSize / 1024f < 1024 ? Math.Round(PropertiesSize / 1024f, 2).ToString() + " KB" : (PropertiesSize / 1048576f >= 1024 ? Math.Round(PropertiesSize / 1073741824f, 2).ToString() + " GB" : Math.Round(PropertiesSize / 1048576f, 2).ToString() + " MB");
         }
 
         private async void FolderDelete_Click(object sender, RoutedEventArgs e)
@@ -560,7 +517,16 @@ namespace SmartLens
                     ChildCollection.Remove(CurrentNode);
                     await UpdateAllSubNodeFolder(NewNode);
                 }
-
+                else
+                {
+                    ChildCollection.Insert(index, new TreeViewNode()
+                    {
+                        Content = Folder,
+                        HasUnrealizedChildren = false,
+                        IsExpanded = false
+                    });
+                    ChildCollection.Remove(CurrentNode);
+                }
 
                 FileTracker?.ResumeDetection();
                 FolderTracker?.ResumeDetection();

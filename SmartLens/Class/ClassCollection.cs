@@ -2082,19 +2082,19 @@ namespace SmartLens
         /// <param name="Size">文件大小</param>
         /// <param name="File">文件StorageFile对象</param>
         /// <param name="Thumbnail">文件缩略图</param>
-        public RemovableDeviceFile(StorageFile File, BitmapImage Thumbnail, string Size)
+        public RemovableDeviceFile(StorageFile File)
         {
-            this.Size = Size;
             this.File = File;
+            GetNecessaryInfo();
+        }
 
-            if (Thumbnail == null)
-            {
-                this.Thumbnail = new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png"));
-            }
-            else
-            {
-                this.Thumbnail = Thumbnail;
-            }
+        private async void GetNecessaryInfo()
+        {
+            Size = await File.GetSizeDescriptionAsync();
+            Thumbnail = await File.GetThumbnailBitmapAsync() ?? new BitmapImage(new Uri("ms-appx:///Assets/DocIcon.png"));
+
+            OnPropertyChanged("Size");
+            OnPropertyChanged("Thumbnail");
         }
 
         private void OnPropertyChanged(string name)
@@ -3718,6 +3718,46 @@ namespace SmartLens
             Math.Round(Properties.Size / 1048576f, 2).ToString() + " MB");
         }
 
+        public static async Task<string> GetModifiedTimeAsync(this IStorageItem Item)
+        {
+            var Properties = await Item.GetBasicPropertiesAsync();
+            return Properties.DateModified.Year + "年" + Properties.DateModified.Month + "月" + Properties.DateModified.Day + "日, " + (Properties.DateModified.Hour < 10 ? "0" + Properties.DateModified.Hour : Properties.DateModified.Hour.ToString()) + ":" + (Properties.DateModified.Minute < 10 ? "0" + Properties.DateModified.Minute : Properties.DateModified.Minute.ToString()) + ":" + (Properties.DateModified.Second < 10 ? "0" + Properties.DateModified.Second : Properties.DateModified.Second.ToString());
+        }
+
+        public static async Task<BitmapImage> GetThumbnailBitmapAsync(this StorageFolder Item)
+        {
+            var Thumbnail = await Item.GetThumbnailAsync(ThumbnailMode.ListView);
+            if (Thumbnail == null)
+            {
+                return null;
+            }
+
+            BitmapImage bitmapImage = new BitmapImage
+            {
+                DecodePixelHeight = 60,
+                DecodePixelWidth = 60
+            };
+            await bitmapImage.SetSourceAsync(Thumbnail);
+            return bitmapImage;
+        }
+
+        public static async Task<BitmapImage> GetThumbnailBitmapAsync(this StorageFile Item)
+        {
+            var Thumbnail = await Item.GetThumbnailAsync(ThumbnailMode.ListView);
+            if (Thumbnail == null)
+            {
+                return null;
+            }
+
+            BitmapImage bitmapImage = new BitmapImage
+            {
+                DecodePixelHeight = 60,
+                DecodePixelWidth = 60
+            };
+            await bitmapImage.SetSourceAsync(Thumbnail);
+            return bitmapImage;
+        }
+
         public static IReadOnlyList<T[]> SplitToArray<T>(this List<T> list, int GroupNum)
         {
             if (GroupNum == 0)
@@ -4219,7 +4259,7 @@ namespace SmartLens
 
         public async void ResumeDetection()
         {
-            if(IsResuming)
+            if (IsResuming)
             {
                 return;
             }

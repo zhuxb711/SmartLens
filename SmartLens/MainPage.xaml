@@ -7,16 +7,17 @@
     mc:Ignorable="d"
     FontFamily="Segoe UI"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-    Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
+    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="33"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Border x:Name="TitleBar" Background="{ThemeResource SystemControlAltLowAcrylicElementBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Border x:Name="TitleBar" Margin="40,0,0,0" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <TextBlock Text="SmartLens" Margin="10,0,0,0" VerticalAlignment="Center"/>
         </Border>
+        <Border x:Name="TopBorder" Width="40" Background="{ThemeResource NavigationViewDefaultPaneBackground}" HorizontalAlignment="Left"/>
         <NavigationView 
             IsSettingsVisible="True" 
             Grid.Row="1"
