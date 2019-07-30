@@ -294,16 +294,16 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\OpenCV.Win.Core.310.6.1\build\native\opencv.win.core.targets" Condition="Exists('..\packages\OpenCV.Win.Core.310.6.1\build\native\opencv.win.core.targets')" />
-    <Import Project="..\packages\OpenCV.Win.ImgProc.310.6.1\build\native\opencv.win.imgproc.targets" Condition="Exists('..\packages\OpenCV.Win.ImgProc.310.6.1\build\native\opencv.win.imgproc.targets')" />
-    <Import Project="..\packages\OpenCV.Win.Video.310.6.1\build\native\opencv.win.video.targets" Condition="Exists('..\packages\OpenCV.Win.Video.310.6.1\build\native\opencv.win.video.targets')" />
+    <Import Project="..\packages\OpenCV.UWP.native.core.0.0.2-alpha\build\native\OpenCV.UWP.native.core.targets" Condition="Exists('..\packages\OpenCV.UWP.native.core.0.0.2-alpha\build\native\OpenCV.UWP.native.core.targets')" />
+    <Import Project="..\packages\OpenCV.UWP.native.imgproc.0.0.2-alpha\build\native\OpenCV.UWP.native.imgproc.targets" Condition="Exists('..\packages\OpenCV.UWP.native.imgproc.0.0.2-alpha\build\native\OpenCV.UWP.native.imgproc.targets')" />
+    <Import Project="..\packages\OpenCV.UWP.native.video.0.0.2-alpha\build\native\OpenCV.UWP.native.video.targets" Condition="Exists('..\packages\OpenCV.UWP.native.video.0.0.2-alpha\build\native\OpenCV.UWP.native.video.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\OpenCV.Win.Core.310.6.1\build\native\opencv.win.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCV.Win.Core.310.6.1\build\native\opencv.win.core.targets'))" />
-    <Error Condition="!Exists('..\packages\OpenCV.Win.ImgProc.310.6.1\build\native\opencv.win.imgproc.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCV.Win.ImgProc.310.6.1\build\native\opencv.win.imgproc.targets'))" />
-    <Error Condition="!Exists('..\packages\OpenCV.Win.Video.310.6.1\build\native\opencv.win.video.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCV.Win.Video.310.6.1\build\native\opencv.win.video.targets'))" />
+    <Error Condition="!Exists('..\packages\OpenCV.UWP.native.core.0.0.2-alpha\build\native\OpenCV.UWP.native.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCV.UWP.native.core.0.0.2-alpha\build\native\OpenCV.UWP.native.core.targets'))" />
+    <Error Condition="!Exists('..\packages\OpenCV.UWP.native.imgproc.0.0.2-alpha\build\native\OpenCV.UWP.native.imgproc.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCV.UWP.native.imgproc.0.0.2-alpha\build\native\OpenCV.UWP.native.imgproc.targets'))" />
+    <Error Condition="!Exists('..\packages\OpenCV.UWP.native.video.0.0.2-alpha\build\native\OpenCV.UWP.native.video.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenCV.UWP.native.video.0.0.2-alpha\build\native\OpenCV.UWP.native.video.targets'))" />
   </Target>
 </Project>
