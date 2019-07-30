@@ -31,8 +31,10 @@
     <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
     <AppInstallerUri>https://smartlen.azurewebsites.net/</AppInstallerUri>
-    <PackageCertificateThumbprint>144E620B5D757A1C07EBF9C3374978248EFD3FA3</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>5FB369C113C7E03BD2DAB84B2F3061A7F6D6C1BC</PackageCertificateThumbprint>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -122,6 +124,9 @@
     </Compile>
     <Compile Include="Boot\ExtendedSplash.xaml.cs">
       <DependentUpon>ExtendedSplash.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Cosmetics\Cosmetics.xaml.cs">
+      <DependentUpon>Cosmetics.xaml</DependentUpon>
     </Compile>
     <Compile Include="USB\TranscodeDialog.xaml.cs">
       <DependentUpon>TranscodeDialog.xaml</DependentUpon>
@@ -250,6 +255,8 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="Cosmetics\LipLogo\CHANEL.png" />
+    <Content Include="Cosmetics\LipLogo\Dior.jpg" />
     <Content Include="GitHubIntroImage\step1.png" />
     <Content Include="GitHubIntroImage\step2.png" />
     <Content Include="GitHubIntroImage\step3.png" />
@@ -258,6 +265,9 @@
     <Content Include="GitHubIntroImage\step6.png" />
     <Content Include="GitHubIntroImage\step7.png" />
     <None Include="Package.StoreAssociation.xml" />
+    <Content Include="Cosmetics\LipLogo\GIVENCHY.jpeg" />
+    <Content Include="Cosmetics\LipLogo\LANCOME.jpg" />
+    <Content Include="Cosmetics\LipLogo\M.A.C.png" />
     <Content Include="Weather\WeatherIcon\中雨.png" />
     <Content Include="Weather\WeatherIcon\中雪.png" />
     <Content Include="Weather\WeatherIcon\冻雨.png" />
@@ -315,6 +325,9 @@
     <Content Include="VoiceRec\SRGS.grxml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Cosmetics\shape_predictor_68_face_landmarks.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\LargeTile.scale-100.png" />
@@ -374,6 +387,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Boot\ExtendedSplash.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Cosmetics\Cosmetics.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -543,7 +560,7 @@
       <Version>1.0.0</Version>
     </PackageReference>
     <PackageReference Include="HtmlAgilityPack">
-      <Version>1.11.11</Version>
+      <Version>1.11.12</Version>
     </PackageReference>
     <PackageReference Include="MailKit">
       <Version>2.2.0</Version>
@@ -600,9 +617,17 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CosmeticsEffect\CosmeticsEffect.csproj">
+      <Project>{51479eb4-54aa-4ab5-adee-ce6174f51f50}</Project>
+      <Name>CosmeticsEffect</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MediaProcessingBackgroundTask\MediaProcessingBackgroundTask.csproj">
       <Project>{4f46f9dd-1bab-4291-8ca7-3a7bae6d2536}</Project>
       <Name>MediaProcessingBackgroundTask</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenCVBridge\OpenCVBridge.vcxproj">
+      <Project>{dcf8f794-eeef-413b-b74d-a9fc69872783}</Project>
+      <Name>OpenCVBridge</Name>
     </ProjectReference>
     <ProjectReference Include="..\SmartLensDownloaderProvider\SmartLensDownloaderProvider.csproj">
       <Project>{7c789ba6-8210-4ee6-9b10-fa16ddf790c2}</Project>
