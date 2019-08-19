@@ -78,7 +78,7 @@ namespace SmartLens
                     Title = "抱歉",
                     Content = "请等待歌曲加载完成",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;
@@ -164,7 +164,7 @@ namespace SmartLens
                     Title = "抱歉",
                     Content = "请等待歌曲加载完成",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;

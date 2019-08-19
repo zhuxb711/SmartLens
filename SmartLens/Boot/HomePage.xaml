@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
-    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+    Background="{StaticResource CustomPageBackground}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -18,7 +18,7 @@
             <ColumnDefinition/>
             <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
-        <CalendarView Grid.Column="1" Name="Calendar" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" BorderThickness="0"/>
+        <CalendarView Grid.Column="1" Name="Calendar" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{StaticResource CustomPageBackground}" BorderThickness="0"/>
         <local:WeatherControl x:FieldModifier="public" Grid.Row="1" Grid.Column="1" x:Name="WeatherCtr"/>
     </Grid>
 </Page>

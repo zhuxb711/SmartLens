@@ -6,7 +6,9 @@
     xmlns:Custom="using:Microsoft.Toolkit.Uwp.UI.Controls"
     x:Class="SmartLens.WeatherControl"
     mc:Ignorable="d"
-    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}" d:DesignWidth="290" d:DesignHeight="400">
+    Background="{StaticResource CustomPageBackground}"
+    d:DesignWidth="290" d:DesignHeight="400">
+    
     <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="100"/>

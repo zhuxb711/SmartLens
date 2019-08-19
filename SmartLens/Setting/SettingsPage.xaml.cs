@@ -325,7 +325,7 @@ namespace SmartLens
                         Title = "错误",
                         Content = "打开蓝牙时出现问题",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     await dialog.ShowAsync();
                 }
@@ -341,7 +341,7 @@ namespace SmartLens
                         Title = "错误",
                         Content = "关闭蓝牙时出现问题",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     await dialog.ShowAsync();
                 }
@@ -431,7 +431,7 @@ namespace SmartLens
                         Title = "错误",
                         Content = "打开WiFi时出现问题",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     IsResetWiFi = true;
                     WiFiSwitch.IsOn = false;
@@ -477,7 +477,7 @@ namespace SmartLens
                         Title = "错误",
                         Content = "关闭WiFi时出现问题",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     IsResetWiFi = true;
                     WiFiSwitch.IsOn = true;
@@ -728,7 +728,7 @@ namespace SmartLens
                 Content = " 操作将完全初始化SmartLens，包括：\r\r     • 清除全部数据存储\r\r     • SmartLens将自动关闭\r\r 您需要按提示重新启动SmartLens",
                 PrimaryButtonText = "继续",
                 CloseButtonText = "取消",
-                Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
             };
             if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
@@ -765,7 +765,7 @@ namespace SmartLens
                 Title = "提示",
                 Content = "清除缓存成功",
                 CloseButtonText = "确定",
-                Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
             };
             await contentDialog.ShowAsync();
             ClearCache.Content = "清除缓存(0KB)";
@@ -797,7 +797,7 @@ namespace SmartLens
                     Title = "提示",
                     Content = "无可用的错误日志导出",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
             }
@@ -846,7 +846,8 @@ namespace SmartLens
                         Title = "警告",
                         Content = "    由于Windows Hello尚未设置，无法启用Windows Hello验证\r\r    请先设置Windows Hello后再试",
                         PrimaryButtonText = "前往",
-                        CloseButtonText = "取消"
+                        CloseButtonText = "取消",
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     dialog.PrimaryButtonClick += async (s, t) =>
                     {

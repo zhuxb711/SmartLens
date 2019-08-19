@@ -188,7 +188,8 @@ namespace SmartLens
                         {
                             Content = "导航失败，请检查网址或网络连接",
                             Title = "提示",
-                            CloseButtonText = "确定"
+                            CloseButtonText = "确定",
+                            Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                         };
                         _ = dialog.ShowAsync();
                         CreateNewTab(new Uri("about:blank"));
@@ -206,7 +207,8 @@ namespace SmartLens
                         {
                             Content = "导航失败，请检查网址或网络连接",
                             Title = "提示",
-                            CloseButtonText = "确定"
+                            CloseButtonText = "确定",
+                            Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                         };
                         _ = dialog.ShowAsync();
                         CreateNewTab(new Uri("about:blank"));
@@ -264,7 +266,8 @@ namespace SmartLens
                         {
                             Content = "导航失败，请检查网址或网络连接",
                             Title = "提示",
-                            CloseButtonText = "确定"
+                            CloseButtonText = "确定",
+                            Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                         };
                         _ = dialog.ShowAsync();
                         CreateNewTab(new Uri("about:blank"));
@@ -282,7 +285,8 @@ namespace SmartLens
                         {
                             Content = "导航失败，请检查网址或网络连接",
                             Title = "提示",
-                            CloseButtonText = "确定"
+                            CloseButtonText = "确定",
+                            Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                         };
                         _ = dialog.ShowAsync();
                         CreateNewTab(new Uri("about:blank"));

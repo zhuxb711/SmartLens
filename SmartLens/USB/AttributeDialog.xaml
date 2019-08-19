@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="属性"
+    Background="{StaticResource DialogAcrylicBrush}"
     CloseButtonText="确定">
 
     <Grid>

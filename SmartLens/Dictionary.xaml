@@ -3,6 +3,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:SmartLens">
 
+    <AcrylicBrush x:Key="DialogAcrylicBrush" 
+                  BackgroundSource="Backdrop"
+                  TintOpacity="0"
+                  TintColor="LightGray" 
+                  FallbackColor="DimGray" />
+    <AcrylicBrush x:Key="CustomPageBackground"
+                  BackgroundSource="HostBackdrop"
+                  TintColor="LightSlateGray"
+                  TintOpacity="0.4" 
+                  FallbackColor="DimGray"
+                  TintTransitionDuration="1"/>
+
     <Style x:Key="PlayInOrderButtonStyle" TargetType="AppBarButton" BasedOn="{StaticResource AppBarButtonRevealStyle}">
         <Setter Property="Width" Value="{ThemeResource MTCMediaButtonWidth}" />
         <Setter Property="Height" Value="{ThemeResource MTCMediaButtonHeight}" />

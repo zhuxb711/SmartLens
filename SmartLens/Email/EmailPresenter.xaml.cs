@@ -874,7 +874,7 @@ namespace SmartLens
                 PrimaryButtonText = "继续",
                 CloseButtonText = "取消",
                 Content = "此操作将注销当前账户\r\r可能需要重新输入相关信息，是否继续？",
-                Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
             };
             if ((await dialog.ShowAsync()) != ContentDialogResult.Primary)
             {

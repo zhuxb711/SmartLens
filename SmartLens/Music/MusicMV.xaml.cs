@@ -6,6 +6,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Linq;
+using Windows.UI.Xaml;
 
 namespace SmartLens
 {
@@ -84,7 +85,7 @@ namespace SmartLens
                 {
                     Title = "错误",
                     Content = "无法缓冲该MV\r\r原因如下：\r\r" + args.ErrorMessage,
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
             });

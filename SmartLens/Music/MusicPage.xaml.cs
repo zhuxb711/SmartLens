@@ -7,6 +7,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -220,7 +221,8 @@ namespace SmartLens
                     {
                         Content = "无法缓冲音乐，请检测网络连接",
                         Title = "提示",
-                        CloseButtonText = "确定"
+                        CloseButtonText = "确定",
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
 
                     await Dialog.ShowAsync();

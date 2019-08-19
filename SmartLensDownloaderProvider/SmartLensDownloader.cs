@@ -162,7 +162,7 @@ namespace SmartLensDownloaderProvider
                     throw new InvalidOperationException("下载任务已完成，此任务已不可用");
             }
 
-            if (State == DownloadState.Paused)
+            if (State == DownloadState.Paused || State == DownloadState.Downloading)
             {
                 CancellationToken.Cancel();
                 PauseSignal.Set();

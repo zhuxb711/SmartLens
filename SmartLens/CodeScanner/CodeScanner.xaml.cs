@@ -12,6 +12,7 @@ using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Documents;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
@@ -128,7 +129,8 @@ namespace SmartLens
                     {
                         Title = "提示",
                         Content = "    设置所指定的摄像头无法应用于条码识别\r\r    已自动选择最合适的摄像头",
-                        CloseButtonText = "确定"
+                        CloseButtonText = "确定",
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     _ = await dialog.ShowAsync();
 
@@ -220,7 +222,8 @@ namespace SmartLens
                 {
                     Content = BarcodeLabel,
                     Title = BarcodeType + "标签内容",
-                    CloseButtonText = "确定"
+                    CloseButtonText = "确定",
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
 

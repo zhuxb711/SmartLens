@@ -64,7 +64,8 @@ namespace SmartLens
                     Title = "提示",
                     Content = "请开启此应用的文件系统访问权限以正常工作\r\r然后重新启动该应用",
                     PrimaryButtonText = "导航至权限页",
-                    CloseButtonText = "关闭应用"
+                    CloseButtonText = "关闭应用",
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 switch (await Dialog.ShowAsync())
                 {
@@ -188,27 +189,25 @@ namespace SmartLens
 
                         if (Context.CanSilentlyDownloadStorePackageUpdates)
                         {
-                            IAsyncOperationWithProgress<StorePackageUpdateResult, StorePackageUpdateStatus> DownloadOperation = Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates);
-
-                            DownloadOperation.Progress += ((Info, Status) =>
+                            IProgress<StorePackageUpdateStatus> DownloadProgress = new Progress<StorePackageUpdateStatus>((Status) =>
                             {
-                                if (Status.PackageDownloadProgress > 1.0)
+                                if (Status.PackageDownloadProgress > 0.8)
                                 {
                                     return;
                                 }
 
-                                string Tag = "USB-Updating";
+                                string Tag = "SmartLens-Updating";
                                 var data = new NotificationData
                                 {
                                     SequenceNumber = 0
                                 };
-                                data.Values["ProgressValue"] = Status.PackageDownloadProgress.ToString("0.##");
-                                data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress).ToString() + "%";
+                                data.Values["ProgressValue"] = (Status.PackageDownloadProgress * 1.25).ToString("0.##");
+                                data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress * 125).ToString() + "%";
 
                                 ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
                             });
 
-                            StorePackageUpdateResult DownloadResult = await DownloadOperation.AsTask();
+                            StorePackageUpdateResult DownloadResult = await Context.TrySilentDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(DownloadProgress);
 
                             if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
                             {
@@ -221,27 +220,25 @@ namespace SmartLens
                         }
                         else
                         {
-                            IAsyncOperationWithProgress<StorePackageUpdateResult, StorePackageUpdateStatus> DownloadOperation = Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates);
-
-                            DownloadOperation.Progress += ((Info, Status) =>
+                            IProgress<StorePackageUpdateStatus> DownloadProgress = new Progress<StorePackageUpdateStatus>((Status) =>
                             {
-                                if (Status.PackageDownloadProgress > 1.0)
+                                if (Status.PackageDownloadProgress > 0.8)
                                 {
                                     return;
                                 }
 
-                                string Tag = "USB-Updating";
+                                string Tag = "SmartLens-Updating";
                                 var data = new NotificationData
                                 {
                                     SequenceNumber = 0
                                 };
-                                data.Values["ProgressValue"] = Status.PackageDownloadProgress.ToString("0.##");
-                                data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress).ToString() + "%";
+                                data.Values["ProgressValue"] = (Status.PackageDownloadProgress * 1.25).ToString("0.##");
+                                data.Values["ProgressString"] = Math.Ceiling(Status.PackageDownloadProgress * 125).ToString() + "%";
 
                                 ToastNotificationManager.CreateToastNotifier().Update(data, Tag);
                             });
 
-                            StorePackageUpdateResult DownloadResult = await DownloadOperation.AsTask();
+                            StorePackageUpdateResult DownloadResult = await Context.RequestDownloadAndInstallStorePackageUpdatesAsync(Updates).AsTask(DownloadProgress);
 
                             if (DownloadResult.OverallState == StorePackageUpdateState.Completed)
                             {

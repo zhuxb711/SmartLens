@@ -14,6 +14,7 @@ using Windows.System.Display;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace SmartLens
@@ -158,7 +159,8 @@ namespace SmartLens
                 {
                     Title = "错误",
                     Content = "无可用的摄像头设备或设备异常，请检查摄像头连接",
-                    CloseButtonText = "返回"
+                    CloseButtonText = "返回",
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 _ = await dialog.ShowAsync();
                 if (MainPage.ThisPage.NavFrame.CanGoBack)

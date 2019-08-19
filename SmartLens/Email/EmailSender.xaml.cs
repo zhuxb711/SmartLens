@@ -122,7 +122,7 @@ namespace SmartLens
                     Title = "Oops...",
                     Content = "收件人和主题不能为空哦",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;
@@ -138,7 +138,7 @@ namespace SmartLens
                     Title = "Oops...",
                     Content = "Email地址不合法哦\r\r多个地址之间用分号隔开",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;

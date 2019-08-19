@@ -365,7 +365,8 @@ namespace SmartLens
                 Title = "警告",
                 Content = "    此操作将永久删除该文件夹内的所有内容\r\r    是否继续？",
                 PrimaryButtonText = "继续",
-                CloseButtonText = "取消"
+                CloseButtonText = "取消",
+                Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
             };
             if (await contentDialog.ShowAsync() == ContentDialogResult.Primary)
             {
@@ -394,7 +395,8 @@ namespace SmartLens
                     {
                         Title = "错误",
                         Content = "删除文件夹时出现错误",
-                        CloseButtonText = "确定"
+                        CloseButtonText = "确定",
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     _ = await Dialog.ShowAsync();
                 }
@@ -476,7 +478,7 @@ namespace SmartLens
                         Title = "错误",
                         Content = "文件夹名不能为空，重命名失败",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     await content.ShowAsync();
                     return;

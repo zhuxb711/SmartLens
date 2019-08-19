@@ -7,7 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Required"
-    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+    Background="{StaticResource CustomPageBackground}">
+    
     <Page.Resources>
         <FontFamily x:Key="IconFontFamily">Segoe MDL2 Assets</FontFamily>
         <Style x:Key="SignalBarsStyle" TargetType="TextBlock">

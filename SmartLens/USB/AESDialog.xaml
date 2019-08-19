@@ -9,6 +9,7 @@
     Title="AES加密"
     CloseButtonText="取消"
     PrimaryButtonText="确定"
+    Background="{StaticResource DialogAcrylicBrush}"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
     
     <Grid>

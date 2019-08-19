@@ -148,7 +148,7 @@ namespace SmartLens
                     Title = "错误",
                     Content = "无法在乐库中搜索到该歌曲，请重试",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;
@@ -246,7 +246,7 @@ namespace SmartLens
                         Title = "抱歉",
                         Content = "当前歌曲暂时无法播放",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     await dialog.ShowAsync();
                     return;
@@ -293,7 +293,7 @@ namespace SmartLens
                     Title = "抱歉",
                     Content = "当前歌曲暂时无法播放",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;
@@ -349,7 +349,7 @@ namespace SmartLens
                     Title = "抱歉",
                     Content = "当前歌曲暂时无法播放",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;

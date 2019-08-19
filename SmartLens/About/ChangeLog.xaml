@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Disabled"
-    Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}">
+    Background="{StaticResource CustomPageBackground}">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -32,7 +32,7 @@
                 Name="MarkdownControl"
                 Header1Foreground="{ThemeResource SystemControlForegroundAccentBrush}" 
                 SchemeList="companyportal,randomscheme" 
-                Background="{ThemeResource SystemControlAcrylicWindowMediumHighBrush}"
+                Background="{StaticResource CustomPageBackground}"
                 LinkClicked="MarkdownControl_LinkClicked"/>
         </ScrollViewer>
     </Grid>

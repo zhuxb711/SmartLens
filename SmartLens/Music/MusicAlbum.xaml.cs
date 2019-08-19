@@ -159,7 +159,7 @@ namespace SmartLens
                     Title = "抱歉",
                     Content = "部分歌曲暂时无法播放，已自动忽略",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
             }
@@ -209,7 +209,7 @@ namespace SmartLens
                         Title = "抱歉",
                         Content = "当前歌曲暂时无法播放",
                         CloseButtonText = "确定",
-                        Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                        Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                     };
                     await dialog.ShowAsync();
                     return;
@@ -267,7 +267,7 @@ namespace SmartLens
                     Title = "抱歉",
                     Content = "当前歌曲暂时无法播放",
                     CloseButtonText = "确定",
-                    Background = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"] as Brush
+                    Background = Application.Current.Resources["DialogAcrylicBrush"] as Brush
                 };
                 await dialog.ShowAsync();
                 return;
