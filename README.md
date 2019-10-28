@@ -1,9 +1,5 @@
 # SmartLens
-This is an extra branch for SmartLens
-
-This branch will submit to Microsoft Store
-
-if you want to get this program fully, see master branch
+This branch will be submit to Microsoft Store
  
 # UWP 应用隐私策略
 前注  本声明通用于Ruofan所发布的所有 UWP 应用，下文简称“应用”。
