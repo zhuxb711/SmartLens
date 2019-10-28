@@ -1176,6 +1176,10 @@ namespace SmartLens
         private static SQLite SQL = null;
         private SQLite()
         {
+            SQLitePCL.Batteries_V2.Init();
+            SQLitePCL.raw.sqlite3_win32_set_directory(1, ApplicationData.Current.LocalFolder.Path);
+            SQLitePCL.raw.sqlite3_win32_set_directory(2, ApplicationData.Current.TemporaryFolder.Path);
+
             OLEDB.Open();
             string Command = @"Create Table If Not Exists MusicList (MusicName Text Not Null, Artist Text Not Null, Album Text Not Null, Duration Text Not Null, ImageURL Text Not Null, SongID Int Not Null ,MVid Int Not Null, Primary Key (MusicName,Artist,Album,Duration));
                                Create Table If Not Exists WiFiRecord (SSID Text Not Null, Password Text Not Null, AutoConnect Text Not Null, Primary Key (SSID,Password,AutoConnect));
@@ -1183,8 +1187,10 @@ namespace SmartLens
                                Create Table If Not Exists WebFavourite (Subject Text Not Null, WebSite Text Not Null, Primary Key (WebSite));
                                Create Table If Not Exists WebHistory (Subject Text Not Null, WebSite Text Not Null, DateTime Text Not Null, Primary Key (Subject, WebSite, DateTime));
                                Create Table If Not Exists DownloadHistory (UniqueID Text Not Null, ActualName Text Not Null, Uri Text Not Null, State Text Not Null, Primary Key(UniqueID))";
-            SqliteCommand CreateTable = new SqliteCommand(Command, OLEDB);
-            _ = CreateTable.ExecuteNonQuery();
+            using (SqliteCommand CreateTable = new SqliteCommand(Command, OLEDB))
+            {
+                _ = CreateTable.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -1206,8 +1212,10 @@ namespace SmartLens
         /// <returns></returns>
         public async Task ClearTableAsync(string TableName)
         {
-            SqliteCommand Command = new SqliteCommand("Delete From " + TableName, OLEDB);
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Delete From " + TableName, OLEDB))
+            {
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1216,17 +1224,19 @@ namespace SmartLens
         /// <returns></returns>
         public async Task<List<WebSiteItem>> GetWebFavouriteListAsync()
         {
-            SqliteCommand Command = new SqliteCommand("Select * From WebFavourite", OLEDB);
-            SqliteDataReader Query = await Command.ExecuteReaderAsync();
-
-            List<WebSiteItem> FavList = new List<WebSiteItem>();
-
-            while (Query.Read())
+            using (SqliteCommand Command = new SqliteCommand("Select * From WebFavourite", OLEDB))
             {
-                FavList.Add(new WebSiteItem(Query[0].ToString(), Query[1].ToString()));
-            }
+                SqliteDataReader Query = await Command.ExecuteReaderAsync();
 
-            return FavList;
+                List<WebSiteItem> FavList = new List<WebSiteItem>();
+
+                while (Query.Read())
+                {
+                    FavList.Add(new WebSiteItem(Query[0].ToString(), Query[1].ToString()));
+                }
+
+                return FavList;
+            }
         }
 
         /// <summary>
@@ -1235,18 +1245,20 @@ namespace SmartLens
         /// <returns>List<KeyValuePair<DateTime, WebSiteItem>></returns>
         public async Task<List<KeyValuePair<DateTime, WebSiteItem>>> GetWebHistoryListAsync()
         {
-            SqliteCommand Command = new SqliteCommand("Select * From WebHistory", OLEDB);
-            SqliteDataReader Query = await Command.ExecuteReaderAsync();
-
-            List<KeyValuePair<DateTime, WebSiteItem>> HistoryList = new List<KeyValuePair<DateTime, WebSiteItem>>();
-
-            while (Query.Read())
+            using (SqliteCommand Command = new SqliteCommand("Select * From WebHistory", OLEDB))
             {
-                HistoryList.Add(new KeyValuePair<DateTime, WebSiteItem>(DateTime.FromBinary(Convert.ToInt64(Query[2])), new WebSiteItem(Query[0].ToString(), Query[1].ToString())));
-            }
+                SqliteDataReader Query = await Command.ExecuteReaderAsync();
 
-            HistoryList.Reverse();
-            return HistoryList;
+                List<KeyValuePair<DateTime, WebSiteItem>> HistoryList = new List<KeyValuePair<DateTime, WebSiteItem>>();
+
+                while (Query.Read())
+                {
+                    HistoryList.Add(new KeyValuePair<DateTime, WebSiteItem>(DateTime.FromBinary(Convert.ToInt64(Query[2])), new WebSiteItem(Query[0].ToString(), Query[1].ToString())));
+                }
+
+                HistoryList.Reverse();
+                return HistoryList;
+            }
         }
 
         /// <summary>
@@ -1255,12 +1267,14 @@ namespace SmartLens
         /// <param name="Info">历史记录</param>
         public void DeleteWebHistory(KeyValuePair<DateTime, WebSiteItem> Info)
         {
-            SqliteCommand Command = new SqliteCommand("Delete From WebHistory Where Subject=@Subject And WebSite=@WebSite And DateTime=@DateTime", OLEDB);
-            _ = Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
-            _ = Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
-            _ = Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
+            using (SqliteCommand Command = new SqliteCommand("Delete From WebHistory Where Subject=@Subject And WebSite=@WebSite And DateTime=@DateTime", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
+                _ = Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
+                _ = Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
 
-            _ = Command.ExecuteNonQuery();
+                _ = Command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -1269,12 +1283,14 @@ namespace SmartLens
         /// <param name="Info">历史记录</param>
         public void SetWebHistoryList(KeyValuePair<DateTime, WebSiteItem> Info)
         {
-            SqliteCommand Command = new SqliteCommand("Insert Into WebHistory Values (@Subject,@WebSite,@DateTime)", OLEDB);
-            _ = Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
-            _ = Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
-            _ = Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
+            using (SqliteCommand Command = new SqliteCommand("Insert Into WebHistory Values (@Subject,@WebSite,@DateTime)", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@Subject", Info.Value.Subject);
+                _ = Command.Parameters.AddWithValue("@WebSite", Info.Value.WebSite);
+                _ = Command.Parameters.AddWithValue("@DateTime", Info.Key.ToBinary().ToString());
 
-            _ = Command.ExecuteNonQuery();
+                _ = Command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -1284,10 +1300,12 @@ namespace SmartLens
         /// <returns></returns>
         public async Task SetWebFavouriteListAsync(WebSiteItem Info)
         {
-            SqliteCommand Command = new SqliteCommand("Insert Into WebFavourite Values (@Subject,@WebSite)", OLEDB);
-            _ = Command.Parameters.AddWithValue("@Subject", Info.Subject);
-            _ = Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Insert Into WebFavourite Values (@Subject,@WebSite)", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@Subject", Info.Subject);
+                _ = Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1297,9 +1315,11 @@ namespace SmartLens
         /// <returns></returns>
         public async Task DeleteWebFavouriteListAsync(WebSiteItem Info)
         {
-            SqliteCommand Command = new SqliteCommand("Delete From WebFavourite Where WebSite = @WebSite", OLEDB);
-            _ = Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Delete From WebFavourite Where WebSite = @WebSite", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@WebSite", Info.WebSite);
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1308,18 +1328,20 @@ namespace SmartLens
         /// <returns>无</returns>
         public async Task GetDownloadHistoryAsync()
         {
-            SqliteCommand Command = new SqliteCommand("Select * From DownloadHistory", OLEDB);
-            SqliteDataReader query = await Command.ExecuteReaderAsync();
-
-            for (int i = 0; query.Read(); i++)
+            using (SqliteCommand Command = new SqliteCommand("Select * From DownloadHistory", OLEDB))
             {
-                DownloadState State = (DownloadState)Enum.Parse(typeof(DownloadState), query[3].ToString());
-                if (State == DownloadState.Downloading || State == DownloadState.Paused)
-                {
-                    State = DownloadState.Canceled;
-                }
+                SqliteDataReader query = await Command.ExecuteReaderAsync();
 
-                SmartLensDownloader.DownloadList.Add(SmartLensDownloader.CreateDownloadOperatorFromDatabase(new Uri(query[2].ToString()), query[1].ToString(), State, query[0].ToString())); ;
+                for (int i = 0; query.Read(); i++)
+                {
+                    DownloadState State = (DownloadState)Enum.Parse(typeof(DownloadState), query[3].ToString());
+                    if (State == DownloadState.Downloading || State == DownloadState.Paused)
+                    {
+                        State = DownloadState.Canceled;
+                    }
+
+                    SmartLensDownloader.DownloadList.Add(SmartLensDownloader.CreateDownloadOperatorFromDatabase(new Uri(query[2].ToString()), query[1].ToString(), State, query[0].ToString())); ;
+                }
             }
         }
 
@@ -1330,10 +1352,12 @@ namespace SmartLens
         /// <returns></returns>
         public async Task UpdateDownloadHistoryAsync(DownloadOperator Task)
         {
-            SqliteCommand Command = new SqliteCommand("Update DownloadHistory Set State = @State Where UniqueID = @UniqueID", OLEDB);
-            _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
-            _ = Command.Parameters.AddWithValue("@State", Enum.GetName(typeof(DownloadState), Task.State));
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Update DownloadHistory Set State = @State Where UniqueID = @UniqueID", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
+                _ = Command.Parameters.AddWithValue("@State", Enum.GetName(typeof(DownloadState), Task.State));
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1343,9 +1367,11 @@ namespace SmartLens
         /// <returns></returns>
         public async Task DeleteDownloadHistoryAsync(DownloadOperator Task)
         {
-            SqliteCommand Command = new SqliteCommand("Delete From DownloadHistory Where UniqueID = @UniqueID", OLEDB);
-            _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Delete From DownloadHistory Where UniqueID = @UniqueID", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1355,12 +1381,14 @@ namespace SmartLens
         /// <returns></returns>
         public async Task SetDownloadHistoryAsync(DownloadOperator Task)
         {
-            SqliteCommand Command = new SqliteCommand("Insert Into DownloadHistory Values (@UniqueID,@ActualName,@Uri,@State)", OLEDB);
-            _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
-            _ = Command.Parameters.AddWithValue("@ActualName", Task.ActualFileName);
-            _ = Command.Parameters.AddWithValue("@Uri", Task.Address.AbsoluteUri);
-            _ = Command.Parameters.AddWithValue("@State", Enum.GetName(typeof(DownloadState), Task.State));
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Insert Into DownloadHistory Values (@UniqueID,@ActualName,@Uri,@State)", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@UniqueID", Task.UniqueID);
+                _ = Command.Parameters.AddWithValue("@ActualName", Task.ActualFileName);
+                _ = Command.Parameters.AddWithValue("@Uri", Task.Address.AbsoluteUri);
+                _ = Command.Parameters.AddWithValue("@State", Enum.GetName(typeof(DownloadState), Task.State));
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1369,21 +1397,23 @@ namespace SmartLens
         /// <returns>string[]</returns>
         public async Task<string[]> GetAllMusicNameAsync()
         {
-            SqliteCommand Command = new SqliteCommand("Select MusicName From MusicList", OLEDB);
-            SqliteCommand Command1 = new SqliteCommand("Select Count(*) From MusicList", OLEDB);
-            int DataCount = Convert.ToInt32(await Command1.ExecuteScalarAsync());
-            if (DataCount == 0)
+            using (SqliteCommand Command = new SqliteCommand("Select MusicName From MusicList", OLEDB))
+            using (SqliteCommand Command1 = new SqliteCommand("Select Count(*) From MusicList", OLEDB))
             {
-                return null;
-            }
+                int DataCount = Convert.ToInt32(await Command1.ExecuteScalarAsync());
+                if (DataCount == 0)
+                {
+                    return null;
+                }
 
-            string[] Names = new string[DataCount];
-            SqliteDataReader query1 = await Command.ExecuteReaderAsync();
-            for (int i = 0; query1.Read(); i++)
-            {
-                Names[i] = query1[0].ToString();
+                string[] Names = new string[DataCount];
+                SqliteDataReader query1 = await Command.ExecuteReaderAsync();
+                for (int i = 0; query1.Read(); i++)
+                {
+                    Names[i] = query1[0].ToString();
+                }
+                return Names;
             }
-            return Names;
         }
 
         /// <summary>
@@ -1392,35 +1422,37 @@ namespace SmartLens
         /// <returns></returns>
         public async Task GetMusicDataAsync()
         {
-            SqliteCommand Command = new SqliteCommand("Select * From MusicList", OLEDB);
-            SqliteDataReader query = await Command.ExecuteReaderAsync();
-            while (query.Read())
+            using (SqliteCommand Command = new SqliteCommand("Select * From MusicList", OLEDB))
             {
-                MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(query[0].ToString(), query[1].ToString(), query[2].ToString(), query[3].ToString(), query[4].ToString(), (long)query[5], (long)query[6], true));
-            }
-            query.Close();
+                SqliteDataReader query = await Command.ExecuteReaderAsync();
+                while (query.Read())
+                {
+                    MusicList.ThisPage.FavouriteMusicCollection.Add(new PlayList(query[0].ToString(), query[1].ToString(), query[2].ToString(), query[3].ToString(), query[4].ToString(), (long)query[5], (long)query[6], true));
+                }
+                query.Close();
 
-            SqliteDataReader query1 = await Command.ExecuteReaderAsync();
-            int Index = 0;
-            while (query1.Read())
-            {
-                long[] SongID = new long[1];
-                SongID[0] = (long)query1[5];
-                MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri((await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(SongID)).Data[0].Url)));
-                MediaPlayList.FavouriteSongList.Items.Add(Item);
+                SqliteDataReader query1 = await Command.ExecuteReaderAsync();
+                int Index = 0;
+                while (query1.Read())
+                {
+                    long[] SongID = new long[1];
+                    SongID[0] = (long)query1[5];
+                    MediaPlaybackItem Item = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri((await NeteaseMusicAPI.GetInstance().GetSongsUrlAsync(SongID)).Data[0].Url)));
+                    MediaPlayList.FavouriteSongList.Items.Add(Item);
 
-                MediaItemDisplayProperties Props = Item.GetDisplayProperties();
-                Props.Type = Windows.Media.MediaPlaybackType.Music;
-                Props.MusicProperties.Title = query1[0].ToString();
-                Props.MusicProperties.Artist = query1[2].ToString();
-                Item.ApplyDisplayProperties(Props);
-                MusicList.ThisPage.FavouriteMusicCollection[Index++].FontColor = new SolidColorBrush(Colors.White);
-            }
-            if (MusicList.ThisPage.FavouriteMusicCollection.Count != 0)
-            {
-                var bitmap = new BitmapImage();
-                MusicList.ThisPage.Image1.Source = bitmap;
-                bitmap.UriSource = new Uri(MusicList.ThisPage.FavouriteMusicCollection[0].ImageUrl);
+                    MediaItemDisplayProperties Props = Item.GetDisplayProperties();
+                    Props.Type = Windows.Media.MediaPlaybackType.Music;
+                    Props.MusicProperties.Title = query1[0].ToString();
+                    Props.MusicProperties.Artist = query1[2].ToString();
+                    Item.ApplyDisplayProperties(Props);
+                    MusicList.ThisPage.FavouriteMusicCollection[Index++].FontColor = new SolidColorBrush(Colors.White);
+                }
+                if (MusicList.ThisPage.FavouriteMusicCollection.Count != 0)
+                {
+                    var bitmap = new BitmapImage();
+                    MusicList.ThisPage.Image1.Source = bitmap;
+                    bitmap.UriSource = new Uri(MusicList.ThisPage.FavouriteMusicCollection[0].ImageUrl);
+                }
             }
         }
 
@@ -1440,8 +1472,10 @@ namespace SmartLens
                 {
                     sb.Append(Command);
                 }
-                SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB, Transaction);
-                _ = await SQLCommand.ExecuteNonQueryAsync();
+                using (SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB, Transaction))
+                {
+                    _ = await SQLCommand.ExecuteNonQueryAsync();
+                }
 
                 Transaction.Commit();
             }
@@ -1461,14 +1495,16 @@ namespace SmartLens
         /// <returns>List<KeyValuePair<string, string>></returns>
         public async Task<List<KeyValuePair<string, string>>> GetHeshValueAsync()
         {
-            SqliteCommand Command = new SqliteCommand("Select * From HashTable", OLEDB);
-            SqliteDataReader query = await Command.ExecuteReaderAsync();
-            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
-            while (query.Read())
+            using (SqliteCommand Command = new SqliteCommand("Select * From HashTable", OLEDB))
             {
-                list.Add(new KeyValuePair<string, string>(query[0].ToString(), query[1].ToString()));
+                SqliteDataReader query = await Command.ExecuteReaderAsync();
+                List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+                while (query.Read())
+                {
+                    list.Add(new KeyValuePair<string, string>(query[0].ToString(), query[1].ToString()));
+                }
+                return list;
             }
-            return list;
         }
 
         /// <summary>
@@ -1484,15 +1520,17 @@ namespace SmartLens
         /// <returns></returns>
         public async Task SetMusicDataAsync(string MusicName, string Artist, string Album, string Duration, string ImageURL, long SongID, long MVid)
         {
-            SqliteCommand Command = new SqliteCommand("Insert Into MusicList Values (@MusicName,@Artist,@Album,@Duration,@ImageURL,@SongID,@MVid)", OLEDB);
-            _ = Command.Parameters.AddWithValue("@MusicName", MusicName);
-            _ = Command.Parameters.AddWithValue("@Artist", Artist);
-            _ = Command.Parameters.AddWithValue("@Album", Album);
-            _ = Command.Parameters.AddWithValue("@Duration", Duration);
-            _ = Command.Parameters.AddWithValue("@SongID", SongID);
-            _ = Command.Parameters.AddWithValue("@ImageURL", ImageURL);
-            _ = Command.Parameters.AddWithValue("@MVid", MVid);
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Insert Into MusicList Values (@MusicName,@Artist,@Album,@Duration,@ImageURL,@SongID,@MVid)", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@MusicName", MusicName);
+                _ = Command.Parameters.AddWithValue("@Artist", Artist);
+                _ = Command.Parameters.AddWithValue("@Album", Album);
+                _ = Command.Parameters.AddWithValue("@Duration", Duration);
+                _ = Command.Parameters.AddWithValue("@SongID", SongID);
+                _ = Command.Parameters.AddWithValue("@ImageURL", ImageURL);
+                _ = Command.Parameters.AddWithValue("@MVid", MVid);
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1502,12 +1540,14 @@ namespace SmartLens
         /// <returns>无</returns>
         public async Task DeleteMusicAsync(PlayList list)
         {
-            SqliteCommand Command = new SqliteCommand("Delete From MusicList Where MusicName=@MusicName And Artist=@Artist And Album=@Album And Duration=@Duration", OLEDB);
-            _ = Command.Parameters.AddWithValue("@MusicName", list.Music);
-            _ = Command.Parameters.AddWithValue("@Artist", list.Artist);
-            _ = Command.Parameters.AddWithValue("@Album", list.Album);
-            _ = Command.Parameters.AddWithValue("@Duration", list.Duration);
-            _ = await Command.ExecuteNonQueryAsync();
+            using (SqliteCommand Command = new SqliteCommand("Delete From MusicList Where MusicName=@MusicName And Artist=@Artist And Album=@Album And Duration=@Duration", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@MusicName", list.Music);
+                _ = Command.Parameters.AddWithValue("@Artist", list.Artist);
+                _ = Command.Parameters.AddWithValue("@Album", list.Album);
+                _ = Command.Parameters.AddWithValue("@Duration", list.Duration);
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
 
@@ -1519,13 +1559,15 @@ namespace SmartLens
         public async Task<List<WiFiInDataBase>> GetAllWiFiDataAsync()
         {
             List<WiFiInDataBase> WiFiContainer = new List<WiFiInDataBase>();
-            SqliteCommand Command = new SqliteCommand("Select * From WiFiRecord", OLEDB);
-            SqliteDataReader query = await Command.ExecuteReaderAsync();
-            while (query.Read())
+            using (SqliteCommand Command = new SqliteCommand("Select * From WiFiRecord", OLEDB))
             {
-                WiFiContainer.Add(new WiFiInDataBase(query[0].ToString(), query[1].ToString(), query[2].ToString()));
+                SqliteDataReader query = await Command.ExecuteReaderAsync();
+                while (query.Read())
+                {
+                    WiFiContainer.Add(new WiFiInDataBase(query[0].ToString(), query[1].ToString(), query[2].ToString()));
+                }
+                return WiFiContainer;
             }
-            return WiFiContainer;
         }
 
         /// <summary>
@@ -1536,11 +1578,13 @@ namespace SmartLens
         /// <returns>无</returns>
         public async Task UpdateWiFiDataAsync(string SSID, bool AutoConnect)
         {
-            SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set AutoConnect = @AutoConnect Where SSID = @SSID", OLEDB);
-            _ = Command.Parameters.AddWithValue("@SSID", SSID);
-            _ = Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
+            using (SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set AutoConnect = @AutoConnect Where SSID = @SSID", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@SSID", SSID);
+                _ = Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
 
-            _ = await Command.ExecuteNonQueryAsync();
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1551,11 +1595,13 @@ namespace SmartLens
         /// <returns></returns>
         public async Task UpdateWiFiDataAsync(string SSID, string Password)
         {
-            SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set Password = @Password Where SSID = @SSID", OLEDB);
-            _ = Command.Parameters.AddWithValue("@SSID", SSID);
-            _ = Command.Parameters.AddWithValue("@Password", Password);
+            using (SqliteCommand Command = new SqliteCommand("Update WiFiRecord Set Password = @Password Where SSID = @SSID", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@SSID", SSID);
+                _ = Command.Parameters.AddWithValue("@Password", Password);
 
-            _ = await Command.ExecuteNonQueryAsync();
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>
@@ -1567,12 +1613,14 @@ namespace SmartLens
         /// <returns>无</returns>
         public async Task SetWiFiDataAsync(string SSID, string Password, bool AutoConnect)
         {
-            SqliteCommand Command = new SqliteCommand("Insert Into WiFiRecord Values (@SSID , @Password , @AutoConnect)", OLEDB);
-            _ = Command.Parameters.AddWithValue("@SSID", SSID);
-            _ = Command.Parameters.AddWithValue("@Password", Password);
-            _ = Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
+            using (SqliteCommand Command = new SqliteCommand("Insert Into WiFiRecord Values (@SSID , @Password , @AutoConnect)", OLEDB))
+            {
+                _ = Command.Parameters.AddWithValue("@SSID", SSID);
+                _ = Command.Parameters.AddWithValue("@Password", Password);
+                _ = Command.Parameters.AddWithValue("@AutoConnect", AutoConnect ? "True" : "False");
 
-            _ = await Command.ExecuteNonQueryAsync();
+                _ = await Command.ExecuteNonQueryAsync();
+            }
         }
 
         /// <summary>

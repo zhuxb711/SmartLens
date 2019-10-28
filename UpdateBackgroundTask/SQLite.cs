@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Windows.Storage;
 
 namespace UpdateBackgroundTask
 {
@@ -12,6 +13,10 @@ namespace UpdateBackgroundTask
         private bool IsDisposed = false;
         public SQLite()
         {
+            SQLitePCL.Batteries_V2.Init();
+            SQLitePCL.raw.sqlite3_win32_set_directory(1, ApplicationData.Current.LocalFolder.Path);
+            SQLitePCL.raw.sqlite3_win32_set_directory(2, ApplicationData.Current.TemporaryFolder.Path);
+
             OLEDB.Open();
         }
 
@@ -26,8 +31,10 @@ namespace UpdateBackgroundTask
                 {
                     sb.Append(Command);
                 }
-                SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB, Transaction);
-                SQLCommand.ExecuteNonQuery();
+                using (SqliteCommand SQLCommand = new SqliteCommand(sb.ToString(), OLEDB, Transaction))
+                {
+                    SQLCommand.ExecuteNonQuery();
+                }
                 Transaction.Commit();
             }
             catch (Exception)
